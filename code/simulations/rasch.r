@@ -7,7 +7,7 @@ parsFromMod <- list(
     R2Y=0.2, ## from app
     omega=0.2,
     tau0=0.13, ## from paper
-    tau1=0.06, ## from paper "a difference of one IQR in etaT was associated with a reduction of 0.083 in the effect size" 0.083/1.35~~ 0.06
+    tau1=-0.06, ## from paper "a difference of one IQR in etaT was associated with a reduction of 0.083 in the effect size" 0.083/1.35~~ 0.06
     lambda=43, ## from data used in model
     R2eta=0.5, ## from app
     nsec=134 ## from data used in model
@@ -73,3 +73,8 @@ makeRaschDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec){
 
 
 system.time(sdat <- do.call("makeRaschDat",parsFromMod))
+
+### NOT RUN
+### fit <- rstan::stan("psRasch.stan",data=sdat)
+                                  
+                                  
