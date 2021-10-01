@@ -24,7 +24,6 @@ parameters{
  vector[ncov] betaY;
 
  real b00;
- real a00;
  real a1;
  real b0;
  real b1;
@@ -58,13 +57,12 @@ model{
  betaY~normal(0,2);
  betaU~normal(0,2);
  b00~normal(0,2);
- a00~normal(0,2);
  a1~normal(0,1);
  b0~normal(0,1);
  b1~normal(0,1);
 
  grad~bernoulli_logit(linPred);
 
- studEff~normal(a00+X*betaU,sigU);
+ studEff~normal(X*betaU,sigU);
  Y~normal(muY+X*betaY,sigYI);
 }
