@@ -1,5 +1,5 @@
 library(lme4)
-source('rasch.r')
+source('code/simulations/rasch.r')
 
 #measMod <- with(sdat,glmer(grad~X[studentM,]+(1|section)+(1|studentM),family=binomial))
 
@@ -27,9 +27,10 @@ sim1 <- function(i){
     mean((coef(mod1)[-1]-coef(mod0)[-1])/fixef(measMod)[-1])
 }
 
-
 library(parallel)
 simOut <- mclapply(1:500,sim1,mc.cores=10)
-save(simOut,file="simpleSim.RData")
+# simOut <- lapply(1:500,sim1)
+
+save(simOut, file="code/simulations/simpleSim.RData")
 
 system('drive push --no-clobber -quiet')
