@@ -1,8 +1,13 @@
 # rm(list = ls())
-for(i in fs::dir_ls("R")) source(i)
+for(i in fs::dir_ls("R", regexp = "r$")) source(i)
+
+memory.limit(50000)
+
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
 
 parsFromMod <- list(
-  N = 100, # 5308
+  N = 1000, # 5308
   R2Y = 0.2, ## from app
   omega = 0.2,
   tau0 = 0.13, ## from paper
