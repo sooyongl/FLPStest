@@ -16,25 +16,10 @@ parsForLVM <- function(..., data_type = "1PL") {
 ##                    IRT model                    ##
 ## #~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~# ##
 
-generate.rasch <- function(.x, ...) {
-  .Class <- "dich"
-  NextMethod()
-}
-
-generate.1PL <- function(.x, ...) {
-  .Class <- "dich"
-  NextMethod()
-}
-
-generate.2PL <- function(.x, ...) {
-  .Class <- "dich"
-  NextMethod()
-}
-
-generate.3PL <- function(.x, ...) {
-  .Class <- "dich"
-  NextMethod()
-}
+generate.rasch <- function(.x, ...) {.Class <- "dich"; NextMethod()}
+generate.1PL   <- function(.x, ...) {.Class <- "dich"; NextMethod()}
+generate.2PL   <- function(.x, ...) {.Class <- "dich"; NextMethod()}
+generate.3PL   <- function(.x, ...) {.Class <- "dich"; NextMethod()}
 
 # Dichotomous Response: Rasch, 1PL, 2PL, 3PL ------------------------------
 generate.dich <- function(info, D = 1){
@@ -104,10 +89,10 @@ generate.gpcm <- function(info){
   ## ------------------------|
   
   # set up for data generation
-  theta <- info$theta; ipar <- info$theta
+  theta <- info$theta; ipar <- info$ipar
   
   # data generation
-  set.seed(seednum)
+  # set.seed(seednum)
   nitem <- dim(ipar)[1]
   disc <- ipar[,"a"]
   loc <- ipar[,grep("b", colnames(ipar))]
