@@ -1,25 +1,46 @@
-## from table 1 in the grant application
-## N is number of students ("sample size") make this even
-## R2Y is Predictive power of covariates
-## omega is "relationship between eta_T and Y_C
-## tau0 is the treatment eff when eta_T=0
-## tau1 is "relationship between eta_T and Y_T-Y_C
-## (for now, single level (not multilevel), linear, normal)
-## lambda mean Worked problems/person
-## R2eta is "Predictive power of latent variable" (extent to which covariates predict eta)
-## other parameters don't apply to rasch
-makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec, lvmodel){
-  ## generate covariates
+#' Generate Fully Latent Principal Stratification data
+#' 
+#' @description
+#' \code{\link{makeDat}} is a function for generating a data based on the given
+#' information.
+#' @param N a numeric indicating sample size.
+#' @param R2Y a numeric indicating predictive power of covariates.
+#' @param omega a numeric indicating the relationship between eta_T and Y_C.
+#' @param tau0 a numeric indicating the treatment eff when eta_T=0.
+#' @param tau1 a numeric indicating the relationship between eta_T and Y_T-Y_C; (for now, single level (not multilevel), linear, normal).
+#' @param lambda a numeric indicating the mean of Worked problems/person.
+#' @param R2eta a numeric indicating Predictive power of latent variable (extent to which covariates predict eta).
+#' @param nsex a numeric indicating the number of maximum sections given to students.
+#' @param lvmodel a character specifying a type of latent variable model.
+#' @return a list containing the data for running FLPS.
+#' 
+#' @examples
+#' sdat <- makeDat(
+#'   N = 1000,
+#'   R2Y = 0.2, 
+#'   omega = 0.2,
+#'   tau0 = 0.13, 
+#'   tau1 = -0.06,
+#'   lambda = 10,
+#'   R2eta = 0.5,
+#'   nsec = 10, 
+#'   lvmodel = "rasch" 
+#' )
+#'
+#' @export
+makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
+  ## generate covariates ----------------------------------------------------
+  
+  ### Auxiliary Covariates
   x1 <- rnorm(N)
   x2 <- rnorm(N) # in proposal, it is binary.
   
+  ### Treatment or Control
   Z <- rep(c(1,0),each=N/2)
-  
 
   # Generate True eta -------------------------------------------------------
   ## generate etas
   eta <- sqrt(R2eta/2)*(x1-x2) + rnorm(N,0,sqrt(1-R2eta))
-  
   
   # Generate LVM data -------------------------------------------------------
   info <- parsForLVM(theta = eta, nsec = nsec, data_type = lvmodel)
@@ -35,16 +56,19 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec, lvmodel){
   
   ## who works which section? Not sure how to do this right
   ## for now, just make it random. this is _not_ true for CT data
-  section <- do.call("c", lapply(seq(N / 2),function(n) {sort(sample(1:nsec, nworked[n], replace = FALSE))}))
-  
+  section <- do.call("c", lapply(seq(N / 2), 
+                                 function(n) {
+                                   sort(sample(1:nsec, nworked[n], 
+                                               replace = FALSE))})
+                     )
   ss <- cbind(studentM, section)
-  
   grad <- sapply(1:dim(ss)[1], function(n) grad[ss[n,1], ss[n,2]] )
   
-  ### simulate Y
+  ### simulate Y -------------------------------------------------------------
   Y <- sqrt(R2Y/2)*(x2-x1)+rnorm(N,0,sqrt(1-R2Y))
   Y <- Y+omega*eta
   Y <- Y+Z*(tau0*sd(Y)+tau1*sd(Y)*eta)
+  
   
   list(
     nsecWorked=length(section),
