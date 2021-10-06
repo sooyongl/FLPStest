@@ -10,7 +10,7 @@
 #' @param tau1 a numeric indicating the relationship between eta_T and Y_T-Y_C; (for now, single level (not multilevel), linear, normal).
 #' @param lambda a numeric indicating the mean of Worked problems/person.
 #' @param R2eta a numeric indicating Predictive power of latent variable (extent to which covariates predict eta).
-#' @param nsex a numeric indicating the number of maximum sections given to students.
+#' @param nsec a numeric indicating the number of maximum sections given to students.
 #' @param lvmodel a character specifying a type of latent variable model.
 #' @return a list containing the data for running FLPS.
 #' 
