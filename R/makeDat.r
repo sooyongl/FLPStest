@@ -44,7 +44,7 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   
   # Generate LVM data -------------------------------------------------------
   info <- parsForLVM(theta = eta, nsec = nsec, data_type = lvmodel)
-  grad <- generate(info)
+  grad <- generate(info); # methods(generate)
   
   ## in the application we said the # obs/ student would be pois(lambda)
   ## it looks like a (descretized) version of the exponential fits the CTA1
@@ -59,15 +59,19 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   section <- do.call("c", lapply(seq(N / 2), 
                                  function(n) {
                                    sort(sample(1:nsec, nworked[n], 
-                                               replace = FALSE))})
-                     )
+                                               replace = FALSE))}))
   ss <- cbind(studentM, section)
+  
+  # d1 <- matrix(rep(NA, 10*500), ncol = 10)
+  # s1 <- split(ss[,2], studentM);
+  # for(i in 1:length(s1)) { d1[i, s1[[i]]] <- grad[i, s1[[i]]]  }
+  
   grad <- sapply(1:dim(ss)[1], function(n) grad[ss[n,1], ss[n,2]] )
   
   ### simulate Y -------------------------------------------------------------
   Y <- sqrt(R2Y/2)*(x2-x1)+rnorm(N,0,sqrt(1-R2Y))
   Y <- Y+omega*eta
-  Y <- Y+Z*(tau0*sd(Y)+tau1*sd(Y)*eta)
+  Y <- Y+Z*(tau0 + tau1*eta)
   
   
   list(
