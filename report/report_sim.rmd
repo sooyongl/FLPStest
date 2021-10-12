@@ -1,0 +1,89 @@
+---
+title: "Simulation Report"
+author: ""
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    css: "style.css"
+    code_folding: show
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r library, message = FALSE, results = 'hide', echo = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(kableExtra)
+library(tidyverse)
+library(knitr)
+library(ggpubr); 
+library(ggrepel)
+
+root <- rprojroot::find_rstudio_root_file()
+report_path <- file.path(root, "report")
+
+res2 <- readRDS(file.path(report_path, "combined_result.rds"))
+```
+
+## Condition
+
+```{r echo=FALSE}
+conditions <- data.frame(
+  sample_size = c(1000, 1000, 4000, 4000),
+  lambda = c(10, 40, 10, 40),
+  num_sec = c(25, 100, 25, 100)
+)
+
+conditions %>% kable() %>% kable_classic()
+```
+
+## Results
+
+```{r data_import, include=FALSE}
+mean_b1 <- res2 %>% 
+  group_by(sample_size, lambda, nsec) %>% 
+  summarise(
+    b1_m = mean(b1)
+  )
+
+
+p1 <- res2 %>% 
+  ggplot(aes(y = b1, x = sample_size, colour = nsec)) +
+  geom_boxplot(
+    size = 0,
+    position = position_dodge(1),
+  ) +
+  geom_point(
+    size = 3,
+    alpha = 0.3,
+    position = position_jitterdodge(jitter.width = 0.1, dodge.width = 1)
+  ) +
+  geom_hline(yintercept = -0.06) +
+  
+  geom_point(
+    data = mean_b1,
+    aes(y = b1_m, x = sample_size, colour = nsec),
+    size = 3, 
+    stroke = 1, 
+    shape = 21,
+    alpha = 1,
+    position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
+  ) +
+  geom_label(
+    data = mean_b1,
+    aes(y = b1_m, x = sample_size, colour = nsec, label = round(b1_m, 3)),
+    position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
+  ) +
+  theme_pubclean()
+p1 <- set_palette(p1, "jco")
+```
+
+
+```{r}
+p1
+```
+

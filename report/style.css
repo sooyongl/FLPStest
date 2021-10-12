@@ -1,0 +1,76 @@
+div.main-container {
+  max-width: 1100px !important;
+}
+.toc-content {
+  padding-legt: 100px;
+}
+
+p {
+  line-height: 1.8;
+}
+body {
+  font-size: 16px;
+}
+td {
+  font-size: 14px;
+}
+h1.title {
+  font-size: 28px;
+  font-weight: 700;
+}
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+}
+h2 {
+  font-size: 16px;
+  font-weight: 700;
+}
+h3 {
+  font-size: 16px;
+  font-weight: 700;
+  font-style: italic;
+}
+
+/* toc color */
+.list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {
+  color: #333;
+  background-color: #fec10d;
+  border-color: #fec10d;
+}
+
+/* toc borders */
+.tocify {
+  border: 0px solid #333;
+}
+
+.tocify-item {
+  font-size: 16px !important;
+}
+
+.tocify .tocify-item a, .tocify .list-group-item {
+  padding: 5px 5px 4px 5px;
+}
+
+.tocify .list-group-item {
+  border-radius: 10px !important;
+}
+
+/* tabset color */
+.nav-tabs>li.active>a,
+.nav-tabs>li.active>a:focus,
+.nav-tabs>li.active>a:hover {
+  color: #333;
+  background-color: #fec10d;
+  border: 1px solid transparent;
+  border-bottom-color: transparent;
+}
+
+a {
+  color: #333;
+}
+
+.nav-tabs>li>a {
+  border-radius: 10px 10px 0 0;
+}
+
