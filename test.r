@@ -1,56 +1,141 @@
 # rm(list = ls())
 for(i in fs::dir_ls("R", regexp = "r$")) source(i)
 
-# memory.limit(50000)
-# rstan_options(auto_write = TRUE)
-# options(mc.cores = parallel::detectCores() - 2)
+memory.limit(50000)
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores() - 2)
+getOption("mc.cores")
 
-# data generation ---------------------------------------------------------
-parsFromMod <- list(
-  N = 1000, # sample size
-  R2Y = 0.2, ## from app
-  omega = 0.2,
-  tau0 = 0.13, ## from paper
-  tau1 = -0.06, ## from paper "a difference of one IQR in etaT was associated with a reduction of 0.083 in the effect size" 0.083/1.35~~ 0.06
-  lambda = 10, ## from data used in model
-  R2eta = 0.5, ## from app
-  nsec = 10, ## from data used in model
-  lvmodel = "rasch" # tag for latent variable model
+# 4000 /// 1000
+# 10/25 // 40//100
+
+conditions <- data.frame(
+  samplesize = c(1000, 1000, 4000, 4000),
+  lambda = c(10, 40, 10, 40),
+  nsec = c(25, 100, 25, 100)
 )
 
-sdat <- do.call("makeDat", parsFromMod)
-str(sdat)
-# or
-# sdat <- makeDat(N = 1000, R2Y = 0.2, omega = 0.2, tau0 = 0.13, tau1 = -0.06, 
-#                lambda = 10, R2eta = 0.5, nsec = 10, lvmodel = "rasch")
+for(j in 1:nrow(conditions)) {
+  
+  N      <- conditions$samplesize[j]
+  lambda <- conditions$lambda[j]
+  nsec   <- conditions$nsec[j]
+  
+  # data generation ---------------------------------------------------------
+  parsFromMod <- list(
+    N = N, # sample size
+    R2Y = 0.2, ## from app
+    omega = 0.2,
+    tau0 = 0.13, ## from paper
+    tau1 = -0.06, ## from paper "a difference of one IQR in etaT was associated with a reduction of 0.083 in the effect size" 0.083/1.35~~ 0.06
+    lambda = lambda, ## from data used in model
+    R2eta = 0.5, ## from app
+    nsec = nsec, ## from data used in model
+    lvmodel = "rasch" # tag for latent variable model
+  )
+  
+  for(i in 1:50) {
+    sdat <- do.call("makeDat", parsFromMod)
+    
+    # N_lambda_nsec_
+    filename <- paste(parsFromMod$N, parsFromMod$lambda, parsFromMod$nsec, "rstan_fit", i, ".rds", sep = "_")
+    
+    # run stan --------------------------------------------------------------
+    fit <- rstan::stan("R/psRasch.stan",data=sdat)
+    fit <- as.data.frame(fit)
+    saveRDS(fit, file.path("results", filename))
+    print(i)
+  }
+  
+  print(j)
+}
+# output ------------------------------------------------------------------
+files <- fs::dir_ls("results")
 
-# test -----------------------------------------------------------------
-measMod <- with(sdat, 
-                glmer(grad~X[studentM,]+(1|section)+(1|studentM),
-                      family=binomial))
- 
-# method 1
-mod0 <- with(sdat,lm(Y[Z==0]~X[Z==0,]))
-mod1 <- with(sdat,lm(Y[Z==1]~X[Z==1,]))
+res1 <- lapply(files, function(i) {
+  fit <- readRDS(i)
+  temp1 <- str_split(i, "/", simplify = T)[,2]
+  temp2 <- str_split(temp1, "_", simplify = T)
+  sample_size <- temp2[1,1]
+  lambda <- temp2[1,2]
+  nsec <- temp2[1,3]
+  rep <- temp2[1,6]
+  
+  b1 <- mean(fit$b1)
+  
+  cbind(sample_size, lambda, nsec, rep, b1)
+})
+
+res2 <- data.frame(do.call("rbind", res1))
+res2$b1 <- as.numeric(res2$b1)
+
+saveRDS(res2, "report/combined_result.rds")
+
+
+# -------------------------------------------------------------------------
+res2 <- readRDS("report/combined_result.rds")
+
+mean_b1 <- res2 %>% 
+  group_by(sample_size, lambda, nsec) %>% 
+  summarise(
+    b1_m = mean(b1)
+  )
+
+library(ggpubr); library(ggrepel)
+p1 <- res2 %>% 
+  ggplot(aes(y = b1, x = sample_size, colour = nsec)) +
+  geom_boxplot(
+    size = 0,
+    position = position_dodge(1),
+  ) +
+  geom_point(
+    size = 3,
+    alpha = 0.3,
+    position = position_jitterdodge(jitter.width = 0.1, dodge.width = 1)
+  ) +
+  geom_hline(yintercept = -0.06) +
+  
+  geom_point(
+    data = mean_b1,
+    aes(y = b1_m, x = sample_size, colour = nsec),
+    size = 3, 
+    stroke = 1, 
+    shape = 21,
+    alpha = 1,
+    position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
+  ) +
+  geom_label(
+    data = mean_b1,
+    aes(y = b1_m, x = sample_size, colour = nsec, label = round(b1_m, 3)),
+    position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
+  ) +
+  theme_pubclean()
+set_palette(p1, "jco")
+
+
+
+
+
+
+
+
+
+
+# str(fit@model_pars)
+# print(fit, pars = 'betaU')
+# print(fit, pars = 'betaY')
 # 
-## only two covariates so...
-mean((coef(mod1)[-1]-coef(mod0)[-1])/fixef(measMod)[-1])
-
-# run stan --------------------------------------------------------------
-system.time(fit <- rstan::stan("R/psRasch.stan",data=sdat))
-# saveRDS(fit, "rstan_fit.rds")
-
-fit <- readRDS("rstan_fit.rds")
-
-print(fit, pars = 'b1')
-
-
-stan_hist(fit, bins=40)
-
-fit.ggmcmc <- ggs(fit)
-theme_set(theme_bw())
-
-fit.ggmcmc %>% filter(Parameter == "studEff[1]") %>% ggs_traceplot(.)
-fit.ggmcmc %>% filter(Parameter == "studEff[1]") %>% ggs_density(.)
-fit.ggmcmc %>% filter(Parameter == "studEff[1]") %>% ggs_caterpillar(.)
+# print(fit, pars = 'b00')
+# print(fit, pars = 'a1')
+# 
+# methods(print, class = class(fit))
+# graphs ------------------------------------------------------------------- 
+# stan_hist(fit, bins=40)
+# 
+# fit.ggmcmc <- ggs(fit)
+# theme_set(theme_bw())
+# 
+# fit.ggmcmc %>% filter(Parameter == "studEff[1]") %>% ggs_traceplot(.)
+# fit.ggmcmc %>% filter(Parameter == "studEff[1]") %>% ggs_density(.)
+# fit.ggmcmc %>% filter(Parameter == "studEff[1]") %>% ggs_caterpillar(.)
 
