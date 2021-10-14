@@ -29,6 +29,21 @@ report_path <- file.path(root, "report")
 res2 <- readRDS(file.path(report_path, "combined_result.rds"))
 ```
 
+## Poulation value
+
+```{r echo=FALSE}
+popv <- data.frame(
+  tau0 = 0.13,
+  omega = 0.2,
+  tau1 = -0.06,
+  difficulty = "N(0, 1)"
+)
+
+popv %>% kable() %>% kable_classic(full_width = F)
+```
+
+
+
 ## Condition
 
 ```{r echo=FALSE}
@@ -38,12 +53,14 @@ conditions <- data.frame(
   num_sec = c(25, 100, 25, 100)
 )
 
-conditions %>% kable() %>% kable_classic()
+conditions %>% kable() %>% kable_classic(full_width = F)
 ```
 
 ## Results
 
-```{r data_import, include=FALSE}
+### main treatment effect 
+
+```{r, include=FALSE}
 mean_b1 <- res2 %>% 
   group_by(sample_size, lambda, nsec) %>% 
   summarise(
@@ -85,5 +102,66 @@ p1 <- set_palette(p1, "jco")
 
 ```{r}
 p1
+```
+
+### main effect 
+
+```{r, include=FALSE}
+mean_a1 <- res2 %>% 
+  group_by(sample_size, lambda, nsec) %>% 
+  summarise(
+    a1_m = mean(a1)
+  )
+
+
+p1 <- res2 %>% 
+  ggplot(aes(y = a1, x = sample_size, colour = nsec)) +
+  geom_boxplot(
+    size = 0,
+    position = position_dodge(1),
+  ) +
+  geom_point(
+    size = 3,
+    alpha = 0.3,
+    position = position_jitterdodge(jitter.width = 0.1, dodge.width = 1)
+  ) +
+  geom_hline(yintercept = 0.2) +
+  
+  geom_point(
+    data = mean_a1,
+    aes(y = a1_m, x = sample_size, colour = nsec),
+    size = 3, 
+    stroke = 1, 
+    shape = 21,
+    alpha = 1,
+    position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
+  ) +
+  geom_label(
+    data = mean_a1,
+    aes(y = a1_m, x = sample_size, colour = nsec, label = round(a1_m, 3)),
+    position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
+  ) +
+  theme_pubclean()
+p1 <- set_palette(p1, "jco")
+```
+
+
+```{r}
+p1
+```
+
+## Rasch model
+
+The item parameters were generated every replication, so they are not the same within replications.
+
+```{r}
+res2 %>% filter(nsec == 25) %>% select(-diff,-b1, -a1, -rep) %>% 
+  bind_cols(
+    res2 %>% filter(nsec == 25) %>% .$diff %>% bind_rows() %>% mutate_all(round, 3)
+    ) %>% 
+  group_by(sample_size, lambda, nsec) %>% 
+  summarise_all(mean) %>% 
+  kable() %>% kable_classic(full_width = F)
+
 ```
 
