@@ -31,17 +31,27 @@ res2 <- readRDS(file.path(report_path, "combined_result.rds"))
 
 ## Poulation value
 
+<div class = "row">
+<div class = "col-md-6">
 ```{r echo=FALSE}
+
 popv <- data.frame(
-  tau0 = 0.13,
   omega = 0.2,
+  tau0 = 0.13,
   tau1 = -0.06,
   difficulty = "N(0, 1)"
 )
 
-popv %>% kable() %>% kable_classic(full_width = F)
+popv %>% kable() %>% kable_classic(full_width = F, position="left")
 ```
+</div>
 
+<div class = "col-md-6">
+```{r echo=FALSE, fig.height=4}
+include_graphics(file.path(report_path, "fig1.png"))
+```
+</div>
+</div>
 
 
 ## Condition
