@@ -52,7 +52,7 @@ for(j in 1:nrow(conditions)) {
 # output ------------------------------------------------------------------
 files <- fs::dir_ls("results")
 
-res1 <- lapply(files, function(i) {
+res1 <- lapply(files, function(i) { # i <- files[1]
   fit <- readRDS(i)
   temp1 <- str_split(i, "/", simplify = T)[,2]
   temp2 <- str_split(temp1, "_", simplify = T)
@@ -61,13 +61,18 @@ res1 <- lapply(files, function(i) {
   nsec <- temp2[1,3]
   rep <- temp2[1,6]
   
+  a1 <- mean(fit$a1)
+  b0 <- mean(fit$b0)
   b1 <- mean(fit$b1)
   
-  cbind(sample_size, lambda, nsec, rep, b1)
+  diff <- list(colMeans(fit[str_detect(names(fit), "secEff")]))
+  
+  df <- tibble(sample_size, lambda, nsec, rep, b1, a1, diff)
+  
+  df
 })
 
-res2 <- data.frame(do.call("rbind", res1))
-res2$b1 <- as.numeric(res2$b1)
+res2 <- bind_rows(res1)
 
 saveRDS(res2, "report/combined_result.rds")
 
