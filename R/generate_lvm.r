@@ -31,7 +31,10 @@ generate.dich <- function(info, D = 1){
   
   if(inherits(info, "rasch")) {
     
+    ni <- nitem/5
+    
     b <- rnorm(nitem) ## this is not based on original model
+    b <- c(rep(-0.3, ni),rep(-0.1, ni),rep(0, ni),rep(0.4, ni),rep(0.6, ni))
     a <- runif(nitem, 1, 1) ## this is not based on original model
     c <- runif(nitem,0,0) ## this is not based on original model
     
@@ -68,7 +71,8 @@ generate.dich <- function(info, D = 1){
   }
   resp <- (matrix(runif(nexaminee*nitem), nexaminee, nitem) < pr) * 1
   
-  return(resp)
+  ipar <- data.frame(a = a, b = b, c = c)
+  return(list(resp = resp, lv.par = ipar))
 }
 
 
