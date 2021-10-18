@@ -68,6 +68,90 @@ conditions %>% kable() %>% kable_classic(full_width = F)
 
 ## Results
 
+### Model fit
+
+```{r, include=FALSE}
+res2 <- res2 %>% 
+  bind_cols(., 
+            res2$model_fit %>% unlist() %>%
+              matrix(., ncol = 3, byrow = T) %>% 
+              data.frame() %>% 
+              set_names(c("Rhat", "geweke", "heidel"))
+  ) %>% 
+  mutate(
+    Rhat = as.numeric(Rhat),
+    geweke = case_when(geweke == "converge" ~ 1, TRUE ~ 0),
+    heidel = case_when(heidel == "converge" ~ 1, TRUE ~ 0)
+    )
+
+res3 <- res2 %>% 
+  group_by(sample_size, lambda, nsec)
+```
+
+#### Model fit summary
+
+```{r}
+res3 %>% 
+  summarise(
+    Rhat = mean(Rhat),
+    geweke = mean(geweke),
+    heidel = mean(heidel)
+    ) %>% 
+  kable() %>% 
+  kable_classic(full_width = F)
+
+```
+
+#### Convergence summary
+<div class = "row">
+<div class = "col-md-6">
+```{r}
+res3 %>% 
+  filter(geweke == 1 & heidel == 1) %>% 
+  count() %>% 
+  kable(caption = "Geweke = 1 and Heidel = 1") %>% 
+  kable_classic(full_width = F)
+```
+</div>
+
+<div class = "col-md-6">
+```{r}
+res3 %>% 
+  filter(geweke == 0 & heidel == 0) %>% 
+  count() %>% 
+  kable(caption = "Geweke = 0 and Heidel = 0") %>% 
+  kable_classic(full_width = F)
+```
+</div>
+</div>
+
+#### Partial convergence summary
+<div class = "row">
+<div class = "col-md-6">
+```{r}
+res3 %>% 
+  filter(geweke == 0 & heidel == 1) %>% 
+  count() %>% 
+  kable(caption = "Geweke = 0 and Heidel = 1") %>% 
+  kable_classic(full_width = F)
+```
+
+</div>
+
+<div class = "col-md-6">
+```{r}
+res3 %>% 
+  filter(geweke == 1 & heidel == 0) %>% 
+  count() %>% 
+  kable(caption = "Geweke = 1 and Heidel = 0") %>% 
+  kable_classic(full_width = F)
+
+```
+
+</div>
+</div>
+
+
 ### main treatment effect 
 
 ```{r, include=FALSE}
@@ -76,7 +160,6 @@ mean_b1 <- res2 %>%
   summarise(
     b1_m = mean(b1)
   )
-
 
 p1 <- res2 %>% 
   ggplot(aes(y = b1, x = sample_size, colour = nsec)) +
@@ -165,10 +248,8 @@ p1
 The item parameters were generated every replication, so they are not the same within replications.
 
 ```{r}
-res2 %>% filter(nsec == 25) %>% select(-diff,-b1, -a1, -rep) %>% 
-  bind_cols(
-    res2 %>% filter(nsec == 25) %>% .$diff %>% bind_rows() %>% mutate_all(round, 3)
-    ) %>% 
+res2 %>% select(-diff,-b1, -a1, -rep, -model_fit) %>% 
+  mutate(b_bias = res2$diff %>% map(., ~ round(mean(.x$est - .x$pop),3)) %>% unlist()) %>% 
   group_by(sample_size, lambda, nsec) %>% 
   summarise_all(mean) %>% 
   kable() %>% kable_classic(full_width = F)
