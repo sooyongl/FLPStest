@@ -46,6 +46,9 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   info <- parsForLVM(theta = eta, nsec = nsec, data_type = lvmodel)
   grad <- generate(info); # methods(generate)
   
+  lv.par <- grad$lv.par
+  grad <- grad$resp
+  
   ## in the application we said the # obs/ student would be pois(lambda)
   ## it looks like a (descretized) version of the exponential fits the CTA1
   ## data much better (tho still not great)
@@ -78,6 +81,7 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
     nsecWorked=length(section),
     nstud=N,
     nsec=nsec,
+    lv.par = lv.par,
     studentM=studentM,
     section=section,
     grad=grad,
