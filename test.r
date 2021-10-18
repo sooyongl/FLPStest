@@ -3,7 +3,7 @@ for(i in fs::dir_ls("R", regexp = "r$")) source(i)
 
 memory.limit(50000)
 rstan_options(auto_write = TRUE)
-options(mc.cores = parallel::detectCores() - 2)
+options(mc.cores = parallel::detectCores())
 getOption("mc.cores")
 
 # 4000 /// 1000
@@ -34,7 +34,10 @@ for(j in 1:nrow(conditions)) {
     lvmodel = "rasch" # tag for latent variable model
   )
   
-  for(i in 1:50) {
+  for(i in 1:20) {
+    
+    set.seed(i+N+nsec)
+    
     sdat <- do.call("makeDat", parsFromMod)
     
     # N_lambda_nsec_
@@ -42,18 +45,57 @@ for(j in 1:nrow(conditions)) {
     
     # run stan --------------------------------------------------------------
     fit <- rstan::stan("R/psRasch.stan",data=sdat)
-    fit <- as.data.frame(fit)
-    saveRDS(fit, file.path("results", filename))
+    
+    saveRDS(list(fit = fit, sdat = sdat), file.path("results_temp", filename))
+    
     print(i)
   }
   
   print(j)
 }
+
+# system("shutdown -f -t 300")
+
 # output ------------------------------------------------------------------
 files <- fs::dir_ls("results")
 
 res1 <- lapply(files, function(i) { # i <- files[1]
   fit <- readRDS(i)
+  
+  pop_data <- fit$sdat
+  fit <- fit$fit
+  
+  # Bayesian fit -----------------------
+  # ESS / Rhat / geweke / heidel / raftery
+  sims <- matrix(unlist(lapply(fit@sim$samples, "[[", "b1")), ncol = fit@sim$chains)
+  r_h <- round(Rhat(sims), 3)
+  
+  mcmc_object <- As.mcmc.list(fit)
+  # # effectiveSize(mcmc_object)
+  gew <- geweke.diag(mcmc_object,frac1=.1,frac2=.5)
+  if(all(abs(unlist(lapply(lapply(gew, "[[", "z"), "[[", "b1"))) < 1.96)){
+    gew <- "converge"
+    } else {
+    gew <- "noncon"
+  }
+  
+  hei <- heidel.diag(mcmc_object)
+  if(all(unlist(lapply(hei, function(x) {x[][which(rownames(x[]) == "b1"), ][4]}))==1)){
+    hei <- "converge"
+  } else{
+    hei <- "noncon"
+  }
+  gel <- gelman.diag(mcmc_object)
+  gel <- gel$mpsrf
+  
+  # raf <- raftery.diag(mcmc_object)
+  # raf
+  
+  model_fit <- list(list(rhat = r_h, geweke = gew, heidel = hei, gelman = gel))
+  
+  # Estimates -----------------------
+  fit <- as.data.frame(fit)
+  
   temp1 <- str_split(i, "/", simplify = T)[,2]
   temp2 <- str_split(temp1, "_", simplify = T)
   sample_size <- temp2[1,1]
@@ -65,9 +107,12 @@ res1 <- lapply(files, function(i) { # i <- files[1]
   b0 <- mean(fit$b0)
   b1 <- mean(fit$b1)
   
-  diff <- list(colMeans(fit[str_detect(names(fit), "secEff")]))
+  diff <- list(
+    est = colMeans(fit[str_detect(names(fit), "secEff")]),
+    pop = -pop_data$lv.par$b
+    )
   
-  df <- tibble(sample_size, lambda, nsec, rep, b1, a1, diff)
+  df <- tibble(sample_size, lambda, nsec, rep, model_fit, b1, a1, diff)
   
   df
 })
