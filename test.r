@@ -75,7 +75,7 @@ res1 <- lapply(files, function(i) { # i <- files[1]
   gew <- geweke.diag(mcmc_object,frac1=.1,frac2=.5)
   if(all(abs(unlist(lapply(lapply(gew, "[[", "z"), "[[", "b1"))) < 1.96)){
     gew <- "converge"
-    } else {
+  } else {
     gew <- "noncon"
   }
   
@@ -85,13 +85,17 @@ res1 <- lapply(files, function(i) { # i <- files[1]
   } else{
     hei <- "noncon"
   }
-  gel <- gelman.diag(mcmc_object)
-  gel <- gel$mpsrf
+  # gel <- try(gelman.diag(mcmc_object))
+  # gel <- try(gel$mpsrf)
+  # 
+  # if(!is(gel, 'try-error')) {
+  #   gel <- -9999
+  # }
   
   # raf <- raftery.diag(mcmc_object)
   # raf
   
-  model_fit <- list(list(rhat = r_h, geweke = gew, heidel = hei, gelman = gel))
+  model_fit <- list(list(rhat = r_h, geweke = gew, heidel = hei))
   
   # Estimates -----------------------
   fit <- as.data.frame(fit)
@@ -108,9 +112,11 @@ res1 <- lapply(files, function(i) { # i <- files[1]
   b1 <- mean(fit$b1)
   
   diff <- list(
-    est = colMeans(fit[str_detect(names(fit), "secEff")]),
-    pop = -pop_data$lv.par$b
+    list(
+      est = colMeans(fit[str_detect(names(fit), "secEff")]),
+      pop = -pop_data$lv.par$b
     )
+  )
   
   df <- tibble(sample_size, lambda, nsec, rep, model_fit, b1, a1, diff)
   
