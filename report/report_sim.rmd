@@ -16,6 +16,9 @@ editor_options:
 ---
 
 ```{r library, message = FALSE, results = 'hide', echo = FALSE}
+# Suppress summarise info
+options(dplyr.summarise.inform = FALSE)
+
 knitr::opts_chunk$set(echo = FALSE)
 library(kableExtra)
 library(tidyverse)
@@ -70,7 +73,7 @@ conditions %>% kable() %>% kable_classic(full_width = F)
 
 ### Model fit
 
-```{r, include=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 res2 <- res2 %>% 
   bind_cols(., 
             res2$model_fit %>% unlist() %>%
@@ -87,6 +90,37 @@ res2 <- res2 %>%
 res3 <- res2 %>% 
   group_by(sample_size, lambda, nsec)
 ```
+
+- R-hat
+
+  - Compromise between the within and between variance
+  - Reduces to 1 as N -> infinity
+  - Acceptable convergence (chains are stationary and mix well) when R-hat < 1.1. Greater values are usually indictive of problems in the model. 
+
+
+- Geweke Diagnostic
+
+  - Compare first part of chain with last part (after warmup period). The default is first 10% with last 50%.
+  -  If the samples are drawn from the same posterior distribution, the two means are equal
+  - The test statistic is a standard unpaired Z-test: the difference between the two sample means divided by its estimated standard error, so it should be between -2 and 2 if the chain has converged to its stationary distribution. 
+  - If significant, then warmup period is too small or need a longer sequence of parameter values for convergence. 
+
+
+- Heidelberg-Welch Diagnostic 
+
+  - Tells whether we have converged and if we have run our MCMC long enough
+  - Null hypothesis that the sample values come from a stationary distribution
+  - First the whole chain is assessed. Then 10% of the first part of the chain is discarded, and then assessed again. Then 20% of the first part of the chain is discarded, then assessed again. Continues until null is ‘accepted’ or 50% of the chain has been discarded. 
+  - The latter outcome constitutes “failure” of the stationary test and indicates that a longer MCMC run is needed. 
+  - If the stationary test is passed, the number of iterations to keep and the number to discard (warm-up) are reported.
+  
+    - If passed, then the half-width test is performed. 
+    - The ratio of the margin of error (the half-width) for a confidence interval is compared to the estimated mean. 
+    - If this ratio is less than $\epsilon$, some desired level of precision, then the chain is long enough. The Monte Carlo error of the MCMC sequence is low. 
+    - If this ratio is more than $\epsilon$, the chain should be extended. 
+
+- Not included: effective sample size, Raftery, Gelman
+
 
 #### Model fit summary
 
@@ -155,8 +189,15 @@ res3 %>%
 ### main treatment effect 
 
 ```{r, include=FALSE}
+res2 <- res2 %>% 
+  mutate(
+    geweke = case_when(geweke == 1 ~ "geweke - 1", TRUE ~ "geweke - 0"),
+    heidel = case_when(heidel == 1 ~ "heidel - 1", TRUE ~ "heidel - 0")
+  )
+
+
 mean_b1 <- res2 %>% 
-  group_by(sample_size, lambda, nsec) %>% 
+  group_by(sample_size, lambda, nsec, geweke, heidel) %>% 
   summarise(
     b1_m = mean(b1)
   )
@@ -188,7 +229,10 @@ p1 <- res2 %>%
     aes(y = b1_m, x = sample_size, colour = nsec, label = round(b1_m, 3)),
     position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
   ) +
-  theme_pubclean()
+  
+  facet_grid(geweke ~ heidel) +
+  
+  theme_pubclean(base_size = 12)
 p1 <- set_palette(p1, "jco")
 ```
 
@@ -201,7 +245,7 @@ p1
 
 ```{r, include=FALSE}
 mean_a1 <- res2 %>% 
-  group_by(sample_size, lambda, nsec) %>% 
+  group_by(sample_size, lambda, nsec, geweke, heidel) %>% 
   summarise(
     a1_m = mean(a1)
   )
@@ -234,7 +278,10 @@ p1 <- res2 %>%
     aes(y = a1_m, x = sample_size, colour = nsec, label = round(a1_m, 3)),
     position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
   ) +
-  theme_pubclean()
+  
+  facet_grid(geweke ~ heidel) +
+  
+  theme_pubclean(base_size = 12)
 p1 <- set_palette(p1, "jco")
 ```
 
