@@ -85,7 +85,7 @@ res2 <- res2 %>%
     Rhat = as.numeric(Rhat),
     geweke = case_when(geweke == "converge" ~ 1, TRUE ~ 0),
     heidel = case_when(heidel == "converge" ~ 1, TRUE ~ 0)
-    )
+  )
 
 res3 <- res2 %>% 
   group_by(sample_size, lambda, nsec)
@@ -113,13 +113,13 @@ res3 <- res2 %>%
   - First the whole chain is assessed. Then 10% of the first part of the chain is discarded, and then assessed again. Then 20% of the first part of the chain is discarded, then assessed again. Continues until null is ‘accepted’ or 50% of the chain has been discarded. 
   - The latter outcome constitutes “failure” of the stationary test and indicates that a longer MCMC run is needed. 
   - If the stationary test is passed, the number of iterations to keep and the number to discard (warm-up) are reported.
-  
+
     - If passed, then the half-width test is performed. 
     - The ratio of the margin of error (the half-width) for a confidence interval is compared to the estimated mean. 
     - If this ratio is less than $\epsilon$, some desired level of precision, then the chain is long enough. The Monte Carlo error of the MCMC sequence is low. 
     - If this ratio is more than $\epsilon$, the chain should be extended. 
 
-- Not included: effective sample size, Raftery, Gelman
+- Not included: effective sample size, Raftery, Gelman, Monte Carlo SE.
 
 
 #### Model fit summary
@@ -130,7 +130,7 @@ res3 %>%
     Rhat = mean(Rhat),
     geweke = mean(geweke),
     heidel = mean(heidel)
-    ) %>% 
+  ) %>% 
   kable() %>% 
   kable_classic(full_width = F)
 
@@ -194,101 +194,128 @@ res2 <- res2 %>%
     geweke = case_when(geweke == 1 ~ "geweke - 1", TRUE ~ "geweke - 0"),
     heidel = case_when(heidel == 1 ~ "heidel - 1", TRUE ~ "heidel - 0")
   )
+```
 
-
-mean_b1 <- res2 %>% 
-  group_by(sample_size, lambda, nsec, geweke, heidel) %>% 
-  summarise(
-    b1_m = mean(b1)
-  )
-
-p1 <- res2 %>% 
-  ggplot(aes(y = b1, x = sample_size, colour = nsec)) +
-  geom_boxplot(
-    size = 0,
-    position = position_dodge(1),
-  ) +
-  geom_point(
-    size = 3,
-    alpha = 0.3,
-    position = position_jitterdodge(jitter.width = 0.1, dodge.width = 1)
-  ) +
-  geom_hline(yintercept = -0.06) +
+```{r}
+mk_plot <- function(res2, yval = NULL, grouping = NULL) { # geweke, heidel
   
-  geom_point(
-    data = mean_b1,
-    aes(y = b1_m, x = sample_size, colour = nsec),
-    size = 3, 
-    stroke = 1, 
-    shape = 21,
-    alpha = 1,
-    position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
-  ) +
-  geom_label(
-    data = mean_b1,
-    aes(y = b1_m, x = sample_size, colour = nsec, label = round(b1_m, 3)),
-    position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
-  ) +
+  grouped <- append(c("sample_size", "lambda", "nsec"), grouping)
   
-  facet_grid(geweke ~ heidel) +
+  yy <- as.name(yval)
   
-  theme_pubclean(base_size = 12)
-p1 <- set_palette(p1, "jco")
+  mean_data <- res2 %>% 
+    group_by_at(vars(one_of(grouped))) %>% 
+    summarise(
+      mean_est = mean(!!yy)
+    )
+  
+  p1 <- res2 %>% 
+    ggplot(aes(y = !!yy, x = sample_size, colour = nsec)) +
+    geom_boxplot(
+      size = 0,
+      position = position_dodge(1),
+    ) +
+    geom_point(
+      size = 3,
+      alpha = 0.6,
+      position = position_jitterdodge(jitter.width = 0.1, dodge.width = 1)
+    ) +
+    
+    geom_point(
+      data = mean_data,
+      aes(y = mean_est, x = sample_size, colour = nsec),
+      size = 3, 
+      stroke = 1, 
+      shape = 21,
+      alpha = 1,
+      position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
+    ) +
+    geom_label(
+      data = mean_data,
+      aes(y = mean_est, x = sample_size, colour = nsec, label = round(mean_est, 3)),
+      position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
+    ) +
+    theme_pubclean(base_size = 12)
+    
+    additional<- NULL
+    if(!is.null(grouping)) {
+      
+      if(length(grouping) == 2) {
+        
+        facet <- paste0(grouping[1], "~", grouping[2])
+      } else {
+        facet <- paste0(".", "~", grouping[1])
+      }
+      facet <- facet_grid(facet)
+      additional <- list(facet)
+    }
+    
+  p1 <- p1 + additional
+  p2 <- set_palette(p1, "Dark2")
+  
+  if(yval == "b1") {
+    p3 <- p2 + geom_hline(yintercept = -0.06, alpha = 0.6)
+  }
+  
+  if(yval == "a1") {
+    p3 <- p2 + geom_hline(yintercept = 0.2, alpha = 0.6)
+  }
+  
+  return(p3)
+}
 ```
 
 
+#### Combined
+
 ```{r}
-p1
+mk_plot(res2, "b1")
+```
+
+#### By Geweke
+
+```{r}
+mk_plot(res2, "b1", "geweke")
+```
+
+#### By Heidel
+
+```{r}
+mk_plot(res2, "b1", "heidel")
+```
+
+#### By Geweke and Heidel
+
+```{r}
+mk_plot(res2, "b1", c("geweke", "heidel"))
 ```
 
 ### main effect 
 
-```{r, include=FALSE}
-mean_a1 <- res2 %>% 
-  group_by(sample_size, lambda, nsec, geweke, heidel) %>% 
-  summarise(
-    a1_m = mean(a1)
-  )
-
-
-p1 <- res2 %>% 
-  ggplot(aes(y = a1, x = sample_size, colour = nsec)) +
-  geom_boxplot(
-    size = 0,
-    position = position_dodge(1),
-  ) +
-  geom_point(
-    size = 3,
-    alpha = 0.3,
-    position = position_jitterdodge(jitter.width = 0.1, dodge.width = 1)
-  ) +
-  geom_hline(yintercept = 0.2) +
-  
-  geom_point(
-    data = mean_a1,
-    aes(y = a1_m, x = sample_size, colour = nsec),
-    size = 3, 
-    stroke = 1, 
-    shape = 21,
-    alpha = 1,
-    position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
-  ) +
-  geom_label(
-    data = mean_a1,
-    aes(y = a1_m, x = sample_size, colour = nsec, label = round(a1_m, 3)),
-    position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
-  ) +
-  
-  facet_grid(geweke ~ heidel) +
-  
-  theme_pubclean(base_size = 12)
-p1 <- set_palette(p1, "jco")
-```
-
+#### Combined
 
 ```{r}
-p1
+mk_plot(res2, "a1")
 ```
+
+#### By Geweke
+
+```{r}
+mk_plot(res2, "a1", "geweke")
+```
+
+#### By Heidel
+
+```{r}
+mk_plot(res2, "a1", "heidel")
+```
+
+#### By Geweke and Heidel
+
+```{r}
+mk_plot(res2, "a1", c("geweke", "heidel"))
+```
+
 
 ## Rasch model
 
@@ -297,8 +324,9 @@ The item parameters were generated every replication, so they are not the same w
 ```{r}
 res2 %>% select(-diff,-b1, -a1, -rep, -model_fit) %>% 
   mutate(b_bias = res2$diff %>% map(., ~ round(mean(.x$est - .x$pop),3)) %>% unlist()) %>% 
-  group_by(sample_size, lambda, nsec) %>% 
-  summarise_all(mean) %>% 
+  group_by(sample_size, lambda, nsec, geweke, heidel) %>% 
+  summarise_all(mean) %>%
+  mutate(b_bias = round(b_bias, 3)) %>% 
   kable() %>% kable_classic(full_width = F)
 
 ```
