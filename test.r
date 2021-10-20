@@ -34,7 +34,7 @@ for(j in 1:nrow(conditions)) {
     lvmodel = "rasch" # tag for latent variable model
   )
   
-  for(i in 1:20) {
+  for(i in 21:50) {
     
     set.seed(i+N+nsec)
     
@@ -46,7 +46,7 @@ for(j in 1:nrow(conditions)) {
     # run stan --------------------------------------------------------------
     fit <- rstan::stan("R/psRasch.stan",data=sdat)
     
-    saveRDS(list(fit = fit, sdat = sdat), file.path("results_temp", filename))
+    saveRDS(list(fit = fit, sdat = sdat), file.path("results", filename))
     
     print(i)
   }
@@ -59,8 +59,22 @@ for(j in 1:nrow(conditions)) {
 # output ------------------------------------------------------------------
 files <- fs::dir_ls("results")
 
-res1 <- lapply(files, function(i) { # i <- files[1]
-  fit <- readRDS(i)
+library(doSNOW)
+library(doParallel)
+library(foreach)
+library(coda)
+library(rstan)
+
+n_cores <- detectCores() - 2
+cl <- parallel::makeCluster(n_cores)
+doSNOW::registerDoSNOW(cl)
+
+# res1 <- vector("list", length(files))
+for(i in 51:100) { # i <- 77
+  
+  print(i)
+  
+  fit <- readRDS(files[i])
   
   pop_data <- fit$sdat
   fit <- fit$fit
@@ -80,11 +94,13 @@ res1 <- lapply(files, function(i) { # i <- files[1]
   }
   
   hei <- heidel.diag(mcmc_object)
-  if(all(unlist(lapply(hei, function(x) {x[][which(rownames(x[]) == "b1"), ][4]}))==1)){
+  temp1 <- all(unlist(lapply(hei, function(x) {x[][which(rownames(x[]) == "b1"), ][4]}))==1) == 1
+  if(!is.na(temp1) & temp1){
     hei <- "converge"
   } else{
     hei <- "noncon"
   }
+  
   # gel <- try(gelman.diag(mcmc_object))
   # gel <- try(gel$mpsrf)
   # 
@@ -100,7 +116,7 @@ res1 <- lapply(files, function(i) { # i <- files[1]
   # Estimates -----------------------
   fit <- as.data.frame(fit)
   
-  temp1 <- str_split(i, "/", simplify = T)[,2]
+  temp1 <- str_split(files[i], "/", simplify = T)[,2]
   temp2 <- str_split(temp1, "_", simplify = T)
   sample_size <- temp2[1,1]
   lambda <- temp2[1,2]
@@ -120,12 +136,13 @@ res1 <- lapply(files, function(i) { # i <- files[1]
   
   df <- tibble(sample_size, lambda, nsec, rep, model_fit, b1, a1, diff)
   
-  df
-})
+  res1[[i]] <- df
+}
+
 
 res2 <- bind_rows(res1)
 
-saveRDS(res2, "report/combined_result.rds")
+saveRDS(res2, "report/combined_result_1_50.rds")
 
 
 # -------------------------------------------------------------------------
