@@ -32,15 +32,17 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   ## generate covariates ----------------------------------------------------
   
   ### Auxiliary Covariates
-  x1 <- rnorm(N)
-  x2 <- rnorm(N) # in proposal, it is binary.
-  
+  x1 <- rnorm(N); x1 <- x1 - mean(x1); x1 <- x1/sd(x1)
+  x2 <- rnorm(N); x2 <- x2 - mean(x2); x2 <- x2/sd(x2) # in proposal, it is binary.
+
   ### Treatment or Control
   Z <- rep(c(1,0),each=N/2)
 
   # Generate True eta -------------------------------------------------------
   ## generate etas
-  eta <- sqrt(R2eta/2)*(x1-x2) + rnorm(N,0,sqrt(1-R2eta))
+  random.e <- rnorm(N,0,sqrt(1-R2eta)); random.e <- random.e - mean(random.e); random.e <- random.e/sd(random.e)
+  eta <- sqrt(R2eta/2)*(x1-x2) + random.e
+
   
   # Generate LVM data -------------------------------------------------------
   info <- parsForLVM(theta = eta, nsec = nsec, data_type = lvmodel)
@@ -72,11 +74,11 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   grad <- sapply(1:dim(ss)[1], function(n) grad[ss[n,1], ss[n,2]] )
   
   ### simulate Y -------------------------------------------------------------
-  Y <- sqrt(R2Y/2)*(x2-x1)+rnorm(N,0,sqrt(1-R2Y))
+  random.Y <- rnorm(N,0,sqrt(1-R2Y)); random.Y <- random.Y - mean(random.Y); random.Y <- random.Y/sd(random.Y)
+  Y <- sqrt(R2Y/2)*(x2-x1)+random.Y
   Y <- Y+omega*eta
   Y <- Y+Z*(tau0 + tau1*eta)
-  
-  
+
   list(
     nsecWorked=length(section),
     nstud=N,
