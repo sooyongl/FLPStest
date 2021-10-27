@@ -29,7 +29,7 @@ library(ggrepel)
 root <- rprojroot::find_rstudio_root_file()
 report_path <- file.path(root, "report")
 
-res2 <- readRDS(file.path(report_path, "combined_result_1_50.rds"))
+res2 <- readRDS(file.path(report_path, "combined_result_1028.rds"))
 ```
 
 ## Poulation value
@@ -319,10 +319,9 @@ mk_plot(res2, "a1", c("geweke", "heidel"))
 
 ## Rasch model
 
-The item parameters were generated every replication, so they are not the same within replications.
 
 ```{r}
-res2 %>% select(-diff,-b1, -a1, -rep, -model_fit) %>% 
+res2 %>% select(-diff,-b1, -a1, -rep, -model_fit, -niter, -temp1) %>% 
   mutate(b_bias = res2$diff %>% map(., ~ round(mean(.x$est - .x$pop),3)) %>% unlist()) %>% 
   group_by(sample_size, lambda, nsec, geweke, heidel) %>% 
   summarise_all(mean) %>%
