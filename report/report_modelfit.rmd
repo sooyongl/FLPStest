@@ -29,6 +29,7 @@ library(tidyverse)
 library(knitr)
 library(ggpubr); 
 library(ggrepel)
+library(DT)
 
 root <- rprojroot::find_rstudio_root_file()
 report_path <- file.path(root, "report")
@@ -70,12 +71,16 @@ for(jj in 1:5) {
   sn <- start_n[jj]
   en <- end_n[jj]
   
+  cond_name <- str_split(res_filename[[sn]], pattern = "_[0-9]_\\.rds", simplify = T) %>% .[,1]
+  
   res_model_fit <- res_fit %>% slice(sn:en) %>% 
     mutate(model_fit = paste0("Rhat:",Rhat, " Geweke:", geweke, " Heidel:", heidel)) %>% pull(model_fit)
   
   plot_area <- res_plot_area[sn:en]
   for(i in 1:5) {
-    plot_area[[i]] <- plot_area[[i]] + 
+    plot_area[[i]] <- 
+      plot_area[[i]] + 
+      scale_y_continuous( labels = NULL) +
       annotate("label", label = res_model_fit[i], 
                x = -Inf, y = Inf, hjust = 0, vjust = 1)
   }
@@ -83,7 +88,7 @@ for(jj in 1:5) {
   comb_area <- ggpubr::ggarrange(plotlist=plot_area, ncol = 2, nrow = 3,
                                  common.legend = T)
   comb_area <- ggpubr::annotate_figure(comb_area, 
-                                       top = ggpubr::text_grob(res_filename[[sn]], color = "blue", face = "bold", size = 14))
+                                       top = ggpubr::text_grob(cond_name, color = "blue", face = "bold", size = 14))
   
   plot_trace <- res_plot_trace[sn:en]
   for(i in 1:5) {
@@ -94,7 +99,7 @@ for(jj in 1:5) {
   comb_trace <- ggpubr::ggarrange(plotlist=plot_trace, ncol = 2, nrow = 3,
                                   common.legend = T)
   comb_trace <- ggpubr::annotate_figure(comb_trace, 
-                                        top = ggpubr::text_grob(res_filename[[sn]], color = "blue", face = "bold", size = 14))
+                                        top = ggpubr::text_grob(cond_name, color = "blue", face = "bold", size = 14))
   
   comb_list[[jj]] <- list(comb_area = comb_area, comb_trace = comb_trace)
 }
@@ -103,6 +108,34 @@ cond_name <- unlist(res_filename) %>% str_split(., pattern = "_[0-9]_\\.rds", si
 
 ```
 
+## Model fit
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+res2 <- res_est
+
+res2 <- res2 %>%
+  bind_cols(.,
+            res2$model_fit %>% unlist() %>%
+              matrix(., ncol = 3, byrow = T) %>%
+              data.frame() %>%
+              set_names(c("Rhat", "geweke", "heidel"))
+  ) %>%
+  mutate(
+    Rhat = as.numeric(Rhat),
+    geweke = case_when(geweke == "converge" ~ 1, TRUE ~ 0),
+    heidel = case_when(heidel == "converge" ~ 1, TRUE ~ 0)
+  )
+
+```
+
+
+```{r}
+res2 %>%
+  group_by(sample_size, nsec, niter) %>%
+  select(-temp1, -lambda, -diff, -model_fit) %>%
+  mutate(b1 = round(b1, 3), a1 = round(a1, 3)) %>% 
+  DT::datatable()
+```
 
 ## Model fit comparison by replications {.tabset}
 
@@ -178,146 +211,146 @@ comb_list[[5]]$comb_area
 comb_list[[5]]$comb_trace
 ```
 
-## Results
+<!-- ## Results -->
 
-### Model fit
+<!-- ### Model fit -->
 
-```{r message=FALSE, warning=FALSE, include=FALSE}
-res2 <- res_est
+<!-- ```{r message=FALSE, warning=FALSE, include=FALSE} -->
+<!-- res2 <- res_est -->
 
-res2 <- res2 %>% 
-  bind_cols(., 
-            res2$model_fit %>% unlist() %>%
-              matrix(., ncol = 3, byrow = T) %>% 
-              data.frame() %>% 
-              set_names(c("Rhat", "geweke", "heidel"))
-  ) %>% 
-  mutate(
-    Rhat = as.numeric(Rhat),
-    geweke = case_when(geweke == "converge" ~ 1, TRUE ~ 0),
-    heidel = case_when(heidel == "converge" ~ 1, TRUE ~ 0)
-  )
+<!-- res2 <- res2 %>%  -->
+<!--   bind_cols(.,  -->
+<!--             res2$model_fit %>% unlist() %>% -->
+<!--               matrix(., ncol = 3, byrow = T) %>%  -->
+<!--               data.frame() %>%  -->
+<!--               set_names(c("Rhat", "geweke", "heidel")) -->
+<!--   ) %>%  -->
+<!--   mutate( -->
+<!--     Rhat = as.numeric(Rhat), -->
+<!--     geweke = case_when(geweke == "converge" ~ 1, TRUE ~ 0), -->
+<!--     heidel = case_when(heidel == "converge" ~ 1, TRUE ~ 0) -->
+<!--   ) -->
 
-```
-
-
-```{r}
-res2 %>% 
-  group_by(sample_size, lambda, nsec, niter) %>%
-  select(-temp1, -lambda, -diff, -model_fit) %>% 
-  kable() %>% 
-  kable_paper()
-```
+<!-- ``` -->
 
 
-### main treatment effect 
-
-```{r, include=FALSE}
-res2 <- res2 %>% 
-  mutate(
-    geweke = case_when(geweke == 1 ~ "geweke - 1", TRUE ~ "geweke - 0"),
-    heidel = case_when(heidel == 1 ~ "heidel - 1", TRUE ~ "heidel - 0")
-  )
-```
-
-```{r}
-mk_plot <- function(res2, yval = NULL, grouping = NULL) { # geweke, heidel
-  
-  grouped <- append(c("sample_size", "lambda", "nsec", "niter"), grouping)
-  
-  yy <- as.name(yval)
-  
-  mean_data <- res2 %>% 
-    group_by_at(vars(one_of(grouped))) %>% 
-    summarise(
-      mean_est = mean(!!yy)
-    )
-  
-  p1 <- res2 %>% 
-    ggplot(aes(y = !!yy, x = sample_size, colour = nsec)) +
-    geom_boxplot(
-      size = 0,
-      position = position_dodge(1),
-    ) +
-    geom_point(
-      size = 3,
-      alpha = 0.6,
-      position = position_jitterdodge(jitter.width = 0.1, dodge.width = 1)
-    ) +
-    
-    geom_point(
-      data = mean_data,
-      aes(y = mean_est, x = sample_size, colour = nsec),
-      size = 3, 
-      stroke = 1, 
-      shape = 21,
-      alpha = 1,
-      position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
-    ) +
-    geom_label(
-      data = mean_data,
-      aes(y = mean_est, x = sample_size, colour = nsec, label = round(mean_est, 3)),
-      position = position_jitterdodge(jitter.width = 0, dodge.width = 1)
-    ) +
-    theme_pubclean(base_size = 16)
-  
-  additional<- NULL
-  if(!is.null(grouping)) {
-    
-    if(length(grouping) == 2) {
-      
-      facet <- paste0("niter", "~", grouping[2], " + ", grouping[1])
-      
-      p1 <- p1 + facet_grid(niter~heidel + geweke)
-      
-    } else {
-      facet <- paste0("niter", "~", grouping[1])
-      
-      p1 <- p1 + facet_grid(facet)
-    }
-    # facet <- facet_grid(facet)
-    # additional <- list(facet)
-  }
-  
-  # p1 <- p1 + additional
-  p2 <- set_palette(p1, "Dark2")
-  
-  if(yval == "b1") {
-    p3 <- p2 + geom_hline(yintercept = -0.06, alpha = 0.6)
-  }
-  
-  if(yval == "a1") {
-    p3 <- p2 + geom_hline(yintercept = 0.2, alpha = 0.6)
-  }
-  
-  return(p3)
-}
-```
+<!-- ```{r} -->
+<!-- res2 %>%  -->
+<!--   group_by(sample_size, lambda, nsec, niter) %>% -->
+<!--   select(-temp1, -lambda, -diff, -model_fit) %>%  -->
+<!--   kable() %>%  -->
+<!--   kable_paper() -->
+<!-- ``` -->
 
 
-#### Combined
+<!-- ### main treatment effect  -->
 
-```{r}
-mk_plot(res2, "b1")
-```
+<!-- ```{r, include=FALSE} -->
+<!-- res2 <- res2 %>%  -->
+<!--   mutate( -->
+<!--     geweke = case_when(geweke == 1 ~ "geweke - 1", TRUE ~ "geweke - 0"), -->
+<!--     heidel = case_when(heidel == 1 ~ "heidel - 1", TRUE ~ "heidel - 0") -->
+<!--   ) -->
+<!-- ``` -->
 
-#### By Geweke
+<!-- ```{r} -->
+<!-- mk_plot <- function(res2, yval = NULL, grouping = NULL) { # geweke, heidel -->
 
-```{r}
-mk_plot(res2, "b1", "geweke")
-```
+<!--   grouped <- append(c("sample_size", "lambda", "nsec", "niter"), grouping) -->
 
-#### By Heidel
+<!--   yy <- as.name(yval) -->
 
-```{r}
-mk_plot(res2, "b1", "heidel")
-```
+<!--   mean_data <- res2 %>%  -->
+<!--     group_by_at(vars(one_of(grouped))) %>%  -->
+<!--     summarise( -->
+<!--       mean_est = mean(!!yy) -->
+<!--     ) -->
 
-#### By Geweke and Heidel
+<!--   p1 <- res2 %>%  -->
+<!--     ggplot(aes(y = !!yy, x = sample_size, colour = nsec)) + -->
+<!--     geom_boxplot( -->
+<!--       size = 0, -->
+<!--       position = position_dodge(1), -->
+<!--     ) + -->
+<!--     geom_point( -->
+<!--       size = 5, -->
+<!--       alpha = 0.6, -->
+<!--       position = position_jitterdodge(jitter.width = 0.1, dodge.width = 1) -->
+<!--     ) + -->
 
-```{r}
-mk_plot(res2 = res2, yval = "b1", grouping = c("geweke", "heidel"))
-```
+<!--     # geom_point( -->
+<!--     #   data = mean_data, -->
+<!--     #   aes(y = mean_est, x = sample_size, colour = nsec), -->
+<!--     #   size = 5,  -->
+<!--     #   stroke = 1,  -->
+<!--     #   shape = 21, -->
+<!--     #   alpha = 1, -->
+<!--     #   position = position_jitterdodge(jitter.width = 0, dodge.width = 1) -->
+<!--     # ) + -->
+<!--     geom_label( -->
+<!--       data = mean_data, -->
+<!--       aes(y = mean_est, x = sample_size, colour = nsec, label = round(mean_est, 3)), -->
+<!--       position = position_jitterdodge(jitter.width = 0, dodge.width = 1) -->
+<!--     ) + -->
+<!--     theme_pubclean(base_size = 16) -->
+
+<!--   additional<- NULL -->
+<!--   if(!is.null(grouping)) { -->
+
+<!--     if(length(grouping) == 2) { -->
+
+<!--       facet <- paste0("niter", "~", grouping[2], " + ", grouping[1]) -->
+
+<!--       p1 <- p1 + facet_grid(niter~heidel + geweke) -->
+
+<!--     } else { -->
+<!--       facet <- paste0("niter", "~", grouping[1]) -->
+
+<!--       p1 <- p1 + facet_grid(facet) -->
+<!--     } -->
+<!--     # facet <- facet_grid(facet) -->
+<!--     # additional <- list(facet) -->
+<!--   } -->
+
+<!--   # p1 <- p1 + additional -->
+<!--   p2 <- set_palette(p1, "Dark2") -->
+
+<!--   if(yval == "b1") { -->
+<!--     p3 <- p2 + geom_hline(yintercept = -0.06, alpha = 0.6) -->
+<!--   } -->
+
+<!--   if(yval == "a1") { -->
+<!--     p3 <- p2 + geom_hline(yintercept = 0.2, alpha = 0.6) -->
+<!--   } -->
+
+<!--   return(p3) -->
+<!-- } -->
+<!-- ``` -->
+
+
+<!-- #### Combined -->
+
+<!-- ```{r} -->
+<!-- mk_plot(res2, "b1") -->
+<!-- ``` -->
+
+<!-- #### By Geweke -->
+
+<!-- ```{r} -->
+<!-- mk_plot(res2 = res2, yval = "b1", grouping = "geweke") -->
+<!-- ``` -->
+
+<!-- #### By Heidel -->
+
+<!-- ```{r} -->
+<!-- mk_plot(res2, "b1", "heidel") -->
+<!-- ``` -->
+
+<!-- #### By Geweke and Heidel -->
+
+<!-- ```{r} -->
+<!-- mk_plot(res2 = res2, yval = "b1", grouping = c("geweke", "heidel")) -->
+<!-- ``` -->
 
 
 
