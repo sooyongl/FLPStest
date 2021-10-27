@@ -234,9 +234,11 @@ end_n <- sapply(1:(tail(a1,1)/5), function(x) { 0 + 5*(x) })
 
 comb_list <- vector("list", 5)
 for(jj in 1:5) {
-  
+ 
   sn <- start_n[jj]
   en <- end_n[jj]
+  
+  cond_name <- str_split(res_filename[[sn]], pattern = "_[0-9]_\\.rds", simplify = T) %>% .[,1]
   
   res_model_fit <- res_fit %>% slice(sn:en) %>% 
     mutate(model_fit = paste0("Rhat:",Rhat, " Geweke:", geweke, " Heidel:", heidel)) %>% pull(model_fit)
@@ -251,7 +253,7 @@ for(jj in 1:5) {
   comb_area <- ggpubr::ggarrange(plotlist=plot_area, ncol = 2, nrow = 3,
                                  common.legend = T)
   comb_area <- ggpubr::annotate_figure(comb_area, 
-                                       top = ggpubr::text_grob(res_filename[[sn]], color = "blue", face = "bold", size = 14))
+                                       top = ggpubr::text_grob(cond_name, color = "blue", face = "bold", size = 14))
   
   plot_trace <- res_plot_trace[sn:en]
   for(i in 1:5) {
@@ -262,7 +264,7 @@ for(jj in 1:5) {
   comb_trace <- ggpubr::ggarrange(plotlist=plot_trace, ncol = 2, nrow = 3,
                                   common.legend = T)
   comb_trace <- ggpubr::annotate_figure(comb_trace, 
-                                        top = ggpubr::text_grob(res_filename[[sn]], color = "blue", face = "bold", size = 14))
+                                        top = ggpubr::text_grob(cond_name, color = "blue", face = "bold", size = 14))
   
   comb_list[[jj]] <- list(comb_area = comb_area, comb_trace = comb_trace)
 }

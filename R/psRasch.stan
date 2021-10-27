@@ -16,6 +16,7 @@ data{
  real Y[nstud];
 
 }
+
 parameters{
 
  vector[nstud] studEff;
