@@ -3,33 +3,35 @@ for(i in fs::dir_ls("R", regexp = "r$")) source(i); rm(i)
 source_funs <- ls()
 
 # memory.limit(50000)
-rstan_options(auto_write = TRUE)
-options(mc.cores = detectCores() - 4 )
-getOption("mc.cores")
+# rstan_options(auto_write = TRUE)
+# options(mc.cores = detectCores() - 4 )
+# getOption("mc.cores")
 
 # 4000 /// 1000
 # 10/25 // 40//100
 
 conditions <- data.frame(
-  samplesize = c(1000, 4000, 1000, 4000),
-  lambda = c(10,10, 40, 40),
-  nsec = c(20, 20, 100, 100)
+  samplesize = c(1000),
+  lambda = c(10),
+  nsec = c(20)
 )
 
-conditions <- crossing(conditions, rep = 11:20)
+conditions <- crossing(conditions, rep = 1:20)
 conditions %>% print(n = 40)
-# n_cores <- detectCores() - 4
-# cl <- parallel::makeCluster(n_cores)
-# doSNOW::registerDoSNOW(cl)
-# pb <- txtProgressBar(max=nrow(conditions), style=3)
-# progress <- function(n) setTxtProgressBar(pb, n)
-# opts <- list(progress=progress)
 
-# o <- foreach(j = 29:nrow(conditions),
-#              .export = source_funs,
-#              .packages = c("rstan"),
-#              .options.snow = opts) %dopar% {
-for(j in 1:nrow(conditions)) {
+n_cores <- detectCores() - 4
+cl <- parallel::makeCluster(n_cores)
+doSNOW::registerDoSNOW(cl)
+
+pb <- txtProgressBar(max=nrow(conditions), style=3)
+progress <- function(n) setTxtProgressBar(pb, n)
+opts <- list(progress=progress)
+
+o <- foreach(j = 1:nrow(conditions),
+             .export = source_funs,
+             .packages = c("rstan"),
+             .options.snow = opts) %dopar% {
+# for(j in 1:nrow(conditions)) {
   # j = 1
   print(j)
   
@@ -47,7 +49,7 @@ for(j in 1:nrow(conditions)) {
     tau0 = 0.13, ## from paper
     tau1 = -0.06, ## from paper "a difference of one IQR in etaT was associated with a reduction of 0.083 in the effect size" 0.083/1.35~~ 0.06
     lambda = lambda, ## from data used in model
-    R2eta = 0.5, ## from app
+    R2eta = 0.2, ## from app
     nsec = nsec, ## from data used in model
     lvmodel = "rasch" # tag for latent variable model
   )
@@ -59,15 +61,16 @@ for(j in 1:nrow(conditions)) {
   
   # N_lambda_nsec_
   filename <- paste(parsFromMod$N, parsFromMod$lambda, parsFromMod$nsec, 
-                    "iter4000chian4", REP, ".rds", sep = "_")
+                    "xeff", REP, ".rds", sep = "_")
   
   # # run stan --------------------------------------------------------------
   fit <- stan(
-    # cores = 1,
+    cores = 1,
     "R/psRasch.stan",
     data = sdat,
     chains = 4,
-    iter = 4000
+    iter = 4000,
+    warmup = 1000
   )
   
   saveRDS(list(fit = fit, sdat = sdat), file.path("results", filename))
@@ -78,5 +81,5 @@ for(j in 1:nrow(conditions)) {
   
   NULL
 }
-# stopCluster(cl)
+stopCluster(cl)
 # system("shutdown -f -t 300")

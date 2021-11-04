@@ -29,7 +29,7 @@ library(ggrepel)
 root <- rprojroot::find_rstudio_root_file()
 report_path <- file.path(root, "report")
 
-res2 <- readRDS(file.path(report_path, "combined_result_1_50.rds"))
+res2 <- readRDS(file.path(report_path, "rds/combined_result_1028.rds"))
 ```
 
 ## Poulation value

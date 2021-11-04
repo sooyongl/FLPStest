@@ -32,17 +32,18 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   ## generate covariates ----------------------------------------------------
   
   ### Auxiliary Covariates
-  x1 <- rnorm(N); x1 <- x1 - mean(x1); x1 <- x1/sd(x1)
-  x2 <- rnorm(N); x2 <- x2 - mean(x2); x2 <- x2/sd(x2) # in proposal, it is binary.
-
+  x1 <- rnorm(N); #x1 <- x1 - mean(x1); x1 <- x1/sd(x1)
+  x2 <- rnorm(N); #x2 <- x2 - mean(x2); x2 <- x2/sd(x2) # in proposal, it is binary.
   ### Treatment or Control
   Z <- rep(c(1,0),each=N/2)
 
   # Generate True eta -------------------------------------------------------
   ## generate etas
-  random.e <- rnorm(N,0,sqrt(1-R2eta)); random.e <- random.e - mean(random.e); random.e <- random.e/sd(random.e)
+  random.e <- rnorm(N,0,sqrt(1-R2eta))
   eta <- sqrt(R2eta/2)*(x1-x2) + random.e
-
+  
+  # random.e <- rnorm(N,0,sqrt(1))
+  # eta <- 0*(x1-x2) + random.e
   
   # Generate LVM data -------------------------------------------------------
   info <- parsForLVM(theta = eta, nsec = nsec, data_type = lvmodel)
@@ -74,23 +75,28 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   grad <- sapply(1:dim(ss)[1], function(n) grad[ss[n,1], ss[n,2]] )
   
   ### simulate Y -------------------------------------------------------------
-  random.Y <- rnorm(N,0,sqrt(1-R2Y)); random.Y <- random.Y - mean(random.Y); random.Y <- random.Y/sd(random.Y)
-  Y <- sqrt(R2Y/2)*(x2-x1)+random.Y
-  Y <- Y+omega*eta
-  Y <- Y+Z*(tau0 + tau1*eta)
+  random.Y <- rnorm(N,0,sqrt(1-R2Y))
+
+  # Y <- sqrt(R2Y/2)*(x2-x1)+random.Y
+  # Y <- Y + omega*eta
+  # Y <- Y + Z*(tau0 + tau1*eta)
+
+  Y <- tau0*Z + omega*eta + tau1*eta*Z + sqrt(R2Y/2)*(x2-x1) + random.Y
+  # Y <- tau0*Z + omega*eta + tau1*eta*Z + 0*(x2-x1) + random.Y
 
   list(
-    nsecWorked=length(section),
-    nstud=N,
-    nsec=nsec,
+    nsecWorked = length(section),
+    nstud = N,
+    nsec = nsec,
     lv.par = lv.par,
-    studentM=studentM,
-    section=section,
-    grad=grad,
-    X=cbind(x1,x2),
-    ncov=2,
-    Z=Z,
-    Y=Y
+    studentM = studentM,
+    section = section,
+    grad = grad,
+    X = cbind(x1,x2),
+    ncov = 2,
+    true_eta = eta,
+    Z = Z,
+    Y = Y
   )
 }
 

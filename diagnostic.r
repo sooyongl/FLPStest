@@ -20,7 +20,7 @@ res1 <- vector("list", length(files))
   #         .options.snow = opts) %dopar%
 for(i in 1:length(files))
 {
-  # i = 3
+  # i = 1
   print(i)
   
   fit <- readRDS(files[i])
@@ -28,6 +28,11 @@ for(i in 1:length(files))
   # print(object.size(fit), units="Mb")
   
   pop_data <- fit$sdat
+  data <- with(pop_data, data.frame(Y, Z, true_eta, X))
+  pop_fit <- lm(Y ~ Z*true_eta + x1 + x2, data = data)
+  pop_est <- c(coefficients(pop_fit),var(pop_fit$residuals))
+  
+  # -------------------------------------
   fit <- fit$fit
   posterior <- as.matrix(fit)
   
@@ -60,7 +65,17 @@ for(i in 1:length(files))
   trace_p <- mcmc_trace(posterior2,  pars = c("b1"), n_warmup = fit@sim$warmup) + geom_hline(yintercept = b1_total_mean, size = 1, color = "blue") +
     annotate("label", label = b1_total_mean, x = 0, y = b1_total_mean-0.02)
   
-  sampler_plot <- list(area_p = area_p, trace_p = trace_p)
+  
+  trace_by_chain <- data.frame(posterior2[,,1]) %>%
+    rowid_to_column() %>% 
+    gather("chain", "samples", -rowid) %>% 
+    ggplot() +
+    geom_line(aes(x = rowid, y = samples), alpha = .5) +
+    # labs(title = res_model_fit) +
+    facet_wrap(. ~ chain)
+  
+  sampler_plot <- list(area_p = area_p, trace_p = trace_p, 
+                       trace_by_chain = trace_by_chain)
   
   # print(object.size(sampler_plot), units="Mb")
   
@@ -117,12 +132,8 @@ for(i in 1:length(files))
     hei <- "noncon"
   }
   
-  # gel <- gelman.diag(mcmc_object)
-  # gel <- try(gel$mpsrf)
-  # 
-  # if(!is(gel, 'try-error')) {
-  #   gel <- -9999
-  # }
+  gel <- my.gelman.diag(mcmc_object)
+  gel <- gel$psrf[1]
   
   # raf <- raftery.diag(mcmc_object)
   # raf
@@ -137,15 +148,17 @@ for(i in 1:length(files))
   sample_size <- temp2[1,1]
   lambda <- temp2[1,2]
   nsec <- temp2[1,3]
-  niter <- temp2[1,4]
+  covar <- temp2[1,4]
+  # if(str_detect(covar, "iter")) {covar <- "xeff"} else {covar <- "noeff"}
+  
   rep <- temp2[1,5]
   
   a1 <- mean(fit$a1)
-  # b0 <- mean(fit$b0)
+  b0 <- mean(fit$b0)
   b1 <- mean(fit$b1)
   
-  # b.x1 <- mean(fit$`betaY[1]`)
-  # b.x2 <- mean(fit$`betaY[2]`)
+  b.x1 <- mean(fit$`betaY[1]`)
+  b.x2 <- mean(fit$`betaY[2]`)
   
   diff <- list(
     list(
@@ -154,7 +167,19 @@ for(i in 1:length(files))
     )
   )
   
-  df <- tibble(temp1, sample_size, lambda, nsec, niter, rep, model_fit, b1, a1, diff)
+  df <- tibble(temp1, sample_size, lambda, nsec, covar, rep, model_fit, 
+               
+               p.b0 = pop_est[2], 
+               b0,
+               p.b1 = pop_est[6], 
+               b1,
+               p.a1 = pop_est[3], 
+               a1,
+               p.bx1 = pop_est[4],
+               b.x1,
+               p.bx2 = pop_est[5],
+               b.x2, 
+               diff)
   
   o <- list(
     file_name = temp1, sampler_plot = sampler_plot, df = df
@@ -175,10 +200,13 @@ for(i in 1:length(files))
 }
 # stopCluster(cl)
 print(object.size(res1), units="Mb")
-# saveRDS(res1, "report/raw_results.rds")
+
+# if(!file.exists("report/rds/raw_results_1101.rds")){
+  saveRDS(res1, "report/rds/raw_results_1101_1.rds")
+  # }
 
 # tidy results ------------------------------------------------------------
-raw_results <- readRDS("report/raw_results.rds")
+raw_results <- readRDS("report/rds/raw_results_1101_1.rds")
 
 res_filename <- lapply(raw_results, "[[", "file_name")
 res_est <- bind_rows(lapply(raw_results, "[[", "df"))
@@ -187,7 +215,7 @@ res_plot_area <- lapply(res_plot, "[[", "area_p")
 res_plot_trace <- lapply(res_plot, "[[", "trace_p")
 
 # check fit ---------------------------------------------------------------
-res_fit <- res_est %>% select(temp1, sample_size, nsec, niter, rep) %>% 
+res_fit <- res_est %>% select(temp1, sample_size, nsec, covar, rep) %>% 
   bind_cols(., 
             res_est$model_fit %>% unlist() %>%
               matrix(., ncol = 3, byrow = T) %>% 
@@ -229,8 +257,9 @@ ggpubr::ggarrange(res_plot_area[[picked_pos]],
 # -------------------------------------------------------------------------
 a1 <- 1:length(res_filename)
 
-start_n <- sapply(1:(tail(a1,1)/5), function(x) { 1 + 5*(x-1) })
-end_n <- sapply(1:(tail(a1,1)/5), function(x) { 0 + 5*(x) })
+nrep <- 20
+start_n <- sapply(1:(tail(a1,1)/nrep), function(x) { 1 + 5*(x-1) })
+end_n <- sapply(1:(tail(a1,1)/nrep), function(x) { 0 + 5*(x) })
 
 comb_list <- vector("list", 5)
 for(jj in 1:5) {
@@ -269,7 +298,7 @@ for(jj in 1:5) {
   comb_list[[jj]] <- list(comb_area = comb_area, comb_trace = comb_trace)
 }
 
-
+length(comb_list)
 comb_list[[1]]$comb_area
 comb_list[[1]]$comb_trace
 
