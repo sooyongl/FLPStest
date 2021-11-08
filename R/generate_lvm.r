@@ -1,9 +1,11 @@
-# S3 generic for data generation ------------------------------------------
+#' S3 generic for latent model data generation
+#'
 generate <- function(parsForLVM, ...) {
   UseMethod("generate", parsForLVM)
 }
 
-# get information for data generation ready -------------------------------
+#' get information for data generation ready
+#'
 parsForLVM <- function(..., data_type = "1pl") {
 
   info <- list(...)
@@ -15,7 +17,9 @@ parsForLVM <- function(..., data_type = "1pl") {
 ## #~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~# ##
 ##                    IRT model                    ##
 ## #~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~# ##
+
 #' generate item pool
+#'
 genItemPool <- function(items = 20, nrCat = 4, model = "GPCM", same.nrCat = T){
 
   if(same.nrCat){
@@ -47,60 +51,70 @@ genItemPool <- function(items = 20, nrCat = 4, model = "GPCM", same.nrCat = T){
   return(res)
 }
 
-getResponse <- function(th, it, model="GPCM",  D = 1.7) {
-  if(model == "binary") {
-    it <- it[,1:2]
-    pr <- (1/(1+exp(-D*it[,1]*(th-it[,2]))))
-    RES <- ifelse(pr > runif(1,0,1), 1, 0)
-  } else {
-    it <- it[, 1:(ncol(it)-1)]
+# getResponse <- function(th, it, model="GPCM",  D = 1.7) {
+#   if(model == "binary") {
+#     it <- it[,1:2]
+#     pr <- (1/(1+exp(-D*it[,1]*(th-it[,2]))))
+#     RES <- ifelse(pr > runif(1,0,1), 1, 0)
+#   } else {
+#     it <- it[, 1:(ncol(it)-1)]
+#
+#     nc <- ncol(it)
+#     prov <- prov1 <- prov2 <- prov3 <- matrix(NA, nrow(it),nc)
+#
+#     dj <- v <- 0
+#
+#     for (t in 1:(ncol(it) - 1)) {
+#       dj <- c(dj, dj[t] + it[1, 1] * D * (th - it[1, t + 1]))
+#       v <- c(v, it[1, 1] * t)
+#     }
+#
+#     v <- v[!is.na(dj)]
+#     dj <- dj[!is.na(dj)]
+#     Gammaj <- exp(dj)
+#     dGammaj <- Gammaj * v
+#     d2Gammaj <- Gammaj * v^2
+#     d3Gammaj <- Gammaj * v^3
+#     Sg <- sum(Gammaj)
+#     Sdg <- sum(dGammaj)
+#     Sd2g <- sum(d2Gammaj)
+#     Sd3g <- sum(d3Gammaj)
+#     n <- length(Gammaj)
+#     prov[1, 1:n] <- Gammaj/Sg
+#     prov1[1, 1:n] <- dGammaj/Sg - Gammaj * Sdg/Sg^2
+#     prov2[1, 1:n] <- d2Gammaj/Sg - 2 * dGammaj * Sdg/Sg^2 - Gammaj * Sd2g/Sg^2 + 2 * Gammaj * Sdg^2/Sg^3
+#     prov3[1, 1:n] <- d3Gammaj/Sg - (Gammaj * Sd3g + 3 * dGammaj * Sd2g + 3 * d2Gammaj * Sdg)/Sg^2 + (6 * Gammaj * Sdg * Sd2g + 6 * dGammaj * Sdg^2)/Sg^3 - 6 * Gammaj * Sdg^3/Sg^4
+#
+#     res <- list(Pi = prov, dPi = prov1, d2Pi = prov2, d3Pi = prov3)
+#
+#     pr <- res$Pi
+#     RES <- rep(NA, nrow(pr))
+#     for (i in 1:nrow(pr)) {
+#       pp <- pr[i, ][!is.na(pr[i, ])]
+#       vec <- rmultinom(n = 1, size = 1, prob = pp)
+#       RES[i] <- (1:nrow(vec))[vec[, 1] == 1] - 1
+#     }
+#   }
+#   list(prob = pr, RES = RES)
+# }
 
-    nc <- ncol(it)
-    prov <- prov1 <- prov2 <- prov3 <- matrix(NA, nrow(it),nc)
-
-    dj <- v <- 0
-
-    for (t in 1:(ncol(it) - 1)) {
-      dj <- c(dj, dj[t] + it[1, 1] * D * (th - it[1, t + 1]))
-      v <- c(v, it[1, 1] * t)
-    }
-
-    v <- v[!is.na(dj)]
-    dj <- dj[!is.na(dj)]
-    Gammaj <- exp(dj)
-    dGammaj <- Gammaj * v
-    d2Gammaj <- Gammaj * v^2
-    d3Gammaj <- Gammaj * v^3
-    Sg <- sum(Gammaj)
-    Sdg <- sum(dGammaj)
-    Sd2g <- sum(d2Gammaj)
-    Sd3g <- sum(d3Gammaj)
-    n <- length(Gammaj)
-    prov[1, 1:n] <- Gammaj/Sg
-    prov1[1, 1:n] <- dGammaj/Sg - Gammaj * Sdg/Sg^2
-    prov2[1, 1:n] <- d2Gammaj/Sg - 2 * dGammaj * Sdg/Sg^2 - Gammaj * Sd2g/Sg^2 + 2 * Gammaj * Sdg^2/Sg^3
-    prov3[1, 1:n] <- d3Gammaj/Sg - (Gammaj * Sd3g + 3 * dGammaj * Sd2g + 3 * d2Gammaj * Sdg)/Sg^2 + (6 * Gammaj * Sdg * Sd2g + 6 * dGammaj * Sdg^2)/Sg^3 - 6 * Gammaj * Sdg^3/Sg^4
-
-    res <- list(Pi = prov, dPi = prov1, d2Pi = prov2, d3Pi = prov3)
-
-    pr <- res$Pi
-    RES <- rep(NA, nrow(pr))
-    for (i in 1:nrow(pr)) {
-      pp <- pr[i, ][!is.na(pr[i, ])]
-      vec <- rmultinom(n = 1, size = 1, prob = pp)
-      RES[i] <- (1:nrow(vec))[vec[, 1] == 1] - 1
-    }
-  }
-  list(prob = pr, RES = RES)
-}
-
+#' methods for rasch model
+#'
 generate.rasch <- function(.x, ...) {.Class <- "dich"; NextMethod()}
+
+#' method for 1PL model
+#'
 generate.1pl   <- function(.x, ...) {.Class <- "dich"; NextMethod()}
+
+#' method for 2PL model
+#'
 generate.2pl   <- function(.x, ...) {.Class <- "dich"; NextMethod()}
+
+#' method for 3PL model
+#'
 generate.3pl   <- function(.x, ...) {.Class <- "dich"; NextMethod()}
 
-# Dichotomous Response: Rasch, 1PL, 2PL, 3PL ------------------------------
-#' generate.dich
+#' method for all dichotomous IRT model
 #'
 generate.dich <- function(info, D = 1){
   # set up for data generation
@@ -156,7 +170,8 @@ generate.dich <- function(info, D = 1){
 }
 
 
-# Polytomous Response: GPCM  ----------------------------------------------
+#' method for Polytomous Response: GPCM
+#'
 generate.gpcm <- function(info){
   ## Generate responses for multiple people to multiple items
 
@@ -223,15 +238,20 @@ generate.gpcm <- function(info){
   return(list(resp = resp + 1, lv.par = ipar))
 }
 
+#' method for Polytomous Response: GRM
+#'
 generate.grm <- function(info) {
   print("not yet")
 }
 
+#' method for Polytomous Response: NRM
+#'
 generate.nominal <- function(info) {
   print("not yet")
 }
 
-# Response Time (Lognormal)------------------------------------------------
+#' method for Polytomous Response: Response Time (Lognormal)
+#'
 generate.ln <- function(info){
   # set up for data generation
   tau <- info$tau; ipar <- info$ipar
@@ -252,11 +272,8 @@ generate.ln <- function(info){
   return(retime)
 }
 
-## #~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~# ##
-##                    SEM model                    ##
-## #~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~# ##
-
-# generate sem data -------------------------------------------------------
+#' method for genderating sem data
+#'
 generate.sem <- function(info) {
 
   # set up for data generation

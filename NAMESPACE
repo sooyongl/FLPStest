@@ -3,6 +3,7 @@
 export(loadRstan)
 export(makeDat)
 export(runSimulation)
+import(Rcpp)
 import(coda)
 import(methods)
 import(rstan)

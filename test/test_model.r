@@ -24,7 +24,7 @@ sdat$lv.par
 
 fit <- stan(
   cores = 1,
-  "R/psIRT.stan",
+  "inst/stan/psIRT.stan",
   data = sdat,
   # iter = 4000,
   # warmup = 1000,
@@ -34,7 +34,30 @@ str(fit)
 
 
 # polytomous --------------------------------------------------------------
+parsFromMod <- list(
+  N = 1000, # sample size
+  R2Y = 0.2, ## from app
+  omega = 0.2,
+  tau0 = 0.13, ## from paper
+  tau1 = -0.06, ## from paper "a difference of one IQR in etaT was associated with a reduction of 0.083 in the effect size" 0.083/1.35~~ 0.06
+  lambda = 10, ## from data used in model
+  R2eta = 0.2, ## from app
+  nsec = 20, ## from data used in model
+  lvmodel = "gpcm" # tag for latent variable model
+)
 
+sdat <- do.call("makeDat", parsFromMod)
+sdat$lv.par
+
+fit <- stan(
+  cores = 1,
+  "inst/stan/psGPCM.stan",
+  data = sdat,
+  # iter = 4000,
+  # warmup = 1000,
+  chains = 1
+)
+str(fit)
 
 
 # sem ---------------------------------------------------------------------
@@ -56,7 +79,7 @@ sdat$grad
 
 fit <- stan(
   cores = 1,
-  "R/psSEM.stan",
+  "inst/stan/psSEM.stan",
   data = sdat,
   # iter = 4000,
   # warmup = 1000,

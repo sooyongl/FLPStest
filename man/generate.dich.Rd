@@ -2,10 +2,10 @@
 % Please edit documentation in R/generate_lvm.r
 \name{generate.dich}
 \alias{generate.dich}
-\title{generate.dich}
+\title{method for all dichotomous IRT model}
 \usage{
 \method{generate}{dich}(info, D = 1)
 }
 \description{
-generate.dich
+method for all dichotomous IRT model
 }
