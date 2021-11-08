@@ -597,7 +597,7 @@ res_plot_trace_by_chain[[i]] +
 #### Density plot
 
 ```{r}
-i = 32
+i = 33
 res_model_fit <- res_fit %>% slice(i) %>% 
     mutate(model_fit = paste0("Rhat:",Rhat, " Geweke:", geweke, " Heidel:", heidel)) %>% pull(model_fit)
 
