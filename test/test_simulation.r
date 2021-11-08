@@ -1,5 +1,5 @@
 rm(list = ls())
-for(i in fs::dir_ls("R", regexp = "r$")) source(i); rm(i)
+for(i in fs::dir_ls("R", regexp = "r$")) {print(i);source(i)}; rm(i)
 source_funs <- ls()
 
 # memory.limit(50000)
@@ -34,16 +34,16 @@ o <- foreach(j = 1:nrow(conditions),
 # for(j in 1:nrow(conditions)) {
   # j = 1
   print(j)
-  
+
   REP      <- conditions$rep[j]
-  
+
   N      <- conditions$samplesize[j]
   lambda <- conditions$lambda[j]
   nsec   <- conditions$nsec[j]
-  
+
   # data generation ---------------------------------------------------------
   parsFromMod <- list(
-    N = N, # sample size
+    N = 100, # sample size
     R2Y = 0.2, ## from app
     omega = 0.2,
     tau0 = 0.13, ## from paper
@@ -53,16 +53,16 @@ o <- foreach(j = 1:nrow(conditions),
     nsec = nsec, ## from data used in model
     lvmodel = "rasch" # tag for latent variable model
   )
-  
-  
+
+
   # set.seed(i+N+nsec)
-  
+
   sdat <- do.call("makeDat", parsFromMod)
-  
+
   # N_lambda_nsec_
-  filename <- paste(parsFromMod$N, parsFromMod$lambda, parsFromMod$nsec, 
+  filename <- paste(parsFromMod$N, parsFromMod$lambda, parsFromMod$nsec,
                     "xeff", REP, ".rds", sep = "_")
-  
+
   # # run stan --------------------------------------------------------------
   fit <- stan(
     cores = 1,
@@ -72,13 +72,13 @@ o <- foreach(j = 1:nrow(conditions),
     iter = 4000,
     warmup = 1000
   )
-  
+
   saveRDS(list(fit = fit, sdat = sdat), file.path("results", filename))
-  
-  
+
+
   rm(fit)
   gc()
-  
+
   NULL
 }
 stopCluster(cl)
