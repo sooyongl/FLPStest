@@ -50,8 +50,7 @@ model{
 
 // grad model
  for(i in 1:nsecWorked){
-  //linPred[i]= secEff[section[i]]+studEff[studentM[i]];
-  //linPred[i]= eta[studentM[i]] - beta[section[i]];
+
     linPred[i]= alpha[section[i]] * (eta[studentM[i]] - beta[section[i]]);
 	}
 
@@ -64,9 +63,9 @@ model{
 
  //priors
  // IRT priors
- // beta ~ normal(0, 1);
- // alpha ~ lognormal(0, .25);
- 
+ //beta ~ normal(0, 1);
+ //alpha ~ lognormal(0, .5);
+
  // PS priors
  betaY~normal(0,2);
  betaU~normal(0,2);

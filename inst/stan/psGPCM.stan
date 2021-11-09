@@ -56,17 +56,8 @@ model{
   matrix[4, nsecWorked] p;
   matrix[4, nsecWorked] s;
 
-  //real p [nsecWorked];
-  //real s [nsecWorked];
   // grad model
   for(i in 1:nsecWorked){
-    //linPred[i]= secEff[section[i]]+studEff[studentM[i]];
-    //linPred[i]= eta[studentM[i]] - beta[section[i]];
-    // linPred[i]= alpha[section[i]] * (eta[studentM[i]] - beta[section[i]]);
-
-    //a ~ normal(0, 1);
-    //b ~ normal(0, 0.5);
-
 
     s[1,i] = 0; //reference
     s[2,i] = alpha[section[i]] + beta1[section[i]] * eta[studentM[i]];
@@ -90,8 +81,10 @@ model{
 
   //priors
   // IRT priors
-  // beta ~ normal(0, 1);
-  // alpha ~ lognormal(0, .25);
+  //beta1 ~ normal(0, 1);
+  //beta2 ~ normal(0, 1);
+  //beta3 ~ normal(0, 1);
+  //alpha ~ lognormal(0.5, 1);
 
   // PS priors
   betaY~normal(0,2);

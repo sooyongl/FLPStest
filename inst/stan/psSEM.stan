@@ -46,8 +46,7 @@ model{
 
 // grad model
  for(i in 1:nsecWorked) {
-  //linPred[i]= secEff[section[i]]+studEff[studentM[i]];
-  //linPred[i]= lambda[section[i]] * eta[studentM[i]];
+
   grad[i] ~ normal(lambda[section[i]] * eta[studentM[i]], sqrt(sig2R[section[i]]));
 }
 
@@ -65,7 +64,7 @@ model{
  a1~normal(0,1);
  b0~normal(0,1);
  b1~normal(0,1);
- 
+
  eta ~ normal(0, sqrt(1));
  lambda ~ normal(0, sqrt(1));
  sig2R ~ inv_gamma(2.1, 1.1);
@@ -84,7 +83,7 @@ model{
  //}
 
  //grad~normal(linPred, sqrt(sigma2));
- 
+
  eta~normal(X*betaU,sigU);
  Y~normal(muY+X*betaY,sigYI);
 }
