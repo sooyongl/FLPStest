@@ -4,10 +4,18 @@
 \alias{runSimulation}
 \title{Run FLPS Simulation}
 \usage{
-runSimulation(pars, ...)
+runSimulation(pars, iter = 2000, warmup = 1000, cores = 1, chains = 1)
 }
 \arguments{
 \item{pars}{a list of parameters}
+
+\item{iter}{deault 2000}
+
+\item{warmup}{default 1000}
+
+\item{cores}{default 1}
+
+\item{chains}{default 1}
 }
 \value{
 A list containing simulated data and stan fit
