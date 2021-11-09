@@ -39,6 +39,7 @@ genItemPool <- function(items = 20, nrCat = 4, model = "GPCM", same.nrCat = T){
   }
 
   if(model == "binary"){
+
     res <- cbind(res[,1],rowMeans(res[,2:nrCat-1])) %>% data.frame()
     name <- c("alphaj","beta")
     colnames(res) <- name
@@ -132,28 +133,28 @@ generate.dich <- function(info, D = 1){
     a <- runif(nitem, 1, 1) ## this is not based on original model
     c <- runif(nitem,0,0) ## this is not based on original model
 
-  } else if(inherits(info, "1PL")) {
+  } else if(inherits(info, "1pl")) {
 
     b <- rnorm(nitem) ## this is not based on original model
     a <- runif(nitem, 1, 1) ## this is not based on original model
     c <- runif(nitem,0,0) ## this is not based on original model
 
-  } else if(inherits(info, "2PL")) {
+  } else if(inherits(info, "2pl")) {
 
     b <- rnorm(nitem) ## this is not based on original model
-    a <- runif(nitem, 0.4, 1.2) ## this is not based on original model
+    a <- rlnorm(nitem, 0, 0.5) ## this is not based on original model
     c <- runif(nitem,0,0) ## this is not based on original model
 
-  } else if(inherits(info, "3PL")) {
+  } else if(inherits(info, "3pl")) {
 
     b <- rnorm(nitem) ## this is not based on original model
-    a <- runif(nitem, 0.4, 1.2) ## this is not based on original model
+    a <- rlnorm(nitem, 0, 0.5) ## this is not based on original model
     c <- runif(nitem,0,.2) ## this is not based on original model
 
   } else {
 
     b <- rnorm(nitem) ## this is not based on original model
-    a <- runif(nitem, 1, 1) ## this is not based on original model
+    a <- rlnorm(nitem, 0, 0.5) ## this is not based on original model
     c <- runif(nitem,0,0) ## this is not based on original model
 
   }

@@ -15,6 +15,10 @@ loadRstan <- function(lv_model = "rasch") {
   stan_path <- system.file("stan", package = "FLPS")
   stan_list <- list.files(stan_path)
 
+  if(tolower(lv_model) %in% c("2pl", "3pl")) {
+    lv_model <- "IRT"
+  }
+
   stan_picked <- grep(toupper(lv_model), toupper(stan_list))
   stan_picked2 <- grep("stan", stan_list[stan_picked])
   stan_model <- stan_list[stan_picked][stan_picked2]
