@@ -1,0 +1,364 @@
+---
+title: "Simulation Report"
+author: ""
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    css: "style.css"
+    code_folding: show
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r library, message = FALSE, results = 'hide', echo = FALSE}
+# Suppress summarise info
+options(dplyr.summarise.inform = FALSE)
+
+knitr::opts_chunk$set(echo = FALSE)
+library(kableExtra)
+library(tidyverse)
+library(knitr)
+library(ggpubr); 
+library(ggrepel)
+
+root <- rprojroot::find_rstudio_root_file()
+report_path <- file.path(root, "report")
+
+raw_results <- readRDS(file.path(report_path, "rds/raw_results_1111_1.rds"))
+
+res_filename <- lapply(raw_results, "[[", "file_name")
+res_est <- bind_rows(lapply(raw_results, "[[", "df"))
+res_plot <- lapply(raw_results, "[[", "sampler_plot")
+res_plot_area <- lapply(res_plot, "[[", "area_p")
+res_plot_trace <- lapply(res_plot, "[[", "trace_p")
+res_plot_trace_by_chain <- lapply(res_plot, "[[", "trace_by_chain")
+
+```
+
+## Poulation value
+
+<div class = "row">
+<div class = "col-md-6">
+```{r echo=FALSE}
+
+popv <- data.frame(
+  omega = 0.2,
+  tau0 = 0.13,
+  tau1 = -0.06,
+  difficulty = "N(0, 1)",
+  step_diff =  "N(.111, 1.060)",
+  discrimination = "Lognorm(0, 0.5)",
+  factorLoading =  "unif(0.8, 1.2)"
+)
+
+popv %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+</div>
+
+<div class = "col-md-6">
+```{r echo=FALSE, fig.height=4}
+include_graphics(file.path(report_path, "fig1.png"))
+```
+</div>
+</div>
+
+
+## Condition
+
+<div class = "row">
+<div class = "col-md-6">
+
+```{r echo=FALSE}
+conditions <- data.frame(
+  sample_size = c(1000),
+  lambda = c(10),
+  num_sec = c(20)
+)
+
+conditions %>% kable() %>% kable_classic(full_width = F)
+```
+</div>
+
+<div class = "col-md-6">
+
+### Latent variable models,
+
+- IRT: $P(y_{ij} = 1 | \eta_i) = \frac{exp(a_j(\eta_i - b_j))}{1 + exp(a_j(\eta_i - b_j))}$
+
+- GPCM: $P(y_{ij} = y | \eta_i) = \frac{exp\sum_{y}^{s=1} (a_j(\eta_i - b_js))}{1 + \sum_{k=1}^{m_j} exp \sum_{}^{} (a_j(\eta_i - b_js))}$
+
+- CFA: $y_{ij} = \lambda_j\eta_i + \epsilon_{ij}$
+
+</div>
+</div>
+
+<!-- ### Model fit -->
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+res_est <- res_est %>% 
+  bind_cols(., 
+            res_est$model_fit %>% unlist() %>%
+              matrix(., ncol = 4, byrow = T) %>% 
+              data.frame() %>% 
+              set_names(c("Rhat", "geweke", "heidel", "gelman"))
+  ) 
+
+res_est <- res_est %>% 
+  mutate(
+    Rhat = as.numeric(Rhat),
+    Gelman = as.numeric(gelman),
+    geweke = case_when(geweke == "converge" ~ 1, TRUE ~ 0),
+    heidel = case_when(heidel == "converge" ~ 1, TRUE ~ 0)
+  )
+
+res3 <- res_est %>% 
+  group_by(sample_size, lambda, nsec, covar)
+# res3$heidel
+# res3$Rhat
+# res3$Gelman
+```
+
+## Summary for main effect
+
+```{r}
+res_fit <- res_est %>% select(temp1, sample_size, nsec, covar, rep, p.b1, b1) %>% 
+  bind_cols(., 
+            res_est$model_fit %>% unlist() %>%
+              matrix(., ncol = 4, byrow = T) %>% 
+              data.frame() %>% 
+              set_names(c("Rhat", "geweke", "heidel", "Gelman"))
+  ) %>% 
+  mutate(
+    Rhat = as.numeric(Rhat),
+    Gelman = as.numeric(Gelman),
+    geweke = case_when(geweke == "converge" ~ 1, TRUE ~ 0),
+    heidel = case_when(heidel == "converge" ~ 1, TRUE ~ 0)
+  )
+
+res_fit %>% kable() %>% kable_paper()
+```
+
+```{r fig.width=12, fig.height = 10, message=FALSE, warning=FALSE}
+
+res_est %>%
+  mutate(
+    rowid = c(1:4),
+    p.dist = p.b1,
+    e.dist = b1
+    ) %>%
+  select(temp1, p.b1, b1) %>%
+  rename("sampled_tau1" = "p.b1",
+         "estimated_tau1" = "b1") %>%
+  gather("type", "y", -temp1) %>% # print(n=40)
+  # filter(covar == "xeff") %>%
+  ggplot() +
+  geom_point(
+    aes(x = temp1, y = y, colour = type, shape = type),
+    size = 3
+  ) +
+  scale_y_continuous(n.breaks = 10, limits = c(-0.2, 0.2)) +
+  # scale_x_continuous(n.breaks = 20) +
+  geom_hline(yintercept = -0.06, alpha = 0.5) +
+  geom_vline(
+    data = tibble(xint = 1:20),
+    aes(xintercept = xint),
+    alpha = 0.3
+    ) +
+  labs(x = "rep",
+       y = "tau1",
+       colour = "",
+       shape = "",
+       caption = "sampled population / estimated") +
+  theme_bw(base_size = 16) +
+  theme(legend.position="top")
+```
+
+## Posterior plot {.tabset}
+
+### `r res_filename[[3]]` {.tabset}
+
+#### Density plot
+
+```{r}
+res_model_fit <- res_fit %>% slice(3) %>% 
+    mutate(model_fit = paste0("Rhat:",Rhat, " Gelman:", round(Gelman,3), " Geweke:", geweke, " Heidel:", heidel)) %>% pull(model_fit)
+
+res_plot_area[[3]] +
+      annotate("label", label = res_model_fit, 
+               x = -Inf, y = Inf, hjust = 0, vjust = 1) +
+  labs(title = res_filename[[3]])
+```
+
+#### Trace plot
+```{r}
+res_plot_trace[[3]] +
+      annotate("label", label = res_model_fit, 
+               x = -Inf, y = Inf, hjust = 0, vjust = 1) +
+  labs(title = res_filename[[3]])
+```
+
+#### Trace plot by chains
+
+```{r}
+res_plot_trace_by_chain[[3]] +
+      annotate("label", label = res_model_fit, 
+               x = -Inf, y = Inf, hjust = 0, vjust = 1) +
+  labs(title = res_filename[[3]])
+```
+
+### `r res_filename[[1]]` {.tabset}
+
+#### Density plot
+
+```{r}
+res_model_fit <- res_fit %>% slice(1) %>% 
+    mutate(model_fit = paste0("Rhat:",Rhat, " Gelman:", round(Gelman,3), " Geweke:", geweke, " Heidel:", heidel)) %>% pull(model_fit)
+
+res_plot_area[[1]] +
+      annotate("label", label = res_model_fit, 
+               x = -Inf, y = Inf, hjust = 0, vjust = 1) +
+  labs(title = res_filename[[1]])
+```
+
+#### Trace plot
+```{r}
+res_plot_trace[[1]] +
+      annotate("label", label = res_model_fit, 
+               x = -Inf, y = Inf, hjust = 0, vjust = 1) +
+  labs(title = res_filename[[1]])
+```
+
+#### Trace plot by chains
+
+```{r}
+res_plot_trace_by_chain[[1]] +
+      annotate("label", label = res_model_fit, 
+               x = -Inf, y = Inf, hjust = 0, vjust = 1) +
+  labs(title = res_filename[[1]])
+```
+
+### `r res_filename[[2]]` {.tabset}
+
+#### Density plot
+
+```{r}
+res_model_fit <- res_fit %>% slice(2) %>% 
+    mutate(model_fit = paste0("Rhat:",Rhat, " Gelman:", round(Gelman,3), " Geweke:", geweke, " Heidel:", heidel)) %>% pull(model_fit)
+
+res_plot_area[[2]] +
+      annotate("label", label = res_model_fit, 
+               x = -Inf, y = Inf, hjust = 0, vjust = 1) +
+  labs(title = res_filename[[2]])
+```
+
+#### Trace plot
+```{r}
+res_plot_trace[[2]] +
+      annotate("label", label = res_model_fit, 
+               x = -Inf, y = Inf, hjust = 0, vjust = 1) +
+  labs(title = res_filename[[2]])
+```
+
+#### Trace plot by chains
+
+```{r}
+res_plot_trace_by_chain[[2]] +
+      annotate("label", label = res_model_fit, 
+               x = -Inf, y = Inf, hjust = 0, vjust = 1) +
+  labs(title = res_filename[[2]])
+```
+
+### `r res_filename[[4]]` {.tabset}
+
+#### Density plot
+
+```{r}
+res_model_fit <- res_fit %>% slice(4) %>% 
+    mutate(model_fit = paste0("Rhat:",Rhat, " Gelman:", round(Gelman,3), " Geweke:", geweke, " Heidel:", heidel)) %>% pull(model_fit)
+
+res_plot_area[[4]] +
+      annotate("label", label = res_model_fit, 
+               x = -Inf, y = Inf, hjust = 0, vjust = 1) +
+  labs(title = res_filename[[4]])
+```
+
+#### Trace plot
+```{r}
+res_plot_trace[[4]] +
+      annotate("label", label = res_model_fit, 
+               x = -Inf, y = Inf, hjust = 0, vjust = 1) +
+  labs(title = res_filename[[4]])
+```
+
+#### Trace plot by chains
+
+```{r}
+res_plot_trace_by_chain[[4]] +
+      annotate("label", label = res_model_fit, 
+               x = -Inf, y = Inf, hjust = 0, vjust = 1) +
+  labs(title = res_filename[[4]])
+```
+
+
+## Summary for latent variable model
+
+
+```{r}
+# 2PL
+twoPL_est.b <- res_est$diff[[1]]$est.b
+twoPL_pop.b <- res_est$diff[[1]]$pop.b
+
+twoPL_est.a <- res_est$diff[[1]]$est.a
+twoPL_pop.a <- res_est$diff[[1]]$pop.a
+
+# GPCM
+GPCM_est.b1 <- res_est$diff[[2]]$est.b1
+GPCM_pop.b1 <- res_est$diff[[2]]$pop.b1
+
+GPCM_est.b2 <- res_est$diff[[2]]$est.b2
+GPCM_pop.b2 <- res_est$diff[[2]]$pop.b2
+
+GPCM_est.b3 <- res_est$diff[[2]]$est.b3
+GPCM_pop.b3 <- res_est$diff[[2]]$pop.b3
+
+GPCM_est.a <- res_est$diff[[2]]$est.a
+GPCM_pop.a <- res_est$diff[[2]]$pop.a
+
+# Rasch
+Rasch_est.b <- res_est$diff[[3]]$est
+Rasch_pop.b <- res_est$diff[[3]]$pop
+
+# CFA
+CFA_est.lam <- res_est$diff[[4]]$est
+CFA_pop.lam <- res_est$diff[[4]]$pop
+
+
+data.frame(Rasch_pop.b, Rasch_est.b) %>% 
+  tibble() %>% mutate_all(round, 3) %>%
+  mutate(item = 1:20) %>% select(item, everything()) %>% 
+  kable(caption = "Rasch") %>% kable_classic(full_width = F)
+
+data.frame(twoPL_pop.b, twoPL_est.b, twoPL_pop.a, twoPL_est.a) %>% 
+  tibble() %>% mutate_all(round, 3) %>%
+  mutate(item = 1:20) %>% select(item, everything()) %>% 
+  kable(caption = "2PL") %>% kable_classic(full_width = F)
+
+data.frame(GPCM_pop.b1, GPCM_est.b1, GPCM_pop.b2, GPCM_est.b2,
+           GPCM_pop.b3, GPCM_est.b3, GPCM_pop.a, GPCM_est.a) %>% 
+  tibble() %>% mutate_all(round, 3) %>%
+  mutate(item = 1:20) %>% select(item, everything()) %>% 
+  kable(caption = "GPCM") %>% kable_classic(full_width = F)
+
+data.frame(CFA_pop.lam, CFA_est.lam) %>% 
+  tibble() %>% mutate_all(round, 3) %>%
+  mutate(item = 1:20) %>% select(item, everything()) %>% 
+  kable(caption = "CFA") %>% kable_classic(full_width = F)
+
+
+```
+
