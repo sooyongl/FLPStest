@@ -31,13 +31,13 @@ parameters{
 
  real lambda[nsec];
 
- vector<lower=0> [nsec] sig2R;
+ real<lower=0> sigR;
  real<lower=0> sigY[2];
  real<lower=0> sigU;
 }
 
 model{
- //real linPred[nsecWorked];
+ real linPred[nsecWorked];
  vector[nstud] muY;
  real useEff[nstud];
  real trtEff[nstud];
@@ -47,7 +47,7 @@ model{
 // grad model
  for(i in 1:nsecWorked) {
 
-  grad[i] ~ normal(lambda[section[i]] * eta[studentM[i]], sqrt(sig2R[section[i]]));
+  linPred[i] = lambda[section[i]] * eta[studentM[i]];
 }
 
  for(i in 1:nstud){
@@ -67,7 +67,7 @@ model{
 
  eta ~ normal(0, sqrt(1));
  lambda ~ normal(0, sqrt(1));
- sig2R ~ inv_gamma(2.1, 1.1);
+ sigR ~ inv_gamma(2.1, 1.1);
  // error variance prior
  // for(i in 1:Nv){
  //   // sigma2 prior
@@ -82,7 +82,7 @@ model{
  //  }
  //}
 
- //grad~normal(linPred, sqrt(sigma2));
+ grad~normal(linPred, sigR);
 
  eta~normal(X*betaU,sigU);
  Y~normal(muY+X*betaY,sigYI);

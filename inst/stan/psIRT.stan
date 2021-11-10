@@ -63,7 +63,8 @@ model{
 
  //priors
  // IRT priors
- //beta ~ normal(0, 1);
+ beta ~ normal(0, 1);
+ alpha ~ normal(0, 1);
  //alpha ~ lognormal(0, .5);
 
  // PS priors

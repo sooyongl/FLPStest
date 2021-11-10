@@ -60,9 +60,9 @@ model{
   for(i in 1:nsecWorked){
 
     s[1,i] = 0; //reference
-    s[2,i] = alpha[section[i]] + beta1[section[i]] * eta[studentM[i]];
-    s[3,i] = alpha[section[i]] + beta2[section[i]] * eta[studentM[i]];
-    s[4,i] = alpha[section[i]] + beta3[section[i]] * eta[studentM[i]];
+    s[2,i] = alpha[section[i]] * eta[studentM[i]] - beta1[section[i]];
+    s[3,i] = s[2,i] + alpha[section[i]] * eta[studentM[i]] - beta2[section[i]];
+    s[4,i] = s[3,i] + alpha[section[i]] * eta[studentM[i]] - beta3[section[i]];
 
     p[,i] = softmax(s[,i]);
 
@@ -81,9 +81,10 @@ model{
 
   //priors
   // IRT priors
-  //beta1 ~ normal(0, 1);
-  //beta2 ~ normal(0, 1);
-  //beta3 ~ normal(0, 1);
+  beta1 ~ normal(0, 1);
+  beta2 ~ normal(0, 1);
+  beta3 ~ normal(0, 1);
+  alpha ~ normal(0, 1);
   //alpha ~ lognormal(0.5, 1);
 
   // PS priors
