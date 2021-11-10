@@ -4,10 +4,10 @@
 \alias{runSimulation}
 \title{Run FLPS Simulation}
 \usage{
-runSimulation(pars, iter = 2000, warmup = 1000, cores = 1, chains = 1)
+runSimulation(param_list, iter = 2000, warmup = 1000, cores = 1, chains = 1)
 }
 \arguments{
-\item{pars}{a list of parameters}
+\item{param_list}{a list of parameters}
 
 \item{iter}{deault 2000}
 
@@ -18,7 +18,7 @@ runSimulation(pars, iter = 2000, warmup = 1000, cores = 1, chains = 1)
 \item{chains}{default 1}
 }
 \value{
-A list containing simulated data and stan fit
+A list containing the parameter list, the simulated data and the stan fit
 }
 \description{
 Simulation of fully latent principal stratification
