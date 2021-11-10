@@ -15,25 +15,34 @@ parsFromMod <- list(
 
 # package version ---------------------------------------------------------
 sim_dt <- do.call(FLPS::makeDat, parsFromMod)
-res <- FLPS::runSimulation(parsFromMod)
+sim_dt$lv.par
+res <- FLPS::runSimulation(parsFromMod, iter = 5000, warmup = 1000, cores = 4, chains = 4)
 str(res); names(res)
+
+fit <- as.data.frame(res$stan_fit)
+cbind(sim_dt$lv.par,
+      -colMeans(fit[stringr::str_detect(names(fit), "secEff\\[")])
+)
 
 res_rasch <- res
 saveRDS(res_rasch, "results/res_rasch.rds")
+rm(res)
+
 # or ------------------------------------------------------------------
-# rm(list = ls())
-# for(i in fs::dir_ls("R", regexp = "r$")) source(i); rm(i)
-# sim_dt <- do.call(FLPS::makeDat, parsFromMod)
-# stan_model <- loadRstan(lv_model = parsFromMod$lvmodel)
-#
-# fit <- rstan::stan(
-#   model_code = stan_model@model_code,
-#   data = sim_dt,
-#   # iter = 4000,
-#   # warmup = 1000,
-#   cores = 1,
-#   chains = 1
-# )
+
+for(i in fs::dir_ls("R", regexp = "r$")) source(i); rm(i)
+
+sim_dt <- do.call(FLPS::makeDat, parsFromMod)
+stan_model <- loadRstan(lv_model = parsFromMod$lvmodel)
+
+fit <- rstan::stan(
+  model_code = stan_model@model_code,
+  data = sim_dt,
+  # iter = 4000,
+  # warmup = 1000,
+  cores = 1,
+  chains = 1
+)
 
 
 # 2pl model ------------------------------------------------------
@@ -52,12 +61,18 @@ parsFromMod <- list(
 # package version ---------------------------------------------------------
 sim_dt <- do.call(FLPS::makeDat, parsFromMod)
 sim_dt$lv.par
-res <- FLPS::runSimulation(parsFromMod)
+res <- FLPS::runSimulation(param_list = parsFromMod, iter = 10000, warmup = 2000, cores = 4, chains = 4)
 str(res)
+
+fit <- as.data.frame(res$stan_fit)
+cbind(sim_dt$lv.par,
+colMeans(fit[stringr::str_detect(names(fit), "alpha")]),
+colMeans(fit[stringr::str_detect(names(fit), "beta\\[")])
+)
 res_2pl <- res
 
 saveRDS(res_2pl, "results/res_2pl.rds")
-
+rm(res)
 # gpcm model ------------------------------------------------------
 parsFromMod <- list(
   N = 1000, # sample size
@@ -74,12 +89,20 @@ parsFromMod <- list(
 # package version ---------------------------------------------------------
 sim_dt <- do.call(FLPS::makeDat, parsFromMod)
 sim_dt$lv.par
-res <- FLPS::runSimulation(parsFromMod)
+res <- FLPS::runSimulation(parsFromMod, iter = 8000, warmup = 2000, cores = 4, chains = 4)
 str(res)
 res_gpcm <- res
 
-saveRDS(res_gpcm, "results/res_gpcm.rds")
+fit <- as.data.frame(res$stan_fit)
+cbind(sim_dt$lv.par,
+      colMeans(fit[stringr::str_detect(names(fit), "alpha")]),
+      colMeans(fit[stringr::str_detect(names(fit), "beta1\\[")]),
+      colMeans(fit[stringr::str_detect(names(fit), "beta2\\[")]),
+      colMeans(fit[stringr::str_detect(names(fit), "beta3\\[")])
+)
 
+saveRDS(res_gpcm, "results/res_gpcm.rds")
+rm(res)
 # sem model ------------------------------------------------------
 parsFromMod <- list(
   N = 1000, # sample size
@@ -96,9 +119,13 @@ parsFromMod <- list(
 # package version ---------------------------------------------------------
 sim_dt <- do.call(FLPS::makeDat, parsFromMod)
 sim_dt$lv.par
-res <- FLPS::runSimulation(pars = parsFromMod)
+res <- FLPS::runSimulation(param_list = parsFromMod, iter = 8000, warmup = 2000, cores = 4, chains = 4)
 str(res)
 res_sem <- res
 
-saveRDS(res_sem, "results/res_sem.rds")
+fit <- as.data.frame(res$stan_fit)
+colMeans(fit[stringr::str_detect(names(fit), "lambda")])
+sim_dt$lv.par
 
+saveRDS(res_sem, "results/res_sem.rds")
+rm(res)
