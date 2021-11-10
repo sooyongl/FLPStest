@@ -47,7 +47,7 @@ dt <- FLPS::makeDat()
 -   Fit your FLPS model
 
 ``` r
-res <- FLPS::runSimulation(parsFromMod)
+res <- FLPS::runSimulation(parsFromMod, iter = 4000, warmup = 1000, cores = 1, chains = 1)
 ```
 
 ### Running directly from the R project (without installing the package)
