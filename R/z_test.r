@@ -1,10 +1,6 @@
-# gelman diagnostic with chol.default error addressed.
-my.gelman.diag <- function(x,
-                           confidence = 0.95,
-                           transform = FALSE, 
-                           autoburnin = FALSE,
-                           multivariate = TRUE
-){
+#' gelman diagnostic with chol.default error addressed.
+#'
+my.gelman.diag <- function(x,confidence = 0.95,transform = FALSE,autoburnin = FALSE,multivariate = TRUE) {
   x <- as.mcmc.list(x)
   if (nchain(x) < 2)
     stop("You need at least two chains")
@@ -24,7 +20,7 @@ my.gelman.diag <- function(x,
   xbar <- matrix(sapply(x, apply, 2, mean, simplify = TRUE),
                  nrow = Nvar, ncol = Nchain)
   B <- Niter * var(t(xbar))
-  if (Nvar > 1 && multivariate) {  #ph-edits 
+  if (Nvar > 1 && multivariate) {  #ph-edits
     # CW <- chol(W)
     #    #This is W^-1*B.
     # emax <- eigen(
@@ -35,7 +31,7 @@ my.gelman.diag <- function(x,
   }  else {
     mpsrf <- NULL
   }
-  
+
   w <- diag(W)
   b <- diag(B)
   s2 <- matrix(apply(S2, 3, diag), nrow = Nvar, ncol = Nchain)
