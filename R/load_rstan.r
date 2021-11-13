@@ -24,18 +24,21 @@ loadRstan <- function(lv_model = "rasch") {
   stan_model <- stan_list[stan_picked][stan_picked2]
 
   stan_file <- file.path(stan_path, stan_model)
+  stan_model <- paste(readLines(stan_file), collapse = "\n")
 
-  stanfit <- rstan::stanc_builder(stan_file,
-                                  allow_undefined = TRUE,
-                                  obfuscate_model_name = FALSE)
-  stanfit$model_cpp <- list(model_cppname = stanfit$model_name,
-                            model_cppcode = stanfit$cppcode)
-  # create stanmodel object
-  methods::new(Class = "stanmodel",
-               model_name = stanfit$model_name,
-               model_code = stanfit$model_code,
-               model_cpp = stanfit$model_cpp,
-               mk_cppmodule = function(x) get(paste0("model_", model_name)))
+  return(stan_model)
+
+  # stanfit <- rstan::stanc_builder(stan_file,
+  #                                 allow_undefined = TRUE,
+  #                                 obfuscate_model_name = FALSE)
+  # stanfit$model_cpp <- list(model_cppname = stanfit$model_name,
+  #                           model_cppcode = stanfit$cppcode)
+  # # create stanmodel object
+  # methods::new(Class = "stanmodel",
+  #              model_name = stanfit$model_name,
+  #              model_code = stanfit$model_code,
+  #              model_cpp = stanfit$model_cpp,
+  #              mk_cppmodule = function(x) get(paste0("model_", model_name)))
 }
 
 
