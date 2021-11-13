@@ -2,9 +2,9 @@
 
 export(loadRstan)
 export(makeDat)
+export(runFLPS)
 export(runSimulation)
 import(Rcpp)
-import(coda)
 import(methods)
 import(rstan)
 importFrom(MASS,mvrnorm)
