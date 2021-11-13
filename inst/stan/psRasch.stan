@@ -45,7 +45,8 @@ model{
 
 // grad model
  for(i in 1:nsecWorked)
-  linPred[i]= secEff[section[i]]+studEff[studentM[i]];
+  linPred[i]= secEff[section[i]]+studEff[studentM[i]]; // easiness
+  // linPred[i]= studEff[studentM[i]] - secEff[section[i]]; // difficulty
 
  for(i in 1:nstud){
   useEff[i]=a1*studEff[i];

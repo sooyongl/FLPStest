@@ -60,9 +60,9 @@ model{
   for(i in 1:nsecWorked){
 
     s[1,i] = 0; //reference
-    s[2,i] = alpha[section[i]] * eta[studentM[i]] - beta1[section[i]];
-    s[3,i] = s[2,i] + alpha[section[i]] * eta[studentM[i]] - beta2[section[i]];
-    s[4,i] = s[3,i] + alpha[section[i]] * eta[studentM[i]] - beta3[section[i]];
+    s[2,i] = alpha[section[i]] * (eta[studentM[i]] - beta1[section[i]]);
+    s[3,i] = s[2,i] + alpha[section[i]] * (eta[studentM[i]] - beta2[section[i]]);
+    s[4,i] = s[3,i] + alpha[section[i]] * (eta[studentM[i]] - beta3[section[i]]);
 
     p[,i] = softmax(s[,i]);
 
