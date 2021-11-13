@@ -24,7 +24,7 @@
 #'   lambda = 10,
 #'   R2eta = 0.5,
 #'   nsec = 10,
-#'   lvmodel = "rasch"
+#'   lvmodel = "sem"
 #' )
 #'
 #' @export
@@ -103,3 +103,10 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   )
 }
 
+#' Convert a dataframe to a FLPS data
+#'
+makeFLPSdata <- function() {
+
+  new("flpsData")
+
+}
