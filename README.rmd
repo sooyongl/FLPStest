@@ -43,16 +43,19 @@ parsFromMod <- list(
 ```
 
 
-- Generate a set of simulated data for [`rstan``](https://github.com/stan-dev/rstan) package.
+- Generate a set of simulated data for [`rstan`](https://github.com/stan-dev/rstan) package.
 
 ```{r}
-dt <- FLPS::makeDat()
+dt <- do.call(FLPS::makeDat, parsFromMod)
 ```
 
 - Fit your FLPS model
 
 ```{r}
-res <- FLPS::runSimulation(parsFromMod, iter = 4000, warmup = 1000, cores = 1, chains = 1)
+res <- FLPS::runFLPS(
+  flps_data = dt,
+  lv_model = "rasch",
+  stan_options = list(iter = 2000, warmup = 1000, cores = 1, chains = 1))
 ```
 
 
