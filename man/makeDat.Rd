@@ -42,7 +42,7 @@ sdat <- makeDat(
   lambda = 10,
   R2eta = 0.5,
   nsec = 10,
-  lvmodel = "rasch"
+  lvmodel = "sem"
 )
 
 }
