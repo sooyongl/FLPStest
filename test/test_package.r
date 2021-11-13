@@ -1,8 +1,8 @@
 library(FLPS)
 
 # simulation factors ------------------------------------------------------
-parsFromMod <- list(
-  N = 1000, # sample size
+param_list<-parsFromMod <- list(
+  N = 500, # sample size
   R2Y = 0.2, ## from app
   omega = 0.2,
   tau0 = 0.13, ## from paper
@@ -13,13 +13,18 @@ parsFromMod <- list(
   lvmodel = "rasch" # tag for latent variable model
 )
 
+
 # package version ---------------------------------------------------------
 sim_dt <- do.call(FLPS::makeDat, parsFromMod)
-sim_dt$lv.par
-res <- FLPS::runSimulation(parsFromMod, iter = 5000, warmup = 1000, cores = 4, chains = 4)
-str(res); names(res)
+res <- FLPS::runFLPS(
+  flps_data = sim_dt,
+  lv_model = "rasch",
+  stan_options = list(iter = 2000, warmup = 1000, cores = 1, chains = 1))
 
-fit <- as.data.frame(res$stan_fit)
+# res <- FLPS::runSimulation(parsFromMod, iter = 2000, warmup = 1000, cores = 1, chains = 1)
+# str(res); names(res)
+
+fit <- as.data.frame(res@flps_fit)
 cbind(sim_dt$lv.par,
       -colMeans(fit[stringr::str_detect(names(fit), "secEff\\[")])
 )
@@ -36,7 +41,7 @@ sim_dt <- do.call(FLPS::makeDat, parsFromMod)
 stan_model <- loadRstan(lv_model = parsFromMod$lvmodel)
 
 fit <- rstan::stan(
-  model_code = stan_model@model_code,
+  model_code = stan_model,
   data = sim_dt,
   # iter = 4000,
   # warmup = 1000,
@@ -64,7 +69,7 @@ sim_dt$lv.par
 res <- FLPS::runSimulation(param_list = parsFromMod, iter = 10000, warmup = 2000, cores = 4, chains = 4)
 str(res)
 
-fit <- as.data.frame(res$stan_fit)
+fit <- as.data.frame(res@flps_fit)
 cbind(sim_dt$lv.par,
 colMeans(fit[stringr::str_detect(names(fit), "alpha")]),
 colMeans(fit[stringr::str_detect(names(fit), "beta\\[")])
@@ -93,7 +98,7 @@ res <- FLPS::runSimulation(parsFromMod, iter = 8000, warmup = 2000, cores = 4, c
 str(res)
 res_gpcm <- res
 
-fit <- as.data.frame(res$stan_fit)
+fit <- as.data.frame(res@flps_fit)
 cbind(sim_dt$lv.par,
       colMeans(fit[stringr::str_detect(names(fit), "alpha")]),
       colMeans(fit[stringr::str_detect(names(fit), "beta1\\[")]),
@@ -118,12 +123,16 @@ parsFromMod <- list(
 
 # package version ---------------------------------------------------------
 sim_dt <- do.call(FLPS::makeDat, parsFromMod)
+str(sim_dt)
+
+sim_dt$grad
+sim_dt$true_eta
 sim_dt$lv.par
 res <- FLPS::runSimulation(param_list = parsFromMod, iter = 8000, warmup = 2000, cores = 4, chains = 4)
 str(res)
 res_sem <- res
 
-fit <- as.data.frame(res$stan_fit)
+fit <- as.data.frame(res@flps_fit)
 colMeans(fit[stringr::str_detect(names(fit), "lambda")])
 sim_dt$lv.par
 
