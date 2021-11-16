@@ -38,7 +38,7 @@ rm(res)
 for(i in fs::dir_ls("R", regexp = "r$")) source(i); rm(i)
 
 sim_dt <- do.call(FLPS::makeDat, parsFromMod)
-stan_model <- loadRstan(lv_model = parsFromMod$lvmodel)
+stan_model <- FLPS::loadRstan(lv_model = parsFromMod$lvmodel)
 
 fit <- rstan::stan(
   model_code = stan_model,
