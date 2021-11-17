@@ -10,19 +10,11 @@ data{
 
 // data data
  real grad[nsecWorked];
-
-}
-// 
-transformed data {
-   int nsec1 = nsec - 1;
 }
 
 parameters{
-
  vector[nstud] eta;
- 
  real lambda[nsec];
- 
  real<lower=0> sigR;
 }
 
@@ -36,27 +28,11 @@ transformed parameters {
     else
       lambda1[section[j]] = lambda[section[j]];
 
-
     linPred[j] = lambda1[section[j]] * eta[studentM[j]];
   }
 }
 
 model{
- 
- 
-// grad model
- // for(i in 1:nsecWorked) {
-
-  // if(section[i] == 1) {
-  //   
-  //   linPred[i] = 1 * eta[studentM[i]];
-  //   
-  // } else {
-    
-    // linPred[i] = lambda[section[i]] * eta[studentM[i]];
-    
-  // }
-// }
 
  eta ~ normal(0, 1);
  lambda ~ uniform(-1.5, 1.5) ; //normal(0, sqrt(1));

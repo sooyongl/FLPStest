@@ -33,7 +33,7 @@ transformed parameters {
       disc1[section[j]] = disc[section[j]];
       diff1[section[j]] = diff[section[j]];
     }
-    linPred[j] = disc1[section[j]] * (eta[studentM[j]] - diff1[section[j]]);
+    linPred[j] = diff1[section[j]] + disc1[section[j]] * eta[studentM[j]];
   }
 }
 
@@ -44,4 +44,14 @@ model{
   diff ~ uniform(-10, 10);
 
   grad ~ bernoulli_logit(linPred);
+}
+
+generated quantities {
+  
+  real difficulty[nsec];
+  
+  for(jj in 1:nsec) {
+    difficulty[jj] = - diff1[jj] / disc1[jj];
+  }
+
 }

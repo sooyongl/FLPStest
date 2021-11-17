@@ -16,11 +16,11 @@ model {
   
   // priors
   eta ~ normal(0, 1);
-  //discrim    ~ uniform(-10, 10);
-  //difficulty ~ uniform(-10, 10);
+  discrim    ~ uniform(-10, 10);
+  difficulty ~ uniform(-10, 10);
   
-  discrim    ~ student_t(3, 0, 5);
-  difficulty ~ student_t(3, 0, 5);
+  //discrim    ~ student_t(3, 0, 5);
+  //difficulty ~ student_t(3, 0, 5);
   
   for (j in 1:J){
     linPred[,j] = discrim[j] * (eta - difficulty[j]);
