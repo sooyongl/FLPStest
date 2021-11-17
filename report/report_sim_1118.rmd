@@ -42,11 +42,35 @@ res_cfa <- readRDS(file.path(report_path, "test/test_scaling/cfa_result.rds"))
 
 - CFA: $y_{ij} = \lambda_j\eta_i + \epsilon_{ij}$
 
+## Condition
+
+- Number of Item: 10
+- 
 
 ## CFA
 
+### data: first 5 rows
+
+```{r}
+head(res_cfa$sim_dt_cfa$original_data)
+```
+
+
 ### stan code
 
+For scaling, `transformed parameters` is used to generate new factor loading vector, whose first item is fixed to 1. 
+
+```
+transformed parameters {
+   vector[nsec] lambda1;
+   real linPred[nsecWorked];
+
+   for(j in 1:nsecWorked) {
+     if(section[j] == 1)
+       lambda1[section[j]] = 1;
+     else
+       lambda1[section[j]] = lambda[section[j]];
+```
 
 
 ```{r}
@@ -55,8 +79,10 @@ cat(stan_model)
 ```
 
 
+
 ### results
 
+#### Factor loading population vs. estimates
 ```{r}
 fit <- res_cfa$cfa.fit
 
@@ -68,7 +94,11 @@ cbind(pop = res_cfa$sim_dt_cfa$lv.par,
   data.frame(row.names = 1:10) %>% 
   set_names(c("pop_lambda", "est_lambda", "est_nonconst")) %>% 
   mutate_all(round, 3)
+```
 
+#### Factor score population vs. estimates
+
+```{r}
 eta <- cbind(est_eta = colMeans(fit[str_detect(names(fit), "eta")]), pop_eta = res_cfa$sim_dt_cfa$true_eta)
 
 # Mean of ability
@@ -82,7 +112,51 @@ plot(eta[,"est_eta"],eta[,"pop_eta"])
 
 ## IRT
 
+### data: first 5 rows
+
+```{r}
+head(res_irt$sim_dt_2pl$original_data)
+```
+
+
 ### stan code {.tabset}
+
+Same as before, `transformed parameters` is used for scaling the discrimination and the difficulty parameters. In this case, the first discrimination is fixed to 1, and the first difficulty is fixed to zero (following conventional SEM specification).
+
+```
+transformed parameters {
+vector[nsec] disc1;
+vector[nsec] diff1;
+
+real linPred[nsecWorked];
+
+ for(j in 1:nsecWorked) {
+   if(section[j] == 1){
+     disc1[section[j]] = 1;
+     diff1[section[j]] = 0;
+   } else{
+     disc1[section[j]] = disc[section[j]];
+     diff1[section[j]] = diff[section[j]];
+   }
+   
+   // This specification does work
+   linPred[j] = diff1[section[j]] + disc1[section[j]] * eta[studentM[j]];
+   
+   // This specification does not work
+   // linPred[j] = disc1[section[j]] * (eta[studentM[j]] - diff1[section[j]]);
+   
+ }
+}
+
+// To get the difficulty values
+generated quantities {
+ 
+ real difficulty[nsec];
+ 
+ for(jj in 1:nsec) {
+   difficulty[jj] = - diff1[jj] / disc1[jj];
+ }
+```
 
 #### This works
 
@@ -100,8 +174,9 @@ cat(stan_model)
 
 ### results
 
-```{r}
+#### Factor loading population vs. estimates
 
+```{r}
 fit <- res_irt$twopl.fit
 est_disc <- colMeans(fit[str_detect(names(fit), pattern = "disc1")])
 est_diff0 <- colMeans(fit[str_detect(names(fit), "diff1")])
@@ -114,7 +189,11 @@ cbind(pop_disc = res_irt$sim_dt_2pl$lv.par[,1],
       est_int = est_diff0) %>% 
   data.frame(row.names = 1:10) %>% 
   set_names(c("pop_disc", "est_disc", "pop_diff", "est_diff", "est_intercept")) %>% mutate_all(round, 3)
+```
 
+#### Factor score population vs. estimates
+
+```{r}
 eta <- cbind(est_eta = colMeans(fit[str_detect(names(fit), "eta")]), pop_eta = res_irt$sim_dt_2pl$true_eta)
 
 # Mean of ability
