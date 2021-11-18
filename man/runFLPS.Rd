@@ -24,3 +24,6 @@ runFLPS(
 \description{
 Conduct fully latent principal stratification
 }
+\examples{
+
+}

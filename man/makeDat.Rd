@@ -34,7 +34,7 @@ information.
 }
 \examples{
 sdat <- makeDat(
-  N = 1000,
+  N = 100,
   R2Y = 0.2,
   omega = 0.2,
   tau0 = 0.13,

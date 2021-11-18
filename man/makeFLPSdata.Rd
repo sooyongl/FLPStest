@@ -4,7 +4,7 @@
 \alias{makeFLPSdata}
 \title{Convert a dataframe to a FLPS data}
 \usage{
-makeFLPSdata()
+makeFLPSdata(inp_data, outcome, group, covariate, lv_model, lv_type)
 }
 \description{
 Convert a dataframe to a FLPS data

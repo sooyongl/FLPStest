@@ -2,6 +2,8 @@
 
 export(loadRstan)
 export(makeDat)
+export(makeFLPSdata)
+export(makeInpData)
 export(runFLPS)
 export(runSimulation)
 import(Rcpp)

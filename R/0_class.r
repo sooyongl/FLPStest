@@ -8,7 +8,7 @@ setClass("flps",
     param_info               = "list",
     inp_data                 = "list", # "flpsData",
     flps_model               = "character",
-    flps_data                = "list",
+    flps_data                = "flpsData",
     flps_fit                 = "stanfit"
     ),
 
@@ -29,7 +29,7 @@ setClass("flps",
 
 #' Initialize a flps class
 #'
-setMethod ("initialize",
+setMethod("initialize",
            signature  = "flps",
            definition = function(.Object) {
              .Object@flps_fit <- new("stanfit", mode = 1L)

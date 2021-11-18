@@ -7,7 +7,8 @@
 #' @param R2Y a numeric indicating predictive power of covariates.
 #' @param omega a numeric indicating the relationship between eta_T and Y_C.
 #' @param tau0 a numeric indicating the treatment eff when eta_T=0.
-#' @param tau1 a numeric indicating the relationship between eta_T and Y_T-Y_C; (for now, single level (not multilevel), linear, normal).
+#' @param tau1 a numeric indicating the relationship between eta_T and Y_T-Y_C; 
+#' (for now, single level (not multilevel), linear, normal).
 #' @param lambda a numeric indicating the mean of Worked problems/person.
 #' @param R2eta a numeric indicating Predictive power of latent variable (extent to which covariates predict eta).
 #' @param nsec a numeric indicating the number of maximum sections given to students.
@@ -16,7 +17,7 @@
 #'
 #' @examples
 #' sdat <- makeDat(
-#'   N = 1000,
+#'   N = 100,
 #'   R2Y = 0.2,
 #'   omega = 0.2,
 #'   tau0 = 0.13,
@@ -35,8 +36,8 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   ## generate covariates ----------------------------------------------------
 
   ### Auxiliary Covariates
-  x1 <- rnorm(N); #x1 <- x1 - mean(x1); x1 <- x1/sd(x1)
-  x2 <- rnorm(N); #x2 <- x2 - mean(x2); x2 <- x2/sd(x2) # in proposal, it is binary.
+  x1 <- rnorm(N);
+  x2 <- rnorm(N);
   ### Treatment or Control
   Z <- rep(c(1,0),each=N/2)
 
@@ -44,9 +45,6 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   ## generate etas
   random.e <- rnorm(N,0,sqrt(1-R2eta))
   eta <- sqrt(R2eta/2)*(x1-x2) + random.e
-
-  # random.e <- rnorm(N,0,sqrt(1))
-  # eta <- 0*(x1-x2) + random.e
 
   # Generate LVM data -------------------------------------------------------
   info <- parsForLVM(theta = eta, nsec = nsec, data_type = lvmodel)
@@ -71,21 +69,12 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
                                                replace = FALSE))}))
   ss <- cbind(studentM, section)
 
-  # d1 <- matrix(rep(NA, 10*500), ncol = 10)
-  # s1 <- split(ss[,2], studentM);
-  # for(i in 1:length(s1)) { d1[i, s1[[i]]] <- grad[i, s1[[i]]]  }
-
   grad <- sapply(1:dim(ss)[1], function(n) grad[ss[n,1], ss[n,2]] )
 
   ### simulate Y -------------------------------------------------------------
   random.Y <- rnorm(N,0,sqrt(1-R2Y))
 
-  # Y <- sqrt(R2Y/2)*(x2-x1)+random.Y
-  # Y <- Y + omega*eta
-  # Y <- Y + Z*(tau0 + tau1*eta)
-
   Y <- tau0*Z + omega*eta + tau1*eta*Z + sqrt(R2Y/2)*(x2-x1) + random.Y
-  # Y <- tau0*Z + omega*eta + tau1*eta*Z + 0*(x2-x1) + random.Y
 
   list(
     nsecWorked = length(section),
@@ -103,10 +92,145 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   )
 }
 
-#' Convert a dataframe to a FLPS data
+#' Convert a matrix to a FLPS data
 #'
-makeFLPSdata <- function() {
+#' @export
+makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type) {
 
-  new("flpsData")
+  inp_data <- data.frame(inp_data)
 
+  outcome.data <- unname(unlist(inp_data[outcome]))
+  group.data <- unname(unlist(inp_data[group]))
+  covariate.data <- inp_data[covariate]
+
+  lv_model1 <- unlist(strsplit(lv_model, "\n"))
+  lv_model2 <- do.call("rbind",strsplit(lv_model1, "=~"))
+  lv_model3 <- unlist(strsplit(lv_model2[, 2], "\\+"))
+  lv_model4 <- unlist(strsplit(lv_model3, " "))
+
+  obs.v.name <- lv_model4[lv_model4 != ""]
+  obs.v.matrix <- inp_data[obs.v.name]
+
+  obs.v.partial <- obs.v.matrix[group.data == 1, ]
+
+  nsec <- ncol(obs.v.partial)
+  nstu <- nrow(obs.v.matrix)
+
+  obs.v.idx <- which(!is.na(obs.v.partial), arr.ind = T)
+  obs.v.idx
+
+  obs.v.vector <- sapply(1:nrow(obs.v.idx),
+                         function(n) obs.v.matrix[obs.v.idx[n,1], obs.v.idx[n,2]])
+
+
+  flps_data <- list(
+    nsecWorked = length(obs.v.idx[,2]),
+    nstud = nstu,
+    nsec = nsec,
+
+    studentM = unname(obs.v.idx[,1]),
+    section = unname(obs.v.idx[,2]),
+
+    grad = obs.v.vector,
+    X = covariate.data,
+    ncov = ncol(covariate.data),
+
+    Z = unname(unlist(group.data)),
+    Y = unname(unlist(outcome.data))
+  )
+
+  out <- new("flpsData")
+
+  out@outcome <- outcome
+  out@group <- group
+  out@lv_type <- lv_type
+  out@lv_model <- lv_model
+  out@flps_data <- flps_data
+
+  return(out)
+}
+
+#' Generate a matrix style data for simulation
+#'
+#' @description
+#' \code{\link{makeInpDat}} is a function for generating a data based on the given
+#' information.
+#' @param N a numeric indicating sample size.
+#' @param R2Y a numeric indicating predictive power of covariates.
+#' @param omega a numeric indicating the relationship between eta_T and Y_C.
+#' @param tau0 a numeric indicating the treatment eff when eta_T=0.
+#' @param tau1 a numeric indicating the relationship between eta_T and Y_T-Y_C; 
+#' (for now, single level (not multilevel), linear, normal).
+#' @param lambda a numeric indicating the mean of Worked problems/person.
+#' @param R2eta a numeric indicating Predictive power of latent variable 
+#' (extent to which covariates predict eta).
+#' @param nsec a numeric indicating the number of maximum sections given to students.
+#' @param lvmodel a character specifying a type of latent variable model.
+#' @return a list containing latent variable model information, true eta, 
+#' and a matrix containing the data for running FLPS.
+#'
+#' @examples
+#' sdat <- makeInpDat(
+#'   N = 100,
+#'   R2Y = 0.2,
+#'   omega = 0.2,
+#'   tau0 = 0.13,
+#'   tau1 = -0.06,
+#'   lambda = 10,
+#'   R2eta = 0.5,
+#'   nsec = 10,
+#'   lvmodel = "sem"
+#' )
+#' @export
+makeInpData <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
+
+  lvmodel <- tolower(lvmodel)
+
+  ## generate covariates ----------------------------------------------------
+
+  ### Auxiliary Covariates
+  x1 <- rnorm(N);
+  x2 <- rnorm(N);
+  ### Treatment or Control
+  Z <- rep(c(1,0),each=N/2)
+
+  # Generate True eta -------------------------------------------------------
+  ## generate etas
+  random.e <- rnorm(N,0,sqrt(1-R2eta))
+  eta <- sqrt(R2eta/2)*(x1-x2) + random.e
+
+  # Generate LVM data -------------------------------------------------------
+  info <- parsForLVM(theta = eta, nsec = nsec, data_type = lvmodel)
+  grad <- generate(info); # methods(generate)
+
+  lv.par <- grad$lv.par
+  grad <- grad$resp
+
+  nworked <- sample(1:nsec,N/2,replace=TRUE,prob=dexp(1:nsec,rate=1/lambda))
+  studentM <- do.call("c", lapply(seq(N/2),function(n) rep(n,each=nworked[n])))
+
+  section <- do.call("c", lapply(seq(N / 2),
+                                 function(n) {
+                                   sort(sample(1:nsec, nworked[n],
+                                               replace = FALSE))}))
+  ss <- cbind(studentM, section)
+
+  d1 <- matrix(rep(NA, nsec*(N/2)), ncol = nsec)
+  s1 <- split(ss[,2], studentM);
+  for(i in 1:length(s1)) { d1[i, s1[[i]]] <- grad[i, s1[[i]]]  }
+
+  d2 <- matrix(rep(NA, nsec*(N/2)), ncol = nsec)
+  d3 <- rbind(d1, d2)
+
+  ### simulate Y -------------------------------------------------------------
+  random.Y <- rnorm(N,0,sqrt(1-R2Y))
+  Y <- tau0*Z + omega*eta + tau1*eta*Z + sqrt(R2Y/2)*(x2-x1) + random.Y
+
+  inp_data <- data.frame(Y, Z, cbind(x1, x2), d3)
+
+  list(
+    lv.par = lv.par,
+    true_eta = eta,
+    inp_data = inp_data
+  )
 }
