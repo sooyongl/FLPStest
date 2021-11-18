@@ -5,7 +5,6 @@
 setClass("flps",
   slots = c(
     call                     = "call",
-    param_info               = "list",
     inp_data                 = "list", # "flpsData",
     flps_model               = "character",
     flps_data                = "flpsData",

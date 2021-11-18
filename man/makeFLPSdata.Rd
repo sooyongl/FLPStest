@@ -2,10 +2,10 @@
 % Please edit documentation in R/make_data.r
 \name{makeFLPSdata}
 \alias{makeFLPSdata}
-\title{Convert a dataframe to a FLPS data}
+\title{Convert a matrix to a FLPS data}
 \usage{
 makeFLPSdata(inp_data, outcome, group, covariate, lv_model, lv_type)
 }
 \description{
-Convert a dataframe to a FLPS data
+Convert a matrix to a FLPS data
 }

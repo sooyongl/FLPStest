@@ -3,7 +3,7 @@ library(FLPS)
 
 # simulation factors ------------------------------------------------------
 param_list<-parsFromMod <- list(
-  N = 1000,
+  N = 100,
   R2Y = 0.2,
   omega = 0.2,
   tau0 = 0.13,
@@ -26,9 +26,9 @@ fit <- FLPS::runFLPS(
   covariate = c("x1","x2"),
   lv_type = "rasch",
   lv_model = paste0("F =~ ", paste(paste0("X", 1:20), collapse = "+")),
-  stan_options = list(iter = 4000, warmup = 1000, cores = 1, chains = 4)
+  stan_options = list(iter = 4000, warmup = 1000, cores = 1, chains = 1)
 )
-
+fit
 
 flps_fit <- as.data.frame(fit@flps_fit)
 cbind(sim_dt$lv.par,

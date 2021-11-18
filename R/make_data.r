@@ -7,7 +7,7 @@
 #' @param R2Y a numeric indicating predictive power of covariates.
 #' @param omega a numeric indicating the relationship between eta_T and Y_C.
 #' @param tau0 a numeric indicating the treatment eff when eta_T=0.
-#' @param tau1 a numeric indicating the relationship between eta_T and Y_T-Y_C; 
+#' @param tau1 a numeric indicating the relationship between eta_T and Y_T-Y_C;
 #' (for now, single level (not multilevel), linear, normal).
 #' @param lambda a numeric indicating the mean of Worked problems/person.
 #' @param R2eta a numeric indicating Predictive power of latent variable (extent to which covariates predict eta).
@@ -117,7 +117,6 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type)
   nstu <- nrow(obs.v.matrix)
 
   obs.v.idx <- which(!is.na(obs.v.partial), arr.ind = T)
-  obs.v.idx
 
   obs.v.vector <- sapply(1:nrow(obs.v.idx),
                          function(n) obs.v.matrix[obs.v.idx[n,1], obs.v.idx[n,2]])
@@ -135,8 +134,8 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type)
     X = covariate.data,
     ncov = ncol(covariate.data),
 
-    Z = unname(unlist(group.data)),
-    Y = unname(unlist(outcome.data))
+    Z = group.data,
+    Y = outcome.data
   )
 
   out <- new("flpsData")
@@ -159,14 +158,14 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type)
 #' @param R2Y a numeric indicating predictive power of covariates.
 #' @param omega a numeric indicating the relationship between eta_T and Y_C.
 #' @param tau0 a numeric indicating the treatment eff when eta_T=0.
-#' @param tau1 a numeric indicating the relationship between eta_T and Y_T-Y_C; 
+#' @param tau1 a numeric indicating the relationship between eta_T and Y_T-Y_C;
 #' (for now, single level (not multilevel), linear, normal).
 #' @param lambda a numeric indicating the mean of Worked problems/person.
-#' @param R2eta a numeric indicating Predictive power of latent variable 
+#' @param R2eta a numeric indicating Predictive power of latent variable
 #' (extent to which covariates predict eta).
 #' @param nsec a numeric indicating the number of maximum sections given to students.
 #' @param lvmodel a character specifying a type of latent variable model.
-#' @return a list containing latent variable model information, true eta, 
+#' @return a list containing latent variable model information, true eta,
 #' and a matrix containing the data for running FLPS.
 #'
 #' @examples

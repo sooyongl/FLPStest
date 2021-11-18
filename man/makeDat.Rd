@@ -15,7 +15,8 @@ makeDat(N, R2Y, omega, tau0, tau1, lambda, R2eta, nsec, lvmodel)
 
 \item{tau0}{a numeric indicating the treatment eff when eta_T=0.}
 
-\item{tau1}{a numeric indicating the relationship between eta_T and Y_T-Y_C; (for now, single level (not multilevel), linear, normal).}
+\item{tau1}{a numeric indicating the relationship between eta_T and Y_T-Y_C;
+(for now, single level (not multilevel), linear, normal).}
 
 \item{lambda}{a numeric indicating the mean of Worked problems/person.}
 

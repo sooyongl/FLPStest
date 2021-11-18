@@ -17,9 +17,23 @@ runFLPS(
 )
 }
 \arguments{
-\item{inp_data}{a dataframe}
+\item{inp_data}{A matrix}
 
-\item{flps_data}{a list}
+\item{flps_data}{A list}
+
+\item{outcome}{A character indicating the name of an outcome variable}
+
+\item{group}{A character indicating the name of a treatment/control group variable}
+
+\item{covariate}{A character indicating the names of covariates variables}
+
+\item{lv_model}{A description of the latent variable model, which is similar to the lavaan model syntax.}
+
+\item{lv_type}{A character indicating the type of latent variable models}
+
+\item{stan_options}{A list containing \code{\link{stan}} options, using 'name = value'.}
+
+\item{...}{Additional options.}
 }
 \description{
 Conduct fully latent principal stratification

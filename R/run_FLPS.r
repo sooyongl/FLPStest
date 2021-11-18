@@ -30,7 +30,7 @@ runFLPS <- function(inp_data = NULL, flps_data = NULL, outcome, group, covariate
   }
 
   # make FLPS model ---------------------------------------------------------
-  flps_model <- loadRstan(lv_model = lv_type)
+  flps_model <- loadRstan(lv_model = lv_type); # cat(flps_model)
   # flps_model<- makeFLPSmodel(flps_data_class)
 
   # fit FLPS ----------------------------------------------------------------
@@ -38,12 +38,13 @@ runFLPS <- function(inp_data = NULL, flps_data = NULL, outcome, group, covariate
   stan_options$model_code <- flps_model
 
   flps_fit <-  do.call(rstan::stan, stan_options)
-  
+
   # class output ------------------------------------------------------------
   o <- new("flps")
 
   o@call      <- .call
   o@inp_data  <- inp_data
+  o@flps_model <- flps_model
   o@flps_data <- flps_data_class
   o@flps_fit  <- flps_fit
 
