@@ -4,6 +4,7 @@ output: github_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval = F)
+library(FLPS)
 ```
 
 ## Fully Latent Principal Stratification (FLPS)
@@ -28,68 +29,53 @@ The documentation is available at (...)
 
 For latent variable models, Rasch, 2PL, GPCM, and sem (one-factor CFA) are available.
 
-```{r}
+```{r eval = T}
 parsFromMod <- list(
-  N = 500, # sample size
-  R2Y = 0.2, # r^2 of outcome
-  R2eta = 0.2, ## r^2 of eta by two covariates
-  omega = 0.2, # the effect of eta
-  tau0 = 0.13, ## direct effect
-  tau1 = -0.06, ## interaction effect between Z and eta
-  lambda = 10, # the mean of administered items
-  nsec = 20, # the number of items
-  lvmodel = "Rasch" # tag for latent variable model
+  N = 500,              # sample size
+  R2Y = 0.2,            # r^2 of outcome
+  R2eta = 0.2,          # r^2 of eta by two covariates
+  omega = 0.2,          # the effect of eta
+  tau0 = 0.13,          # direct effect
+  tau1 = -0.06,         # interaction effect between Z and eta
+  lambda = 10,          # the mean of administered items
+  nsec = 20,            # the number of items
+  lvmodel = "Rasch"     # tag for latent variable model; case-nonsensitive
 )
 ```
 
 
 - Generate a set of simulated data for [`rstan`](https://github.com/stan-dev/rstan) package.
 
-```{r}
-dt <- do.call(FLPS::makeDat, parsFromMod)
+```{r eval = T}
+dt <- do.call(FLPS::makeInpData, parsFromMod)
+```
+
+`dt` contains three variables: `lv.par`, `true_eta`, and `inp_data`. 
+
+- `lv.par`: information about latent variable models
+
+- `true_eta`: True factor scores
+
+- `inp_data`: a matrix containing all the data for FLPS. It is used in `runFLPS` function.
+
+```{r eval = T}
+# Input data matrix
+head(dt$inp_data,5)
 ```
 
 - Fit your FLPS model
 
+Now, provide information about your model. `runFLPS` coverts `inp_data` into the data format for `rstan` given the information, and runs FLPS.
+
 ```{r}
 res <- FLPS::runFLPS(
-  flps_data = dt,
-  lv_model = "rasch",
-  stan_options = list(iter = 2000, warmup = 1000, cores = 1, chains = 1))
-```
-
-
-### Running directly from the R project (without installing the package)
-
-```{r}
-for(i in fs::dir_ls("R", regexp = "r$")) source(i); rm(i)
-
-library(coda)
-library(rstan)
-library(tidyverse)
-
-parsFromMod <- list(
-  N = 1000, 
-  R2Y = 0.2,
-  omega = 0.2,
-  tau0 = 0.13,
-  tau1 = -0.06,
-  lambda = 10,
-  R2eta = 0.2,
-  nsec = 20,
-  lvmodel = "2PL"
+  inp_data = sim_dt$inp_data,
+  outcome = "Y",
+  group = "Z",
+  covariate = c("x1","x2"),
+  lv_type = "rasch",
+  lv_model = paste0("F =~ ", paste(paste0("X", 1:20), collapse = "+")),
+  stan_options = list(iter = 4000, warmup = 1000, cores = 1, chains = 4)
 )
 
-sdat <- do.call("makeDat", parsFromMod)
-
-fit <- stan(
-  cores = 1,
-  "inst/stan/psIRT.stan",
-  data = sdat,
-  # iter = 4000,
-  # warmup = 1000,
-  chains = 1
-)
 ```
-
-
