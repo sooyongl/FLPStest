@@ -1,0 +1,11 @@
+data: file is lca.csv;
+variable: names are x1-x10 class;
+categorical = x1-x10;
+usevariables are x1-x10;
+class = c(2);
+
+analysis: type = mixture;
+
+!model:
+
+!%overall%
