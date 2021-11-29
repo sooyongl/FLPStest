@@ -1,8 +1,10 @@
 # rm(list = ls())
 library(FLPS)
 
+# https://mc-stan.org/users/documentation/case-studies/Latent_class_case_study.html#data-generation-and-label-switching
+
 # simulation factors ------------------------------------------------------
-param_list<-parsFromMod <- list(
+param_list <- parsFromMod <- list(
   N = 100,
   R2Y = 0.2,
   omega = 0.2,
@@ -11,33 +13,45 @@ param_list<-parsFromMod <- list(
   lambda = 10,
   R2eta = 0.2,
   nsec = 20,
-  lvmodel = "rasch" # tag for latent variable model
+  lvmodel = "2pl" # tag for latent variable model
 )
 
 
 # package version ---------------------------------------------------------
-sim_dt <- do.call(FLPS::makeInpData, parsFromMod)
+sim_dt <- do.call(FLPS::makeInpData, parsFromMod);
+
 sim_dt$lv.par
 sim_dt$true_eta
+head(sim_dt$inp_data)
+tail(sim_dt$inp_data)
+
 fit <- FLPS::runFLPS(
   inp_data = sim_dt$inp_data,
   outcome = "Y",
   group = "Z",
   covariate = c("x1","x2"),
-  lv_type = "rasch",
+  lv_type = "2pl",
   lv_model = paste0("F =~ ", paste(paste0("X", 1:20), collapse = "+")),
   stan_options = list(iter = 4000, warmup = 1000, cores = 1, chains = 1)
 )
+
+# fit <- readRDS("results/res_rasch_new.rds")
+
 fit
+
+fit@inp_data
+cat(fit@flps_model)
+fit@flps_data
+fit@flps_fit
 
 flps_fit <- as.data.frame(fit@flps_fit)
 cbind(sim_dt$lv.par,
       est = -colMeans(flps_fit[stringr::str_detect(names(flps_fit), "secEff\\[")])
 )
 
-res_rasch <- res
-saveRDS(res_rasch, "results/res_rasch.rds")
-rm(res)
+fit_rasch <- fit
+saveRDS(fit_rasch, "results/res_rasch_new.rds")
+rm(fit)
 
 
 #######################################################################
