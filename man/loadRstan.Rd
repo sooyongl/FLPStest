@@ -4,7 +4,7 @@
 \alias{loadRstan}
 \title{Load rstan model}
 \usage{
-loadRstan(lv_model = "rasch")
+loadRstan(lv_type = "2pl")
 }
 \arguments{
 \item{lv_model}{a character specifying a latent model}
@@ -16,5 +16,5 @@ An object of class \code{\linkS4class{stanmodel}}
 Load rstan model
 }
 \examples{
-stan_model <- rstan_path(lv_model = "rasch")
+stan_model <- rstan_path(lv_type = "rasch")
 }

@@ -12,12 +12,6 @@ setClass("flps",
     ),
 
   contains = character(),
-
-  # prototype = list(
-  #   flps_model    = NA_character_,
-  #   flps_res      = new("stanfit", mode = 1L),
-  #   ),
-
   validity = function(object) {
     # if (!is.character(object@version) ) {
     #   stop("version ...")
@@ -45,7 +39,7 @@ setClass("flpsData",
     group           = "character",
     lv_type         = "character",
     lv_model        = "character",
-    flps_data       = "list"
+    stan_data       = "list"
     ),
 
   contains = character(),

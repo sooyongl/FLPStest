@@ -35,6 +35,9 @@ runFLPS(
 
 \item{...}{Additional options.}
 }
+\value{
+an object of class \code{flps}
+}
 \description{
 Conduct fully latent principal stratification
 }

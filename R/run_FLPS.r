@@ -9,6 +9,7 @@
 #' @param lv_type  A character indicating the type of latent variable models
 #' @param stan_options A list containing \code{\link{stan}} options, using 'name = value'.
 #' @param ... Additional options.
+#' @return an object of class \code{flps}
 #' @examples
 #'
 #' @export
@@ -24,17 +25,17 @@ runFLPS <- function(inp_data = NULL, flps_data = NULL, outcome, group, covariate
 
   if(!is.null(inp_data)){
     flps_data_class <- makeFLPSdata(inp_data, outcome, group, covariate, lv_model, lv_type)
-    flps_data <- flps_data_class@flps_data
+    stan_data <- flps_data_class@stan_data
   } else {
     inp_data <- list()
   }
 
   # make FLPS model ---------------------------------------------------------
-  flps_model <- loadRstan(lv_model = lv_type); # cat(flps_model)
+  flps_model <- loadRstan(lv_type); # cat(flps_model)
   # flps_model<- makeFLPSmodel(flps_data_class)
 
   # fit FLPS ----------------------------------------------------------------
-  stan_options$data <- flps_data
+  stan_options$data <- stan_data
   stan_options$model_code <- flps_model
 
   flps_fit <-  do.call(rstan::stan, stan_options)
