@@ -1,0 +1,407 @@
+Mplus VERSION 8.6
+MUTHEN & MUTHEN
+11/18/2021   6:21 PM
+
+INPUT INSTRUCTIONS
+
+  DATA:	FILE IS gpcm.csv;
+
+  VARIABLE:	NAMES ARE u1-u10;
+  CATEGORICAL ARE u1-u10 (gpcm);
+
+  ANALYSIS:	ESTIMATOR = MLR;
+
+  MODEL:	f BY u1-u10*;
+
+    f@1;
+    ![f@0];
+
+
+
+INPUT READING TERMINATED NORMALLY
+
+
+
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                         500
+
+Number of dependent variables                                   10
+Number of independent variables                                  0
+Number of continuous latent variables                            1
+
+Observed dependent variables
+
+  Binary and ordered categorical (ordinal)
+   U1          U2          U3          U4          U5          U6
+   U7          U8          U9          U10
+
+Continuous latent variables
+   F
+
+
+Estimator                                                      MLR
+Information matrix                                        OBSERVED
+Optimization Specifications for the Quasi-Newton Algorithm for
+Continuous Outcomes
+  Maximum number of iterations                                 100
+  Convergence criterion                                  0.100D-05
+Optimization Specifications for the EM Algorithm
+  Maximum number of iterations                                 500
+  Convergence criteria
+    Loglikelihood change                                 0.100D-02
+    Relative loglikelihood change                        0.100D-05
+    Derivative                                           0.100D-02
+Optimization Specifications for the M step of the EM Algorithm for
+Categorical Latent variables
+  Number of M step iterations                                    1
+  M step convergence criterion                           0.100D-02
+  Basis for M step termination                           ITERATION
+Optimization Specifications for the M step of the EM Algorithm for
+Censored, Binary or Ordered Categorical (Ordinal), Unordered
+Categorical (Nominal) and Count Outcomes
+  Number of M step iterations                                    1
+  M step convergence criterion                           0.100D-02
+  Basis for M step termination                           ITERATION
+  Maximum value for logit thresholds                            15
+  Minimum value for logit thresholds                           -15
+  Minimum expected cell size for chi-square              0.100D-01
+Optimization algorithm                                         EMA
+Integration Specifications
+  Type                                                    STANDARD
+  Number of integration points                                  15
+  Dimensions of numerical integration                            1
+  Adaptive quadrature                                           ON
+Link                                                         LOGIT
+Cholesky                                                        ON
+
+Input data file(s)
+  gpcm.csv
+Input data format  FREE
+
+
+UNIVARIATE PROPORTIONS AND COUNTS FOR CATEGORICAL VARIABLES
+
+    U1
+      Category 1    0.336          168.000
+      Category 2    0.438          219.000
+      Category 3    0.078           39.000
+      Category 4    0.148           74.000
+    U2
+      Category 1    0.398          199.000
+      Category 2    0.224          112.000
+      Category 3    0.092           46.000
+      Category 4    0.286          143.000
+    U3
+      Category 1    0.106           53.000
+      Category 2    0.026           13.000
+      Category 3    0.104           52.000
+      Category 4    0.764          382.000
+    U4
+      Category 1    0.170           85.000
+      Category 2    0.178           89.000
+      Category 3    0.378          189.000
+      Category 4    0.274          137.000
+    U5
+      Category 1    0.444          222.000
+      Category 2    0.066           33.000
+      Category 3    0.196           98.000
+      Category 4    0.294          147.000
+    U6
+      Category 1    0.076           38.000
+      Category 2    0.332          166.000
+      Category 3    0.488          244.000
+      Category 4    0.104           52.000
+    U7
+      Category 1    0.266          133.000
+      Category 2    0.144           72.000
+      Category 3    0.184           92.000
+      Category 4    0.406          203.000
+    U8
+      Category 1    0.344          172.000
+      Category 2    0.062           31.000
+      Category 3    0.054           27.000
+      Category 4    0.540          270.000
+    U9
+      Category 1    0.660          330.000
+      Category 2    0.036           18.000
+      Category 3    0.130           65.000
+      Category 4    0.174           87.000
+    U10
+      Category 1    0.500          250.000
+      Category 2    0.208          104.000
+      Category 3    0.078           39.000
+      Category 4    0.214          107.000
+
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                       40
+
+Loglikelihood
+
+          H0 Value                       -4896.432
+          H0 Scaling Correction Factor      1.0037
+            for MLR
+
+Information Criteria
+
+          Akaike (AIC)                    9872.864
+          Bayesian (BIC)                 10041.449
+          Sample-Size Adjusted BIC        9914.486
+            (n* = (n + 2) / 24)
+
+Chi-Square Test of Model Fit for the Binary and Ordered Categorical
+(Ordinal) Outcomes**
+
+          Pearson Chi-Square
+
+          Value                           7453.231
+          Degrees of Freedom               1048373
+          P-Value                           1.0000
+
+          Likelihood Ratio Chi-Square
+
+          Value                           1591.518
+          Degrees of Freedom               1048373
+          P-Value                           1.0000
+
+** Of the 1048576 cells in the frequency table, 162
+   were deleted in the calculation of chi-square due to extreme values.
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+ F        BY
+    U1                 1.278      0.144      8.879      0.000
+    U2                 1.574      0.181      8.685      0.000
+    U3                 0.541      0.078      6.947      0.000
+    U4                 1.670      0.164     10.192      0.000
+    U5                 1.632      0.204      8.021      0.000
+    U6                 0.746      0.095      7.886      0.000
+    U7                 0.471      0.058      8.092      0.000
+    U8                 1.724      0.225      7.679      0.000
+    U9                 0.856      0.106      8.049      0.000
+    U10                0.759      0.080      9.463      0.000
+
+ Steps
+    U1$1              -0.701      0.140     -5.008      0.000
+    U1$2               2.153      0.198     10.871      0.000
+    U1$3               0.580      0.284      2.044      0.041
+    U2$1              -0.074      0.164     -0.447      0.655
+    U2$2               1.139      0.204      5.578      0.000
+    U2$3              -0.032      0.234     -0.136      0.892
+    U3$1               0.937      0.342      2.738      0.006
+    U3$2              -1.634      0.311     -5.250      0.000
+    U3$3              -2.004      0.152    -13.226      0.000
+    U4$1              -1.484      0.235     -6.304      0.000
+    U4$2              -1.095      0.167     -6.571      0.000
+    U4$3               1.166      0.179      6.526      0.000
+    U5$1               1.195      0.226      5.279      0.000
+    U5$2              -0.935      0.223     -4.198      0.000
+    U5$3               0.627      0.209      3.001      0.003
+    U6$1              -1.965      0.207     -9.474      0.000
+    U6$2              -0.439      0.111     -3.968      0.000
+    U6$3               1.936      0.188     10.296      0.000
+    U7$1               0.400      0.151      2.644      0.008
+    U7$2              -0.285      0.161     -1.770      0.077
+    U7$3              -0.659      0.133     -4.966      0.000
+    U8$1               0.578      0.253      2.282      0.023
+    U8$2              -0.192      0.291     -0.660      0.509
+    U8$3              -1.771      0.232     -7.620      0.000
+    U9$1               2.792      0.248     11.265      0.000
+    U9$2              -0.971      0.279     -3.474      0.001
+    U9$3               0.428      0.206      2.076      0.038
+    U10$1              0.701      0.127      5.524      0.000
+    U10$2              1.170      0.193      6.058      0.000
+    U10$3             -0.462      0.212     -2.182      0.029
+
+ Variances
+    F                  1.000      0.000    999.000    999.000
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Condition Number for the Information Matrix              0.124E-01
+       (ratio of smallest to largest eigenvalue)
+
+
+RESULTS IN PROBABILITY SCALE
+
+                    Estimate
+
+ U1
+    Category 1         0.336
+    Category 2         0.437
+    Category 3         0.079
+    Category 4         0.148
+ U2
+    Category 1         0.398
+    Category 2         0.221
+    Category 3         0.092
+    Category 4         0.289
+ U3
+    Category 1         0.106
+    Category 2         0.026
+    Category 3         0.104
+    Category 4         0.764
+ U4
+    Category 1         0.172
+    Category 2         0.178
+    Category 3         0.375
+    Category 4         0.275
+ U5
+    Category 1         0.444
+    Category 2         0.065
+    Category 3         0.195
+    Category 4         0.296
+ U6
+    Category 1         0.076
+    Category 2         0.332
+    Category 3         0.488
+    Category 4         0.104
+ U7
+    Category 1         0.266
+    Category 2         0.144
+    Category 3         0.184
+    Category 4         0.406
+ U8
+    Category 1         0.347
+    Category 2         0.061
+    Category 3         0.053
+    Category 4         0.539
+ U9
+    Category 1         0.659
+    Category 2         0.036
+    Category 3         0.131
+    Category 4         0.175
+ U10
+    Category 1         0.499
+    Category 2         0.208
+    Category 3         0.078
+    Category 4         0.215
+
+
+IRT PARAMETERIZATION
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+ Item Discriminations
+
+ F        BY
+    U1                 1.278      0.144      8.879      0.000
+    U2                 1.574      0.181      8.685      0.000
+    U3                 0.541      0.078      6.947      0.000
+    U4                 1.670      0.164     10.192      0.000
+    U5                 1.632      0.204      8.021      0.000
+    U6                 0.746      0.095      7.886      0.000
+    U7                 0.471      0.058      8.092      0.000
+    U8                 1.724      0.225      7.679      0.000
+    U9                 0.856      0.106      8.049      0.000
+    U10                0.759      0.080      9.463      0.000
+
+ Item Locations
+    U1                 0.530      0.070      7.550      0.000
+    U2                 0.219      0.059      3.681      0.000
+    U3                -1.663      0.177     -9.406      0.000
+    U4                -0.282      0.062     -4.555      0.000
+    U5                 0.181      0.060      3.039      0.002
+    U6                -0.209      0.115     -1.818      0.069
+    U7                -0.385      0.106     -3.644      0.000
+    U8                -0.268      0.059     -4.562      0.000
+    U9                 0.876      0.091      9.614      0.000
+    U10                0.619      0.084      7.341      0.000
+
+ Item Categories
+
+  U1
+    Category 1         0.000      0.000      0.000      1.000
+    Category 2         1.078      0.090     12.024      0.000
+    Category 3        -1.154      0.193     -5.978      0.000
+    Category 4         0.076      0.177      0.428      0.669
+  U2
+    Category 1         0.000      0.000      0.000      1.000
+    Category 2         0.266      0.084      3.170      0.002
+    Category 3        -0.505      0.126     -4.020      0.000
+    Category 4         0.239      0.136      1.758      0.079
+  U3
+    Category 1         0.000      0.000      0.000      1.000
+    Category 2        -3.395      0.839     -4.046      0.000
+    Category 3         1.356      0.632      2.146      0.032
+    Category 4         2.039      0.476      4.286      0.000
+  U4
+    Category 1         0.000      0.000      0.000      1.000
+    Category 2         0.606      0.088      6.882      0.000
+    Category 3         0.374      0.090      4.169      0.000
+    Category 4        -0.980      0.076    -12.974      0.000
+  U5
+    Category 1         0.000      0.000      0.000      1.000
+    Category 2        -0.551      0.175     -3.158      0.002
+    Category 3         0.754      0.154      4.884      0.000
+    Category 4        -0.203      0.088     -2.294      0.022
+  U6
+    Category 1         0.000      0.000      0.000      1.000
+    Category 2         2.425      0.272      8.925      0.000
+    Category 3         0.379      0.169      2.241      0.025
+    Category 4        -2.804      0.285     -9.830      0.000
+  U7
+    Category 1         0.000      0.000      0.000      1.000
+    Category 2        -1.235      0.346     -3.567      0.000
+    Category 3         0.220      0.342      0.642      0.521
+    Category 4         1.015      0.321      3.158      0.002
+  U8
+    Category 1         0.000      0.000      0.000      1.000
+    Category 2        -0.603      0.167     -3.616      0.000
+    Category 3        -0.156      0.158     -0.990      0.322
+    Category 4         0.760      0.198      3.830      0.000
+  U9
+    Category 1         0.000      0.000      0.000      1.000
+    Category 2        -2.385      0.472     -5.053      0.000
+    Category 3         2.009      0.412      4.882      0.000
+    Category 4         0.376      0.205      1.834      0.067
+  U10
+    Category 1         0.000      0.000      0.000      1.000
+    Category 2        -0.305      0.176     -1.739      0.082
+    Category 3        -0.923      0.276     -3.339      0.001
+    Category 4         1.228      0.309      3.981      0.000
+
+ Variances
+    F                  1.000      0.000      0.000      1.000
+
+
+DIAGRAM INFORMATION
+
+  Use View Diagram under the Diagram menu in the Mplus Editor to view the diagram.
+  If running Mplus from the Mplus Diagrammer, the diagram opens automatically.
+
+  Diagram output
+    c:\users\sooyong\box\git\flps\test\test_lv_model\mplus\gpcm_meanvar_fixed.dgm
+
+     Beginning Time:  18:21:53
+        Ending Time:  18:21:53
+       Elapsed Time:  00:00:00
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2021 Muthen & Muthen

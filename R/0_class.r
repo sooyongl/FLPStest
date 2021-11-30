@@ -12,12 +12,6 @@ setClass("flps",
     ),
 
   contains = character(),
-
-  # prototype = list(
-  #   flps_model    = NA_character_,
-  #   flps_res      = new("stanfit", mode = 1L),
-  #   ),
-
   validity = function(object) {
     # if (!is.character(object@version) ) {
     #   stop("version ...")
@@ -31,7 +25,8 @@ setClass("flps",
 setMethod("initialize",
            signature  = "flps",
            definition = function(.Object) {
-             .Object@flps_fit <- new("stanfit", mode = 1L)
+             .Object@flps_fit  <- new("stanfit", mode = 1L)
+             .Object@flps_data <- new("flpsData")
              return(.Object)
 })
 
@@ -45,7 +40,7 @@ setClass("flpsData",
     group           = "character",
     lv_type         = "character",
     lv_model        = "character",
-    flps_data       = "list"
+    stan_data       = "list"
     ),
 
   contains = character(),
@@ -54,3 +49,4 @@ setClass("flpsData",
     return(TRUE)
   }
 )
+

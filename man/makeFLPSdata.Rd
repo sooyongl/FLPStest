@@ -2,10 +2,17 @@
 % Please edit documentation in R/make_data.r
 \name{makeFLPSdata}
 \alias{makeFLPSdata}
-\title{Convert a matrix to a FLPS data}
+\title{#' S3 generic for data setting depending on latent variable models
+#'
+dataSetting <- function(info, ...) {
+  UseMethod("dataSetting", info)
+}}
 \usage{
 makeFLPSdata(inp_data, outcome, group, covariate, lv_model, lv_type)
 }
 \description{
-Convert a matrix to a FLPS data
+
+}
+\details{
+
 }

@@ -135,14 +135,15 @@ generate.dich <- function(info, D = 1){
 
   } else if(inherits(info, "1pl")) {
 
-    b <- rnorm(nitem, 0, .7) ## this is not based on original model
-    a <- runif(nitem, 1, 1) ## this is not based on original model
+    b <- c(rnorm(nitem)) ## this is not based on original model
+    a <- c(runif((nitem), 1, 1)) ## this is not based on original model
     c <- runif(nitem,0,0) ## this is not based on original model
 
   } else if(inherits(info, "2pl")) {
 
     b <- rnorm(nitem) ## this is not based on original model
-    a <- rlnorm(nitem, 0, 0.5) ## this is not based on original model
+    # a <- rlnorm(nitem, 0, .1) ## this is not based on original model
+    a <- runif(nitem, 0.8, 1.5) ## this is not based on original model
     c <- runif(nitem,0,0) ## this is not based on original model
 
   } else if(inherits(info, "3pl")) {
@@ -309,7 +310,6 @@ generate.sem <- function(info) {
 
 class_assign <- function(...) {
   eta <- list(...)
-
   eta$ref <- rep(0, length(eta[[1]]))
   eta <- lapply(eta, exp)
   eta <- do.call("cbind", eta)
@@ -320,10 +320,7 @@ class_assign <- function(...) {
   assignment <- apply(clasS_prob, 1, function(x) { (dim(clasS_prob)[2] + 1) - which.max(x)})
 
   assignment
-
 }
-
-# https://mc-stan.org/users/documentation/case-studies/Latent_class_case_study.html#data-generation-and-label-switching
 
 # generate lca data ---------------------------------------------------
 generate.lca <- function(info) {
@@ -408,7 +405,7 @@ generate.lpa <- function(info) {
 # generate general mixture data -------------------------------------------
 generate.mixture <- function(info) {
 
- # return(data)
+  # return(data)
   print("not yet")
 }
 

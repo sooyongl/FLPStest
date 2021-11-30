@@ -46,8 +46,8 @@ setMethod("show", "flpsData", function(object) {
 #' @rdname print-methods
 setMethod("print", "flpsData", function(x) {
 
-  z0_mean <- round(mean(x@flps_data$Y [x@flps_data$Z == 0], na.rm = T),3)
-  z1_mean <- round(mean(x@flps_data$Y [x@flps_data$Z == 1], na.rm = T),3)
+  z0_mean <- round(mean(x@stan_data$Y [x@stan_data$Z == 0], na.rm = T),3)
+  z1_mean <- round(mean(x@stan_data$Y [x@stan_data$Z == 1], na.rm = T),3)
 
   out <- paste0(
     paste("LVM type:", x@lv_type, "\n"),

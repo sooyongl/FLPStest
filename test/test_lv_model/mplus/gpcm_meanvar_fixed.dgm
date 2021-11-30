@@ -1,0 +1,42 @@
+VERSION 1.1.0
+INPUT
+DATA:
+ FILE IS gpcm.csv;
+VARIABLE:
+ NAMES ARE u1-u10;
+CATEGORICAL ARE u1-u10 (gpcm);
+ANALYSIS:
+ ESTIMATOR = MLR;
+MODEL:
+ f BY u1-u10*;
+  f@1;
+INPUT_END
+2
+0
+0
+0
+MLR
+1
+GENERAL
+0
+10
+1
+0
+u1 u2 u3 u4 u5 u6 u7 u8 u9 u10 f
+1
+-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 0
+0
+1
+f
+u1 u2 u3 u4 u5 u6 u7 u8 u9 u10
+1 1 f u1    1.278    0.144
+1 1 f u2    1.574    0.181
+1 1 f u3    0.541    0.078
+1 1 f u4    1.670    0.164
+1 1 f u5    1.632    0.204
+1 1 f u6    0.746    0.095
+1 1 f u7    0.471    0.058
+1 1 f u8    1.724    0.225
+1 1 f u9    0.856    0.106
+1 1 f u10    0.759    0.080
+5 1 f    1.000    0.000

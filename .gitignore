@@ -3,3 +3,5 @@
 .RData
 .Ruserdata
 results
+test/test_scaling/cfa_result.rds
+test/test_scaling/twopl_result.rds

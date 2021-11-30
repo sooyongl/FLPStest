@@ -1,0 +1,12 @@
+data: file is irt.csv;
+variable: names are x1-x10;
+categorical = x1-x10;
+
+analysis: estimator = ml;
+	  
+model:
+
+F by x1* x2-x10;
+
+[F@0];
+F@1;

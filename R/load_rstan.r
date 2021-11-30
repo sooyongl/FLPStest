@@ -5,21 +5,23 @@
 #' @param lv_model a character specifying a latent model
 #' @return An object of class \code{\linkS4class{stanmodel}}
 #' @examples
-#' stan_model <- rstan_path(lv_model = "rasch")
+#' stan_model <- rstan_path(lv_type = "rasch")
 #' @export
-loadRstan <- function(lv_model = "rasch") {
+loadRstan <- function(lv_type = "2pl") {
 
   # if(!dir.exists(file.path("inst", "stan")))
   #   stop("The stan code does not exist!")
-
+  # stan_path <- "inst/stan"
   stan_path <- system.file("stan", package = "FLPS")
   stan_list <- list.files(stan_path)
 
-  if(tolower(lv_model) %in% c("2pl", "3pl")) {
-    lv_model <- "IRT"
+  stan_list <- stan_list[grep(toupper("scaling"), toupper(stan_list))]
+
+  if(tolower(lv_type) %in% c("2pl", "3pl")) {
+    lv_type <- "IRT"
   }
 
-  stan_picked <- grep(toupper(lv_model), toupper(stan_list))
+  stan_picked <- grep(toupper(lv_type), toupper(stan_list))
   stan_picked2 <- grep("stan", stan_list[stan_picked])
   stan_model <- stan_list[stan_picked][stan_picked2]
 

@@ -80,6 +80,7 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
     nsecWorked = length(section),
     nstud = N,
     nsec = nsec,
+    max_k = max(grad),
     lv.par = lv.par,
     studentM = studentM,
     section = section,
@@ -92,10 +93,31 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   )
 }
 
+
+
+#' #' S3 generic for data setting depending on latent variable models
+#' #'
+#' dataSetting <- function(info, ...) {
+#'   UseMethod("dataSetting", info)
+#' }
+#'
+#' #' get information for data generation ready
+#' #'
+#' infoSetting <- function(...) {
+#'
+#'   info <- list(...)
+#'   lv_type <- info$lv_type
+#'   info$lv_type <- NULL
+#'
+#'   structure(info, class = lv_type)
+#' }
+
 #' Convert a matrix to a FLPS data
 #'
 #' @export
 makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type) {
+
+  # flps_data <- dataSetting() ; S3 class
 
   inp_data <- data.frame(inp_data)
 
@@ -126,6 +148,7 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type)
     nsecWorked = length(obs.v.idx[,2]),
     nstud = nstu,
     nsec = nsec,
+    max_k = max(obs.v.vector),
 
     studentM = unname(obs.v.idx[,1]),
     section = unname(obs.v.idx[,2]),
@@ -144,7 +167,7 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type)
   out@group <- group
   out@lv_type <- lv_type
   out@lv_model <- lv_model
-  out@flps_data <- flps_data
+  out@stan_data <- flps_data
 
   return(out)
 }

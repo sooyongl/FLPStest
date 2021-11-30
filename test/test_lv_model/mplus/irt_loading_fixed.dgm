@@ -1,0 +1,43 @@
+VERSION 1.1.0
+INPUT
+DATA:
+ file is irt.csv;
+VARIABLE:
+ names are x1-x10;
+categorical = x1-x10;
+ANALYSIS:
+ estimator = ml;
+MODEL:
+F by x1-x10;
+[x1$1@0];
+[F*];
+INPUT_END
+2
+0
+0
+0
+ML
+1
+GENERAL
+0
+10
+1
+0
+x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 f
+1
+-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 0
+0
+1
+f
+x1 x2 x3 x4 x5 x6 x7 x8 x9 x10
+1 1 f x1    1.000    0.000
+1 1 f x2    1.660    0.386
+1 1 f x3    0.952    0.227
+1 1 f x4    0.768    0.199
+1 1 f x5    0.441    0.155
+1 1 f x6    1.627    0.377
+1 1 f x7    1.406    0.321
+1 1 f x8    0.434    0.152
+1 1 f x9    1.373    0.335
+1 1 f x10    0.952    0.231
+5 1 f    0.828    0.285
