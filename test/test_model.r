@@ -39,47 +39,71 @@ for(i in 1:10) {
   print(i)
 }
 
-res_list <- fs::dir_ls("results", regexp = "^res_")
-model_type <- str_split(res_list[1], "_", simplify = T)
-res <- readRDS(res_list[1])
+# -------------------------------------------------------------------------
+res_list <- fs::dir_ls("results", regexp = "rds$")
 
-fit <- res$fit
-sdat <- res$sdat
+res_list <- res_list[str_detect(res_list, "GPCM")]
 
-# item param
-df.fit <- as.data.frame(fit)
+param_list <- vector("list", length(res_list))
+for(i in 1:length(res_list)) {
+  model_type <- str_split(res_list[i], "_", simplify = T)[2]
+  res <- readRDS(res_list[i])
 
-lambda <- colMeans(df.fit[str_detect(names(df.fit), "lambda\\[")])
-tau <- colMeans(df.fit[str_detect(names(df.fit), "tau\\[")])
-tau <- matrix(tau, nrow = length(lambda))
+  fit <- res$fit
+  sdat <- res$sdat
 
-cbind(sdat$lv.par,lam  = lambda, tau = tau)
+  # item param
+  df.fit <- as.data.frame(fit)
 
-eta <- data.frame(
-  est_eta = colMeans(df.fit[str_detect(names(df.fit), "^eta")]),
-  pop_eta = sdat$true_eta)
+  lambda <- colMeans(df.fit[str_detect(names(df.fit), "lambda\\[")])
+  tau <- colMeans(df.fit[str_detect(names(df.fit), "tau\\[")])
+  tau <- matrix(tau, nrow = length(lambda))
 
-c(pop_mean = mean(eta[,2]), stan.mean = mean(eta[,1]))
+  lv_param <- cbind(sdat$lv.par,lam  = lambda, tau = tau)
 
-colMeans(df.fit[str_detect(names(df.fit), "muEta")])
+  eta <- data.frame(
+    est_eta = colMeans(df.fit[str_detect(names(df.fit), "^eta")]),
+    pop_eta = sdat$true_eta)
 
-plot(eta[,"est_eta"],eta[,"pop_eta"])
-cor(eta[,"est_eta"],eta[,"pop_eta"])
-# main effect
-true_data <- data.frame(Y = sdat$Y, X1 = sdat$X[,1], X2 = sdat$X[,2], eta = sdat$true_eta, Z = sdat$Z)
-true_param <- lm(Y ~ Z + eta + eta*Z + X1 + X2, data = true_data)
-true_param <- coefficients(true_param)
-names(true_param) <- c("b00", "b0", "a1", "by1","by2", "b1")
-true_param <- true_param[c("b00", "b0", "b1", "a1", "by1","by2")]
+  mu.eta <- c(pop_mean = mean(eta[,2]), stan.mean = mean(eta[,1]), mueta = colMeans(df.fit[str_detect(names(df.fit), "muEta")]))
 
-est_param <- data.frame(
-  b00  = colMeans(df.fit[str_detect(names(df.fit), "b00$")]),
-  b0  = colMeans(df.fit[str_detect(names(df.fit), "b0$")]),
-  b1  = colMeans(df.fit[str_detect(names(df.fit), "b1$")]),
-  a1  = colMeans(df.fit[str_detect(names(df.fit), "a1$")]),
-  by1  = colMeans(df.fit[str_detect(names(df.fit), "betaY")])[1],
-  by2  = colMeans(df.fit[str_detect(names(df.fit), "betaY")])[2]
-)
+  # plot(eta[,"est_eta"],eta[,"pop_eta"])
+  # cor(eta[,"est_eta"],eta[,"pop_eta"])
+  # main effect
+  true_data <- data.frame(Y = sdat$Y, X1 = sdat$X[,1], X2 = sdat$X[,2], eta = sdat$true_eta, Z = sdat$Z)
+  true_param <- lm(Y ~ Z + eta + eta*Z + X1 + X2, data = true_data)
+  true_param <- coefficients(true_param)
 
-rbind(true = true_param, est = est_param)
+  true_param1 <- lm(eta ~ X1 + X2, data = true_data)
+  true_param1 <- coefficients(true_param1)
 
+  true_param <- c(true_param, true_param1[2:3])
+
+  names(true_param) <- c("b00", "b0", "a1", "by1","by2", "b1", "bu1","bu2")
+  true_param <- true_param[c("b00", "b0", "b1", "a1", "by1","by2", "bu1","bu2")]
+
+  est_param <- data.frame(
+    b00  = colMeans(df.fit[str_detect(names(df.fit), "b00$")]),
+    b0  = colMeans(df.fit[str_detect(names(df.fit), "b0$")]),
+    b1  = colMeans(df.fit[str_detect(names(df.fit), "b1$")]),
+    a1  = colMeans(df.fit[str_detect(names(df.fit), "a1$")]),
+    by1  = colMeans(df.fit[str_detect(names(df.fit), "betaY")])[1],
+    by2  = colMeans(df.fit[str_detect(names(df.fit), "betaY")])[2],
+    bu1  = colMeans(df.fit[str_detect(names(df.fit), "betaU")])[1],
+    bu2  = colMeans(df.fit[str_detect(names(df.fit), "betaU")])[2]
+  )
+
+  flps_param <- rbind(true = true_param, est = est_param)
+
+  param_list[[i]] <- list(model_type = model_type, lv_param = lv_param, eta_param = eta, mu.eta = mu.eta, flps_param = flps_param)
+}
+param_list.gpcm <- param_list
+
+param_list.sem <- param_list
+param_list.2PL <- param_list
+
+res_combined_1130 <- list(param_list.sem = param_list.sem,
+                          param_list.2PL = param_list.2PL,
+                          param_list.gpcm = param_list.gpcm)
+
+saveRDS(res_combined_1130, "report/rds/res_combined_1130.rds")

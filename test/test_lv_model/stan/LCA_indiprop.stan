@@ -64,10 +64,9 @@ model{
 		
         
 	}
- 
-    
-	
+
 	target += log_sum_exp(to_vector(ps[,j]));
 
   }
 }
+//last line empty

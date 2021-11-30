@@ -1,0 +1,732 @@
+---
+title: "Simulation Report"
+author: ""
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    css: "style.css"
+    code_folding: show
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r library, message = FALSE, echo = FALSE}
+# Suppress summarise info
+options(dplyr.summarise.inform = FALSE,
+        scipen = 1, digits = 4)
+
+knitr::opts_chunk$set(echo = FALSE)
+library(kableExtra)
+library(tidyverse)
+library(knitr)
+library(ggpubr); 
+library(ggrepel)
+
+root <- rprojroot::find_rstudio_root_file()
+report_path <- file.path(root)
+
+res_scaled <- readRDS(file.path(report_path, "report/rds/res_combined_1130.rds"))
+res_LCA <- readRDS(file.path(report_path, "report/rds/res_combined_LCA_1129.rds"))
+
+
+```
+
+## Simulation model
+
+```{r echo=FALSE, out.width="50%"}
+include_graphics(file.path(report_path, "report/fig2.png"))
+```
+
+## Scaled version
+
+### sem {.tabset}
+
+```{r}
+selected <- "param_list.sem"
+
+flps_res <- res_scaled[[selected]]
+# for(i in 1:length(flps_res)) {
+#   flps_res[[i]]$eta_param %>% 
+#     data.frame() %>% 
+#     ggplot() +
+#     geom_point(aes(x = est_eta, y = pop_eta)) +
+#     labs(title = paste("result", i, flps_res[[i]]$model_type))
+# }
+# for(i in 1:length(flps_res)) {
+#   flps_res[[i]]$flps_param
+# }
+```
+
+#### 1
+
+```{r}
+i = 1
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 2
+
+```{r}
+i = 2
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 3
+
+```{r}
+i = 3
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 4
+
+```{r}
+i = 4
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+
+#### 5
+
+```{r}
+i = 5
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 6
+
+```{r}
+i = 6
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+
+#### 7
+
+```{r}
+i = 7
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 8
+
+```{r}
+i = 8
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 9
+
+```{r}
+i = 9
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 10
+
+```{r}
+i = 10
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+
+
+### 2PL {.tabset}
+
+```{r}
+selected <- "param_list.2PL"
+
+flps_res <- res_scaled[[selected]]
+# for(i in 1:length(flps_res)) {
+#   flps_res[[i]]$eta_param %>% 
+#     data.frame() %>% 
+#     ggplot() +
+#     geom_point(aes(x = est_eta, y = pop_eta)) +
+#     labs(title = paste("result", i, flps_res[[i]]$model_type))
+# }
+# for(i in 1:length(flps_res)) {
+#   flps_res[[i]]$flps_param
+# }
+```
+
+#### 1
+
+```{r}
+i = 1
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 2
+
+```{r}
+i = 2
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 3
+
+```{r}
+i = 3
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 4
+
+```{r}
+i = 4
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+
+#### 5
+
+```{r}
+i = 5
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 6
+
+```{r}
+i = 6
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+
+#### 7
+
+```{r}
+i = 7
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 8
+
+```{r}
+i = 8
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 9
+
+```{r}
+i = 9
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 10
+
+```{r}
+i = 10
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+### GPCM {.tabset}
+
+```{r}
+selected <- "param_list.gpcm"
+
+flps_res <- res_scaled[[selected]]
+# for(i in 1:length(flps_res)) {
+#   flps_res[[i]]$eta_param %>% 
+#     data.frame() %>% 
+#     ggplot() +
+#     geom_point(aes(x = est_eta, y = pop_eta)) +
+#     labs(title = paste("result", i, flps_res[[i]]$model_type))
+# }
+# for(i in 1:length(flps_res)) {
+#   flps_res[[i]]$flps_param
+# }
+```
+
+#### 1
+
+```{r}
+i = 1
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 2
+
+```{r}
+i = 2
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 3
+
+```{r}
+i = 3
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 4
+
+```{r}
+i = 4
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+
+#### 5
+
+```{r}
+i = 5
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 6
+
+```{r}
+i = 6
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+
+#### 7
+
+```{r}
+i = 7
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 8
+
+```{r}
+i = 8
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 9
+
+```{r}
+i = 9
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 10
+
+```{r}
+i = 10
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+## LCA {.tabset}
+
+### Complete data {.tabset}
+
+```{r}
+# for(i in 1:length(flps_res)) {
+#   p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+#                  res_LCA[[i]]$post_plot[[2]],
+#                  res_LCA[[i]]$post_plot[[3]], nrow = 3)
+#   annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+# }
+```
+
+#### 1
+
+```{r}
+i = 11
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 2
+
+```{r}
+i = 12
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 3
+
+```{r}
+i = 13
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 4
+
+```{r}
+i = 14
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 5
+
+```{r}
+i = 15
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 6
+
+```{r}
+i = 16
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 7
+
+```{r}
+i = 17
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 8
+
+```{r}
+i = 18
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 9
+
+```{r}
+i = 19
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 10
+
+```{r}
+i = 20
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+### Incomplete data {.tabset}
+
+#### 1
+
+```{r}
+i = 1
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 2
+
+```{r}
+i = 2
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 3
+
+```{r}
+i = 3
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 4
+
+```{r}
+i = 4
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 5
+
+```{r}
+i = 5
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 6
+
+```{r}
+i = 6
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 7
+
+```{r}
+i = 7
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 8
+
+```{r}
+i = 8
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 9
+
+```{r}
+i = 9
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 10
+
+```{r}
+i = 10
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```

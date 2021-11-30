@@ -26,7 +26,7 @@ parameters{
  vector[ncov] betaU;
  vector[ncov] betaY;
 
- real muEta;
+ //real muEta;
  real b00;
  real a1;
  real b0;
@@ -81,7 +81,7 @@ model{
  }
 
  //priors
- muEta~normal(0, sqrt(1));
+ //muEta~normal(0, sqrt(1));
  eta~normal(0, sqrt(1));
  lambda_free~normal(0, sqrt(1));
  tau_free~normal(0, sqrt(1));
@@ -96,6 +96,7 @@ model{
 
  grad~normal(linPred, sigR);
 
- eta~normal(muEta+X*betaU,sigU);
+ //eta~normal(muEta+X*betaU,sigU);
+ eta~normal(X*betaU,sigU);
  Y~normal(muY+X*betaY,sigYI);
 }

@@ -30,7 +30,7 @@ parameters{
  vector[ncov] betaU;
  vector[ncov] betaY;
 
- real muEta;
+ //real muEta;
  real b00;
  real a1;
  real b0;
@@ -45,16 +45,27 @@ transformed parameters {
   vector[nsec] lambda;
   vector[nsec] tau;
 
-   real linPred[nsecWorked];
+  real linPred[nsecWorked];
 
+  for(jj in 1:nsec) {
+    if(jj == 1) {
+      lambda[1] = 1;
+	  tau[1] = 0;
+	} else {
+      lambda[jj] = lambda_free[jj];
+	  tau[jj] = tau_free[jj];
+    }  
+  
+  }
+ 
   for(j in 1:nsecWorked) {
-    if(section[j] == 1){
-      lambda[section[j]] = 1;
-      tau[section[j]] = 0;
-    } else{
-      lambda[section[j]] = lambda_free[section[j]];
-      tau[section[j]] = tau_free[section[j]];
-    }
+  //  if(section[j] == 1){
+  //    lambda[section[j]] = 1;
+  //    tau[section[j]] = 0;
+  //  } else{
+  //   lambda[section[j]] = lambda_free[section[j]];
+  //    tau[section[j]] = tau_free[section[j]];
+  //  }
     linPred[j] = tau[section[j]] + lambda[section[j]] * eta[studentM[j]];
   }
 
@@ -81,7 +92,7 @@ model{
  //alpha ~ lognormal(0, .5);
 
  // PS priors
- muEta~normal(0,1);
+ //muEta~normal(0,1);
  betaY~normal(0,2);
  betaU~normal(0,2);
  b00~normal(0,2);
@@ -93,7 +104,8 @@ model{
  // Latent variable model
  grad~bernoulli_logit(linPred);
  // Causal model
- eta~normal(muEta+X*betaU,sigU);
+ //eta~normal(muEta+X*betaU,sigU);
+ eta~normal(X*betaU,sigU);
  Y~normal(muY+X*betaY,sigYI);
 }
 

@@ -25,7 +25,8 @@ setClass("flps",
 setMethod("initialize",
            signature  = "flps",
            definition = function(.Object) {
-             .Object@flps_fit <- new("stanfit", mode = 1L)
+             .Object@flps_fit  <- new("stanfit", mode = 1L)
+             .Object@flps_data <- new("flpsData")
              return(.Object)
 })
 
@@ -48,3 +49,4 @@ setClass("flpsData",
     return(TRUE)
   }
 )
+
