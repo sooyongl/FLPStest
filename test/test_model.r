@@ -17,7 +17,7 @@ lvmodel_list <- c("2PL", "GPCM", "sem")
 stan_file_name <- file_list[2]
 lvmodel <- lvmodel_list[2]
 
-for(i in 1:10) {
+for(i in 1:5) {
   # i <- 1
   # -------------------------------------------------------------------------
   parsFromMod <- list(
@@ -29,20 +29,29 @@ for(i in 1:10) {
     lambda = 10,
     R2eta = 0.2,
     nsec = 20,
-    lvmodel = lvmodel # tag for latent variable model
+    lvmodel = lvmodel, # tag for latent variable model
+    complete = T
   )
   sdat <- do.call("makeDat", parsFromMod)
   fit <- stan(stan_file_name,data=sdat,iter=5000,warmup=2000,cores=1,chains=1)
   res <- list(fit = fit, sdat = sdat)
-  saveRDS(res, paste0("results/res_", parsFromMod$lvmodel,"_",i ,".rds"))
+  saveRDS(res, paste0("results/res_complete_", parsFromMod$lvmodel,"_",i ,".rds"))
 
   print(i)
 }
 
+
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
 res_list <- fs::dir_ls("results", regexp = "rds$")
 
-res_list <- res_list[str_detect(res_list, "GPCM")]
+res_list <- res_list[str_detect(res_list, "2PL")]
+res_list <- res_list[str_detect(res_list, "complete")]
 
 param_list <- vector("list", length(res_list))
 for(i in 1:length(res_list)) {
@@ -97,13 +106,15 @@ for(i in 1:length(res_list)) {
 
   param_list[[i]] <- list(model_type = model_type, lv_param = lv_param, eta_param = eta, mu.eta = mu.eta, flps_param = flps_param)
 }
-param_list.gpcm <- param_list
+param_list.2PL <- param_list
+
 
 param_list.sem <- param_list
-param_list.2PL <- param_list
+param_list.gpcm <- param_list
+
 
 res_combined_1130 <- list(param_list.sem = param_list.sem,
                           param_list.2PL = param_list.2PL,
                           param_list.gpcm = param_list.gpcm)
 
-saveRDS(res_combined_1130, "report/rds/res_combined_1130.rds")
+saveRDS(res_combined_1130, "report/rds/res_combined_complete_1130.rds")
