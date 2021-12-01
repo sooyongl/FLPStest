@@ -29,7 +29,7 @@
 #' )
 #'
 #' @export
-makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
+makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel,complete=F){
 
   lvmodel <- tolower(lvmodel)
 
@@ -56,7 +56,12 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   ## in the application we said the # obs/ student would be pois(lambda)
   ## it looks like a (descretized) version of the exponential fits the CTA1
   ## data much better (tho still not great)
-  nworked <- sample(1:nsec,N/2,replace=TRUE,prob=dexp(1:nsec,rate=1/lambda))
+  if(complete) {
+    nworked <- rep(nsec, N/2)
+  } else {
+    nworked <- sample(1:nsec,N/2,replace=TRUE,prob=dexp(1:nsec,rate=1/lambda))
+  }
+
   ### this results in a somewhat lower mean than lambda
 
   studentM <- do.call("c", lapply(seq(N/2),function(n) rep(n,each=nworked[n])))
@@ -204,7 +209,7 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type)
 #'   lvmodel = "sem"
 #' )
 #' @export
-makeInpData <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
+makeInpData <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel,complete=F){
 
   lvmodel <- tolower(lvmodel)
 
@@ -228,7 +233,12 @@ makeInpData <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   lv.par <- grad$lv.par
   grad <- grad$resp
 
-  nworked <- sample(1:nsec,N/2,replace=TRUE,prob=dexp(1:nsec,rate=1/lambda))
+  if(complete) {
+    nworked <- rep(nsec, N/2)
+  } else {
+    nworked <- sample(1:nsec,N/2,replace=TRUE,prob=dexp(1:nsec,rate=1/lambda))
+  }
+
   studentM <- do.call("c", lapply(seq(N/2),function(n) rep(n,each=nworked[n])))
 
   section <- do.call("c", lapply(seq(N / 2),
