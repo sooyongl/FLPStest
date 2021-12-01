@@ -31,9 +31,9 @@ root <- rprojroot::find_rstudio_root_file()
 report_path <- file.path(root)
 
 res_scaled <- readRDS(file.path(report_path, "report/rds/res_combined_1130.rds"))
+res_scaled_comp <- readRDS(file.path(report_path, "report/rds/res_combined_complete_1130.rds"))
+
 res_LCA <- readRDS(file.path(report_path, "report/rds/res_combined_LCA_1129.rds"))
-
-
 ```
 
 ## Simulation model
@@ -42,7 +42,12 @@ res_LCA <- readRDS(file.path(report_path, "report/rds/res_combined_LCA_1129.rds"
 include_graphics(file.path(report_path, "report/fig2.png"))
 ```
 
-## Scaled version
+## Scaled version with incomplete data for latent variable models
+
+Incomplete data means that the data for latent variable models has missingness (the default setting).
+
+The problem is even with the scaled version; the estimated eta is sometimes negatively correlated with the true eta (see sem 7, for example). In that case, the parameter estimates regarding the eta (b1, bu1, bu2) show the opposite direction to the true parameters.
+
 
 ### sem {.tabset}
 
@@ -50,16 +55,6 @@ include_graphics(file.path(report_path, "report/fig2.png"))
 selected <- "param_list.sem"
 
 flps_res <- res_scaled[[selected]]
-# for(i in 1:length(flps_res)) {
-#   flps_res[[i]]$eta_param %>% 
-#     data.frame() %>% 
-#     ggplot() +
-#     geom_point(aes(x = est_eta, y = pop_eta)) +
-#     labs(title = paste("result", i, flps_res[[i]]$model_type))
-# }
-# for(i in 1:length(flps_res)) {
-#   flps_res[[i]]$flps_param
-# }
 ```
 
 #### 1
@@ -202,16 +197,6 @@ flps_res[[i]]$flps_param
 selected <- "param_list.2PL"
 
 flps_res <- res_scaled[[selected]]
-# for(i in 1:length(flps_res)) {
-#   flps_res[[i]]$eta_param %>% 
-#     data.frame() %>% 
-#     ggplot() +
-#     geom_point(aes(x = est_eta, y = pop_eta)) +
-#     labs(title = paste("result", i, flps_res[[i]]$model_type))
-# }
-# for(i in 1:length(flps_res)) {
-#   flps_res[[i]]$flps_param
-# }
 ```
 
 #### 1
@@ -352,16 +337,6 @@ flps_res[[i]]$flps_param
 selected <- "param_list.gpcm"
 
 flps_res <- res_scaled[[selected]]
-# for(i in 1:length(flps_res)) {
-#   flps_res[[i]]$eta_param %>% 
-#     data.frame() %>% 
-#     ggplot() +
-#     geom_point(aes(x = est_eta, y = pop_eta)) +
-#     labs(title = paste("result", i, flps_res[[i]]$model_type))
-# }
-# for(i in 1:length(flps_res)) {
-#   flps_res[[i]]$flps_param
-# }
 ```
 
 #### 1
@@ -496,18 +471,385 @@ flps_res[[i]]$eta_param %>%
 flps_res[[i]]$flps_param
 ```
 
+
+## Scaled version with complete data for latent variable models
+
+To see if the missingness makes the direction of eta opposite, I tried the complete data. 
+
+### sem {.tabset}
+
+```{r}
+selected <- "param_list.sem"
+res_scaled <- res_scaled_comp
+
+flps_res <- res_scaled[[selected]]
+```
+
+#### 1
+
+```{r}
+i = 1
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 2
+
+```{r}
+i = 2
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 3
+
+```{r}
+i = 3
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 4
+
+```{r}
+i = 4
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+
+#### 5
+
+```{r}
+i = 5
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+
+### 2PL {.tabset}
+
+```{r}
+selected <- "param_list.2PL"
+
+flps_res <- res_scaled[[selected]]
+# for(i in 1:length(flps_res)) {
+#   flps_res[[i]]$eta_param %>% 
+#     data.frame() %>% 
+#     ggplot() +
+#     geom_point(aes(x = est_eta, y = pop_eta)) +
+#     labs(title = paste("result", i, flps_res[[i]]$model_type))
+# }
+# for(i in 1:length(flps_res)) {
+#   flps_res[[i]]$flps_param
+# }
+```
+
+#### 1
+
+```{r}
+i = 1
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 2
+
+```{r}
+i = 2
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 3
+
+```{r}
+i = 3
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 4
+
+```{r}
+i = 4
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+
+#### 5
+
+```{r}
+i = 5
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+### GPCM {.tabset}
+
+```{r}
+selected <- "param_list.gpcm"
+
+flps_res <- res_scaled[[selected]]
+# for(i in 1:length(flps_res)) {
+#   flps_res[[i]]$eta_param %>% 
+#     data.frame() %>% 
+#     ggplot() +
+#     geom_point(aes(x = est_eta, y = pop_eta)) +
+#     labs(title = paste("result", i, flps_res[[i]]$model_type))
+# }
+# for(i in 1:length(flps_res)) {
+#   flps_res[[i]]$flps_param
+# }
+```
+
+#### 1
+
+```{r}
+i = 1
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 2
+
+```{r}
+i = 2
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 3
+
+```{r}
+i = 3
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+#### 4
+
+```{r}
+i = 4
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+
+#### 5
+
+```{r}
+i = 5
+flps_res[[i]]$eta_param %>% 
+    data.frame() %>% 
+    ggplot() +
+    geom_point(aes(x = est_eta, y = pop_eta)) +
+    labs(title = paste("result", i, flps_res[[1]]$model_type)) +
+  theme_pubclean()
+flps_res[[i]]$flps_param
+```
+
+
 ## LCA {.tabset}
+
+I've tried specifying an LCA, but I don't have an idea of how to incorporate the LCA into the FLPS. Below is the stan code I've tried. 
+
+I ran 10 replication with 2 latent classes and high class separation (.9 of item probability (y = 1) for the first class and .1 for the second class across all the indicators (10)).
+
+Although the data is complete, the label switching occurred while sampling. You can see there is a clear bimodal distribution for the class proportion. Out of 10 replications, replication 7 and 8 showed the well-mixing results, and others showed the switched labels in the complete data case. There is only one replication (replication 9) showing well-mixing in the incomplete data case.
+
+### stan code
+
+```{r}
+stan_model <- paste(read_lines(file.path(report_path, "test/test_lv_model/stan/LCA.stan")), collapse = "\n")
+cat(stan_model)
+```
+
 
 ### Complete data {.tabset}
 
+#### 1
+
 ```{r}
-# for(i in 1:length(flps_res)) {
-#   p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
-#                  res_LCA[[i]]$post_plot[[2]],
-#                  res_LCA[[i]]$post_plot[[3]], nrow = 3)
-#   annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
-# }
+i = 1
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
 ```
+
+#### 2
+
+```{r}
+i = 2
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 3
+
+```{r}
+i = 3
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 4
+
+```{r}
+i = 4
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 5
+
+```{r}
+i = 5
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 6
+
+```{r}
+i = 6
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 7
+
+```{r}
+i = 7
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 8
+
+```{r}
+i = 8
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 9
+
+```{r}
+i = 9
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+#### 10
+
+```{r}
+i = 10
+  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
+                 res_LCA[[i]]$post_plot[[2]],
+                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
+  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
+  
+```
+
+### Incomplete data {.tabset}
 
 #### 1
 
@@ -612,118 +954,6 @@ i = 19
 
 ```{r}
 i = 20
-  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
-                 res_LCA[[i]]$post_plot[[2]],
-                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
-  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
-  
-```
-
-### Incomplete data {.tabset}
-
-#### 1
-
-```{r}
-i = 1
-  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
-                 res_LCA[[i]]$post_plot[[2]],
-                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
-  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
-  
-```
-
-#### 2
-
-```{r}
-i = 2
-  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
-                 res_LCA[[i]]$post_plot[[2]],
-                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
-  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
-  
-```
-
-#### 3
-
-```{r}
-i = 3
-  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
-                 res_LCA[[i]]$post_plot[[2]],
-                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
-  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
-  
-```
-
-#### 4
-
-```{r}
-i = 4
-  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
-                 res_LCA[[i]]$post_plot[[2]],
-                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
-  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
-  
-```
-
-#### 5
-
-```{r}
-i = 5
-  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
-                 res_LCA[[i]]$post_plot[[2]],
-                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
-  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
-  
-```
-
-#### 6
-
-```{r}
-i = 6
-  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
-                 res_LCA[[i]]$post_plot[[2]],
-                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
-  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
-  
-```
-
-#### 7
-
-```{r}
-i = 7
-  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
-                 res_LCA[[i]]$post_plot[[2]],
-                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
-  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
-  
-```
-
-#### 8
-
-```{r}
-i = 8
-  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
-                 res_LCA[[i]]$post_plot[[2]],
-                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
-  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
-  
-```
-
-#### 9
-
-```{r}
-i = 9
-  p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
-                 res_LCA[[i]]$post_plot[[2]],
-                 res_LCA[[i]]$post_plot[[3]], nrow = 3)
-  annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
-  
-```
-
-#### 10
-
-```{r}
-i = 10
   p <- ggarrange(res_LCA[[i]]$post_plot[[1]],
                  res_LCA[[i]]$post_plot[[2]],
                  res_LCA[[i]]$post_plot[[3]], nrow = 3)
