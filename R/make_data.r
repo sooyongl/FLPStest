@@ -29,7 +29,7 @@
 #' )
 #'
 #' @export
-makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel,complete=F){
+makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
 
   lvmodel <- tolower(lvmodel)
 
@@ -48,19 +48,17 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel,complete=F){
 
   # Generate LVM data -------------------------------------------------------
   info <- parsForLVM(theta = eta, nsec = nsec, data_type = lvmodel)
-  grad <- generate(info); # methods(generate)
+  info.data <- generate(info); # methods(generate)
 
-  lv.par <- grad$lv.par
-  grad <- grad$resp
+  lv.par <- info.data$lv.par
+  grad <- info.data$resp
 
   ## in the application we said the # obs/ student would be pois(lambda)
   ## it looks like a (descretized) version of the exponential fits the CTA1
   ## data much better (tho still not great)
-  if(complete) {
-    nworked <- rep(nsec, N/2)
-  } else {
-    nworked <- sample(1:nsec,N/2,replace=TRUE,prob=dexp(1:nsec,rate=1/lambda))
-  }
+
+  # nworked <- sample(1:nsec,N/2,replace=TRUE,prob=dexp(1:nsec,rate=1/lambda))
+  nworked <- rep(floor(nsec * lambda), N/2)
 
   ### this results in a somewhat lower mean than lambda
 
@@ -68,7 +66,7 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel,complete=F){
 
   ## who works which section? Not sure how to do this right
   ## for now, just make it random. this is _not_ true for CT data
-  section <- do.call("c", lapply(seq(N / 2),
+  section <- do.call("c", lapply(seq(N/2),
                                  function(n) {
                                    sort(sample(1:nsec, nworked[n],
                                                replace = FALSE))}))
@@ -76,10 +74,16 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel,complete=F){
 
   grad <- sapply(1:dim(ss)[1], function(n) grad[ss[n,1], ss[n,2]] )
 
-  ### simulate Y -------------------------------------------------------------
-  random.Y <- rnorm(N,0,sqrt(1-R2Y))
+  if(lvmodel == "lca") {
 
-  Y <- tau0*Z + omega*eta + tau1*eta*Z + sqrt(R2Y/2)*(x2-x1) + random.Y
+
+  } else {
+
+    ### simulate Y -------------------------------------------------------------
+    random.Y <- rnorm(N,0,sqrt(1-R2Y))
+
+    Y <- tau0*Z + omega*eta + tau1*eta*Z + sqrt(R2Y/2)*(x2-x1) + random.Y
+  }
 
   list(
     nsecWorked = length(section),
@@ -209,7 +213,7 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type)
 #'   lvmodel = "sem"
 #' )
 #' @export
-makeInpData <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel,complete=F){
+makeInpData <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
 
   lvmodel <- tolower(lvmodel)
 
@@ -233,11 +237,9 @@ makeInpData <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel,complete
   lv.par <- grad$lv.par
   grad <- grad$resp
 
-  if(complete) {
-    nworked <- rep(nsec, N/2)
-  } else {
-    nworked <- sample(1:nsec,N/2,replace=TRUE,prob=dexp(1:nsec,rate=1/lambda))
-  }
+  # nworked <- sample(1:nsec,N/2,replace=TRUE,prob=dexp(1:nsec,rate=1/lambda))
+  nworked <- rep(floor(nsec * lambda), N/2)
+
 
   studentM <- do.call("c", lapply(seq(N/2),function(n) rep(n,each=nworked[n])))
 
