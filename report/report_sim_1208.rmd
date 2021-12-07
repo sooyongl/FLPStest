@@ -1,0 +1,389 @@
+---
+title: "Simulation Report"
+author: ""
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    css: "style.css"
+    code_folding: show
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r library, message = FALSE, echo = FALSE}
+# Suppress summarise info
+options(dplyr.summarise.inform = FALSE,scipen = 1, digits = 4)
+
+
+knitr::opts_chunk$set(echo = FALSE,
+                      fig.width=12, fig.height=8)
+library(kableExtra)
+library(tidyverse)
+library(knitr)
+library(ggpubr); 
+library(ggrepel)
+
+root <- rprojroot::find_rstudio_root_file()
+report_path <- file.path(root)
+
+res <- readRDS(file.path(report_path, "report/rds/sem_1204.rds"))
+res_irt <- readRDS(file.path(report_path, "report/rds/irt_1204.rds"))
+
+mk_plot <- function(picked) {
+  
+  model_type <- picked$model_type
+  
+  p_lambda <- picked$comb_lambda %>% 
+    set_names(c("chain", paste0("fs",1:20))) %>% 
+    gather("name", "value", -chain) %>% 
+    ggplot() +
+    geom_point(aes(name, value, 
+                   color = as.factor(chain))) +
+    geom_line(
+      aes(name, value, 
+          color = as.factor(chain), 
+          linetype = as.factor(chain),
+          group = as.factor(chain)),
+      size = 1.2) +
+    labs(color = "Chain", 
+         x = "factor loading",
+         y = "est",
+         title = "Factor loading", subtitle = picked) +
+    theme_bw(base_size = 16)
+  
+  p_tau <- picked$comb_tau %>%
+    set_names(c("chain", paste0("int",1:20))) %>% 
+    gather("name", "value", -chain) %>%
+    ggplot() +
+    geom_point(aes(name, value,
+                   color = as.factor(chain))) +
+    geom_line(
+      aes(name, value,
+          color = as.factor(chain),
+          linetype = as.factor(chain),
+          group = as.factor(chain)),
+      size = 1.2) +
+        labs(color = "Chain", 
+         x = "intercept",
+         y = "est",
+         title = "Intercept (or difficulty)", subtitle = picked) +
+    theme_bw(base_size = 16)
+  
+  eta_param <- picked$eta_param %>% 
+    gather("name", "value", -chain)
+  
+  pop_eta <- eta_param %>% filter(chain == 0)
+  est_eta <- eta_param %>% filter(chain != 0) %>% arrange(chain)
+  
+  
+  
+  est_eta <- est_eta %>% 
+    mutate(
+      group = rep(rep(c("trt","ctl"), each = 250), 4), 
+      pop_eta = rep(pop_eta$value,4))
+  
+  
+  p_eta_group <- est_eta %>% 
+    ggplot() +
+    geom_point(aes(pop_eta, value, 
+                   color = group),
+               alpha = 0.5) +
+    geom_smooth(
+      aes(pop_eta, value,
+          color = group),
+      method='lm', formula= y~x,
+      se = F
+    ) +
+    facet_wrap(chain ~ .) +
+    labs(color = "Chain", title = "Correlation between true eta and est eta by group", subtitle = picked) +
+    theme_bw(base_size = 16)
+  
+  p_eta <-est_eta %>% 
+    ggplot() +
+    geom_point(aes(pop_eta, value, 
+                   color = as.factor(chain)),
+               alpha = 0.5) +
+    geom_smooth(
+      aes(pop_eta, value,
+          color = as.factor(chain)),
+      method='lm', formula= y~x,
+      se = F
+    ) +
+    facet_wrap(chain ~ .) +
+    labs(color = "Chain", title = "Correlation between true eta and est eta", subtitle = picked) +
+    theme_bw(base_size = 16)
+  
+  t_param <- picked$flps_param
+  
+  list(p_lambda = p_lambda, p_eta = p_eta, t_param = t_param, p_tau = p_tau, p_eta_group = p_eta_group)
+}
+picked_ls <- c(1, 11, 23, 31, 41)
+
+```
+
+
+## sem {.tabset}
+
+### 80% missing
+
+```{r}
+picked <- res[[picked_ls[1]]]
+a1 <- mk_plot(picked)
+```
+
+```{r}
+a1[[2]]
+```
+
+```{r}
+a1[[5]]
+```
+
+```{r}
+a1[[1]]
+```
+
+
+```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+### 60% missing
+
+```{r}
+picked <- res[[picked_ls[2]]]
+a1 <- mk_plot(picked)
+```
+
+```{r}
+a1[[2]]
+```
+
+```{r}
+a1[[5]]
+```
+
+```{r}
+a1[[1]]
+```
+
+
+```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+### 40% missing
+
+```{r}
+picked <- res[[picked_ls[3]]]
+a1 <- mk_plot(picked)
+```
+
+```{r}
+a1[[2]]
+```
+
+```{r}
+a1[[5]]
+```
+
+```{r}
+a1[[1]]
+```
+
+```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+### 20% missing
+
+```{r}
+picked <- res[[picked_ls[4]]]
+a1 <- mk_plot(picked)
+```
+
+```{r}
+a1[[2]]
+```
+
+```{r}
+a1[[5]]
+```
+
+```{r}
+a1[[1]]
+```
+
+```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+
+### 0% missing
+
+```{r}
+picked <- res[[picked_ls[5]]]
+a1 <- mk_plot(picked)
+```
+
+```{r}
+a1[[2]]
+```
+
+```{r}
+a1[[5]]
+```
+
+```{r}
+a1[[1]]
+```
+
+```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+## 2PL {.tabset}
+
+### 80% missing
+
+```{r}
+picked <- res_irt[[1]]
+a1 <- mk_plot(picked)
+```
+
+```{r}
+a1[[2]]
+```
+
+```{r}
+a1[[5]]
+```
+
+```{r}
+a1[[1]]
+```
+
+```{r}
+a1[[4]]
+```
+
+
+```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+### 60% missing
+
+```{r}
+picked <- res_irt[[2]]
+a1 <- mk_plot(picked)
+```
+
+```{r}
+a1[[2]]
+```
+
+```{r}
+a1[[5]]
+```
+
+```{r}
+a1[[1]]
+```
+
+```{r}
+a1[[4]]
+```
+
+
+```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+### 40% missing
+
+```{r}
+picked <- res_irt[[3]]
+a1 <- mk_plot(picked)
+```
+
+```{r}
+a1[[2]]
+```
+
+```{r}
+a1[[5]]
+```
+
+```{r}
+a1[[1]]
+```
+
+```{r}
+a1[[4]]
+```
+
+
+```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+### 20% missing
+
+```{r}
+picked <- res_irt[[4]]
+a1 <- mk_plot(picked)
+```
+
+```{r}
+a1[[2]]
+```
+
+```{r}
+a1[[5]]
+```
+
+```{r}
+a1[[1]]
+```
+
+```{r}
+a1[[4]]
+```
+
+```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+### 0% missing
+
+```{r}
+picked <- res_irt[[5]]
+a1 <- mk_plot(picked)
+```
+
+```{r}
+a1[[2]]
+```
+
+```{r}
+a1[[5]]
+```
+
+```{r}
+a1[[1]]
+```
+
+```{r}
+a1[[4]]
+```
+
+
+```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
