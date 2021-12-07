@@ -204,7 +204,7 @@ saveRDS(param_list, "report/rds/res_combined_LCA_1129.rds")
 
 # test --------------------------------------------------------------------
 
-  true_eta <- c(rnorm(250), rnorm(250, 0.7))
+  true_eta <- c(rnorm(100), rnorm(100))
   info <- parsForLVM(
     theta = true_eta,
     n_class = 2,
@@ -213,6 +213,7 @@ saveRDS(param_list, "report/rds/res_combined_LCA_1129.rds")
     data_type = "lca")
 
   data_info <- generate.lca(info)
+  table(data_info$class)/length(data_info$class)
   # apply(data_info[data_info$class == 1, 1:10], 2, table)
   # apply(data_info[data_info$class == 2, 1:10], 2, table)
 
@@ -275,7 +276,9 @@ lca.fit <- rstan::stan(
 lca.fit.df <- as.data.frame(lca.fit)
 
 a1 <- colMeans(lca.fit.df)[str_detect(names(lca.fit.df), "nu")]
+round(a1, 3)
 
+round(a1[1:250],3)
 
 matrix(a1, 500, 2)
 

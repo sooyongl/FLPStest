@@ -10,7 +10,7 @@ data {
   int studentM[nsecWorked];  // student index for long-format data
   int section[nsecWorked];    // item index for long-format data
 
-  int<lower=0,upper=1> grad[nsecWorked];      // long-format data
+  int<lower=1,upper=2> grad[nsecWorked];      // long-format data
 
   int<lower=1> nclass;                        // number of latent class
 }
