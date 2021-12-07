@@ -280,7 +280,7 @@ generate.sem <- function(info) {
   # set up for data generation
   theta <- info$theta; nitem <- info$nsec
 
-  loadings <- matrix(runif(nitem, 0.8, 1.2), ncol = 1)
+  loadings <- matrix(round(runif(nitem, 0.8, 1.5),2), ncol = 1)
   residuals <- diag(1, nitem)
 
   if(is.null(dim(theta))) {
@@ -293,14 +293,14 @@ generate.sem <- function(info) {
 
   residuals <- MASS::mvrnorm(n = n_sample,
                              mu = rep(0, nrow(loadings)),
-                             Sigma = residuals)
+                             Sigma = residuals,
+                             empirical = T)
 
   # data generation
-  latent <- tcrossprod(theta, loadings)
+  latent <- tcrossprod(theta, loadings);
   resp <- latent + residuals
 
   return(list(resp = resp, lv.par = loadings))
-
 }
 
 ## #~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~# ##
@@ -328,10 +328,12 @@ class_assign <- function(...) {
 # generate lca data ---------------------------------------------------
 generate.lca <- function(info) {
 
-  n_class <- info$n_class
-  n_indi <- info$n_indi
+  # n_class <- info$n_class
+  n_class <- 2
+  n_indi <- info$nsec
   theta <- info$theta
-  seperation <- info$seperation
+  # seperation <- info$seperation
+  seperation <- 0.9
   seperation <- c(seperation, 1- seperation)
 
   latent_class <- class_assign(theta)
@@ -367,7 +369,7 @@ generate.lca <- function(info) {
 
   data <- do.call('rbind', data)
 
-  return(data)
+  return(list(lv.par = seperation,resp = data))
 
 }
 
