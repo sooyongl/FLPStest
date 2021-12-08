@@ -100,7 +100,10 @@ mk_plot <- function(picked) {
       se = F
     ) +
     facet_wrap(chain ~ .) +
-    labs(color = "Chain", title = "Correlation between true eta and est eta by group", subtitle = picked) +
+    labs(color = "Chain", 
+         y = "Est eta",
+         title = "Correlation between true eta and est eta by group", 
+         subtitle = picked) +
     theme_bw(base_size = 16)
   
   p_eta <-est_eta %>% 
@@ -115,7 +118,10 @@ mk_plot <- function(picked) {
       se = F
     ) +
     facet_wrap(chain ~ .) +
-    labs(color = "Chain", title = "Correlation between true eta and est eta", subtitle = picked) +
+    labs(color = "Chain", 
+         y = "Est eta",
+         title = "Correlation between true eta and est eta", 
+         subtitle = picked) +
     theme_bw(base_size = 16)
   
   t_param <- picked$flps_param
