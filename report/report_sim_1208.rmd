@@ -126,6 +126,11 @@ picked_ls <- c(1, 11, 23, 31, 41)
 
 ```
 
+## Simulation model
+
+```{r echo=FALSE, out.width="50%"}
+include_graphics(file.path(report_path, "report/fig2.png"))
+```
 
 ## sem {.tabset}
 
