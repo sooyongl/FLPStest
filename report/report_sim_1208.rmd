@@ -152,6 +152,10 @@ a1[[2]]
 ```
 
 ```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+```{r}
 a1[[5]]
 ```
 
@@ -159,10 +163,6 @@ a1[[5]]
 <!-- a1[[1]] -->
 <!-- ``` -->
 
-
-```{r}
-a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
-```
 
 ### 60% missing
 
@@ -176,17 +176,16 @@ a1[[2]]
 ```
 
 ```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+```{r}
 a1[[5]]
 ```
 
 <!-- # ```{r} -->
 <!-- # a1[[1]] -->
 <!-- # ``` -->
-
-
-```{r}
-a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
-```
 
 ### 40% missing
 
@@ -200,16 +199,16 @@ a1[[2]]
 ```
 
 ```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+```{r}
 a1[[5]]
 ```
 
 <!-- # ```{r} -->
 <!-- # a1[[1]] -->
 <!-- # ``` -->
-
-```{r}
-a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
-```
 
 ### 20% missing
 
@@ -223,16 +222,16 @@ a1[[2]]
 ```
 
 ```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+```{r}
 a1[[5]]
 ```
 
 <!-- # ```{r} -->
 <!-- # a1[[1]] -->
 <!-- # ``` -->
-
-```{r}
-a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
-```
 
 
 ### 0% missing
@@ -247,16 +246,16 @@ a1[[2]]
 ```
 
 ```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+```{r}
 a1[[5]]
 ```
 
 <!-- # ```{r} -->
 <!-- # a1[[1]] -->
 <!-- # ``` -->
-
-```{r}
-a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
-```
 
 ## 2PL {.tabset}
 
@@ -272,6 +271,10 @@ a1[[2]]
 ```
 
 ```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+```{r}
 a1[[5]]
 ```
 
@@ -282,11 +285,6 @@ a1[[5]]
 <!-- # ```{r} -->
 <!-- # a1[[4]] -->
 <!-- # ``` -->
-
-
-```{r}
-a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
-```
 
 ### 60% missing
 
@@ -300,6 +298,10 @@ a1[[2]]
 ```
 
 ```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+```{r}
 a1[[5]]
 ```
 
@@ -311,10 +313,6 @@ a1[[5]]
 <!-- # a1[[4]] -->
 <!-- # ``` -->
 
-
-```{r}
-a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
-```
 
 ### 40% missing
 
@@ -328,6 +326,10 @@ a1[[2]]
 ```
 
 ```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+```{r}
 a1[[5]]
 ```
 
@@ -338,11 +340,6 @@ a1[[5]]
 <!-- # ```{r} -->
 <!-- # a1[[4]] -->
 <!-- # ``` -->
-
-
-```{r}
-a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
-```
 
 ### 20% missing
 
@@ -356,6 +353,10 @@ a1[[2]]
 ```
 
 ```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+```{r}
 a1[[5]]
 ```
 
@@ -366,10 +367,6 @@ a1[[5]]
 <!-- # ```{r} -->
 <!-- # a1[[4]] -->
 <!-- # ``` -->
-
-```{r}
-a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
-```
 
 ### 0% missing
 
@@ -383,6 +380,10 @@ a1[[2]]
 ```
 
 ```{r}
+a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
+```
+
+```{r}
 a1[[5]]
 ```
 
@@ -393,8 +394,3 @@ a1[[5]]
 <!-- # ```{r} -->
 <!-- # a1[[4]] -->
 <!-- # ``` -->
-
-
-```{r}
-a1[[3]] %>% kable() %>% kable_classic(full_width = F, position="left")
-```
