@@ -76,6 +76,40 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
 
   if(lvmodel == "lca") {
 
+    studItem <- unname(table(studentM))
+    cumStudItem <- c(0, cumsum(studItem)[-length(studItem)])
+
+    random.Y <- rnorm(N,0,sqrt(1-R2Y))
+
+    Y <- rep(0, N)
+
+    idx.c1 <- which(info.data$resp$class==1)
+    Y[idx.c1] <- 0 + 0*Z[idx.c1]
+
+    idx.c2 <- which(info.data$resp$class==2)
+    Y[idx.c2] <- omega + tau1*Z[idx.c2]
+
+    Y <- Y + tau0*Z + sqrt(R2Y/2)*(x2-x1) + random.Y
+
+    varlist <- list(
+      nsecWorked = length(section),
+      nstud = N,
+      nsec = nsec,
+      max_k = max(grad),
+      lv.par = lv.par,
+      studentM = studentM,
+      section = section,
+      grad = grad,
+      X = cbind(x1,x2),
+      ncov = 2,
+      true_eta = eta,
+      Z = Z,
+      Y = Y,
+
+      studItem = studItem,
+      cumStudItem = cumStudItem,
+      lv.rep = info.data$resp
+    )
 
   } else {
 
@@ -83,23 +117,25 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
     random.Y <- rnorm(N,0,sqrt(1-R2Y))
 
     Y <- tau0*Z + omega*eta + tau1*eta*Z + sqrt(R2Y/2)*(x2-x1) + random.Y
+
+    varlist <- list(
+      nsecWorked = length(section),
+      nstud = N,
+      nsec = nsec,
+      max_k = max(grad),
+      lv.par = lv.par,
+      studentM = studentM,
+      section = section,
+      grad = grad,
+      X = cbind(x1,x2),
+      ncov = 2,
+      true_eta = eta,
+      Z = Z,
+      Y = Y
+    )
   }
 
-  list(
-    nsecWorked = length(section),
-    nstud = N,
-    nsec = nsec,
-    max_k = max(grad),
-    lv.par = lv.par,
-    studentM = studentM,
-    section = section,
-    grad = grad,
-    X = cbind(x1,x2),
-    ncov = 2,
-    true_eta = eta,
-    Z = Z,
-    Y = Y
-  )
+  return(varlist)
 }
 
 
@@ -232,10 +268,10 @@ makeInpData <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
 
   # Generate LVM data -------------------------------------------------------
   info <- parsForLVM(theta = eta, nsec = nsec, data_type = lvmodel)
-  grad <- generate(info); # methods(generate)
+  info.data <- generate(info); # methods(generate)
 
-  lv.par <- grad$lv.par
-  grad <- grad$resp
+  lv.par <- info.data$lv.par
+  grad <- info.data$resp
 
   # nworked <- sample(1:nsec,N/2,replace=TRUE,prob=dexp(1:nsec,rate=1/lambda))
   nworked <- rep(floor(nsec * lambda), N/2)
@@ -263,6 +299,7 @@ makeInpData <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   inp_data <- data.frame(Y, Z, cbind(x1, x2), d3)
 
   list(
+    lv.rep = info.data$resp,
     lv.par = lv.par,
     true_eta = eta,
     inp_data = inp_data

@@ -142,13 +142,13 @@ generate.dich <- function(info, D = 1){
   } else if(inherits(info, "2pl")) {
 
     b <- rnorm(nitem) ## this is not based on original model
-    a <- rlnorm(nitem, 0, 0.5) ## this is not based on original model
+    a <- runif(nitem, 0.6, 1.4) ## this is not based on original model
     c <- runif(nitem,0,0) ## this is not based on original model
 
   } else if(inherits(info, "3pl")) {
 
     b <- rnorm(nitem) ## this is not based on original model
-    a <- rlnorm(nitem, 0, 0.5) ## this is not based on original model
+    a <- runif(nitem, 0.6, 1.4) ## this is not based on original model
     c <- runif(nitem,0,.2) ## this is not based on original model
 
   } else {
@@ -310,17 +310,25 @@ generate.sem <- function(info) {
 class_assign <- function(...) {
   eta <- list(...)
 
-  eta$ref <- rep(0, length(eta[[1]]))
-  eta <- lapply(eta, exp)
-  eta <- do.call("cbind", eta)
+  # eta$ref <- rep(0, length(eta[[1]]))
+  # eta <- lapply(eta, exp)
+  # eta <- do.call("cbind", eta)
+  #
+  # sum_eta <- apply(eta, 1, function(x) Reduce(sum, x))
+  # clasS_prob <- apply(eta, 2, function(x) x / (sum_eta))
+  #
+  # assignment <- apply(clasS_prob, 1, function(x) { (dim(clasS_prob)[2] + 1) - which.max(x)})
+  #
+  # assignment
 
-  sum_eta <- apply(eta, 1, function(x) Reduce(sum, x))
-  clasS_prob <- apply(eta, 2, function(x) x / (sum_eta))
+  # vector of probabilities
+  vProb = cbind(exp(0), exp(eta[[1]]))
 
-  assignment <- apply(clasS_prob, 1, function(x) { (dim(clasS_prob)[2] + 1) - which.max(x)})
+  # multinomial draws
+  mChoices = t(apply(vProb, 1, rmultinom, n = 1, size = 1))
+  assignment = cbind.data.frame(class = apply(mChoices, 1, function(x) which(x==1)))
 
   assignment
-
 }
 
 # https://mc-stan.org/users/documentation/case-studies/Latent_class_case_study.html#data-generation-and-label-switching
@@ -366,11 +374,17 @@ generate.lca <- function(info) {
 
     useData
   })
+  resp <- do.call('rbind', data)
+  resp <- resp - 1
 
-  data <- do.call('rbind', data)
+  idx <- data.frame(latent_class, id = 1:nrow(latent_class))
+  idx <- idx[order(idx$class),]
 
-  return(list(lv.par = seperation,resp = data))
+  resp$id <- idx$id
+  resp <- resp[order(resp$id),]
+  resp$id <- NULL
 
+  return(list(lv.par = seperation, resp = resp))
 }
 
 # generate lpa data ---------------------------------------------------
