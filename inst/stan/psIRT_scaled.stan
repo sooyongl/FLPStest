@@ -55,17 +55,9 @@ transformed parameters {
       lambda[jj] = lambda_free[jj];
 	  tau[jj] = tau_free[jj];
     }  
-  
   }
  
   for(j in 1:nsecWorked) {
-  //  if(section[j] == 1){
-  //    lambda[section[j]] = 1;
-  //    tau[section[j]] = 0;
-  //  } else{
-  //   lambda[section[j]] = lambda_free[section[j]];
-  //    tau[section[j]] = tau_free[section[j]];
-  //  }
     linPred[j] = tau[section[j]] + lambda[section[j]] * eta[studentM[j]];
   }
 
@@ -77,7 +69,6 @@ model{
  real trtEff[nstud];
  real sigYI[nstud];
 
-
  for(i in 1:nstud){
   useEff[i]=a1*eta[i];
   trtEff[i]=b0+b1*eta[i];
@@ -88,18 +79,20 @@ model{
  //priors
  // IRT priors
  tau_free ~ normal(0, 1);
- lambda_free ~ normal(0, 1);
- //alpha ~ lognormal(0, .5);
+ lambda_free ~ normal(1, 0.5);
 
  // PS priors
- //muEta~normal(0,1);
  betaY~normal(0,2);
- betaU~normal(0,2);
- b00~normal(0,2);
- a1~normal(0,1);
- b0~normal(0,1);
- b1~normal(0,1);
 
+ betaU[1]~normal(0,1);
+ betaU[2]~normal(0,1);
+ 
+ a1~normal(0,1);
+ b1~normal(0,1);
+ 
+ b00~normal(0,2);
+ b0~normal(0,1);
+ 
  // Fully Latent Principal Stratification model
  // Latent variable model
  grad~bernoulli_logit(linPred);
@@ -109,12 +102,10 @@ model{
  Y~normal(muY+X*betaY,sigYI);
 }
 
-generated quantities {
-  
-  real difficulty[nsec];
-  
-  for(jj in 1:nsec) {
-    difficulty[jj] = - tau[jj] / lambda[jj];
-  }
-
-}
+//generated quantities {
+//  real difficulty[nsec];
+//  for(jj in 1:nsec) {
+//    difficulty[jj] = - tau[jj] / lambda[jj];
+//  }
+//}
+// last line blank

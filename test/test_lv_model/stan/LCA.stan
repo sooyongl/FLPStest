@@ -45,7 +45,9 @@ model{
 		log_items[m] = grad[cumStudItem[j] + m] * log(p[c,i]) + (1 - grad[cumStudItem[j] + m]) * log(1 - p[c,i]);
 
 		}
-
+        
+		
+		
         ps[c] = log_nu[c] + sum(log_items);
 
 	}

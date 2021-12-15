@@ -21,15 +21,16 @@ parameters{
  // IRT model
  // real delta; // mean ability
  vector[nstud] eta; // ability of student nstud
- real tau[nsec]; // difficulty of question nsec
- real lambda[nsec]; // discrimination of nsec
-
+ real lambda_free[nsec]; // discrimination of nsec
+ real tau_free[nsec]; // difficulty of question nsec
+ 
  // vector[nstud] studEff;
  // real secEff[nsec];
 
  vector[ncov] betaU;
  vector[ncov] betaY;
 
+ //real muEta;
  real b00;
  real a1;
  real b0;
@@ -40,19 +41,33 @@ parameters{
  real<lower=0> sigU;
 }
 
+transformed parameters {
+  vector[nsec] lambda;
+  vector[nsec] tau;
+
+  real linPred[nsecWorked];
+
+  for(jj in 1:nsec) {
+    if(jj == 1) {
+      lambda[1] = 1;
+	  tau[1] = 0;
+	} else {
+      lambda[jj] = lambda_free[jj];
+	  tau[jj] = tau_free[jj];
+    }  
+  }
+ 
+  for(j in 1:nsecWorked) {
+    linPred[j] = tau[section[j]] + lambda[section[j]] * eta[studentM[j]];
+  }
+
+}
+
 model{
- real linPred[nsecWorked];
  vector[nstud] muY;
  real useEff[nstud];
  real trtEff[nstud];
  real sigYI[nstud];
-
-
-// grad model
- for(i in 1:nsecWorked){
-
-    linPred[i]= lambda[section[i]] * (eta[studentM[i]] - tau[section[i]]);
-	}
 
  for(i in 1:nstud){
   useEff[i]=a1*eta[i];
@@ -63,22 +78,27 @@ model{
 
  //priors
  // IRT priors
- tau ~ normal(0, 1);
- lambda ~ normal(0, 1);
- //alpha ~ lognormal(0, .5);
+ tau_free ~ normal(0, 1);
+ lambda_free ~ normal(0, 1);
 
  // PS priors
  betaY~normal(0,2);
- betaU~normal(0,2);
- b00~normal(0,2);
- a1~normal(0,1);
- b0~normal(0,1);
- b1~normal(0,1);
 
+ betaU[1]~normal(0,1);
+ betaU[2]~normal(0,1);
+ 
+ a1~normal(0,1);
+ b1~normal(0,1);
+ 
+ b00~normal(0,2);
+ b0~normal(0,1);
+ 
  // Fully Latent Principal Stratification model
  // Latent variable model
  grad~bernoulli_logit(linPred);
  // Causal model
+ //eta~normal(muEta+X*betaU,sigU);
  eta~normal(X*betaU,sigU);
  Y~normal(muY+X*betaY,sigYI);
 }
+// last line blank

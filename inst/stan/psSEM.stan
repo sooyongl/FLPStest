@@ -30,7 +30,8 @@ parameters{
  real b1;
 
  real lambda[nsec];
-
+ real tau[nsec];
+ 
  real<lower=0> sigR;
  real<lower=0> sigY[2];
  real<lower=0> sigU;
@@ -47,7 +48,7 @@ model{
 // grad model
  for(i in 1:nsecWorked) {
 
-  linPred[i] = lambda[section[i]] * eta[studentM[i]];
+  linPred[i] = tau[section[i]] + lambda[section[i]] * eta[studentM[i]];
 }
 
  for(i in 1:nstud){
@@ -65,8 +66,9 @@ model{
  b0~normal(0,1);
  b1~normal(0,1);
 
- eta ~ normal(0, sqrt(1));
- lambda ~ normal(0, sqrt(1));
+ eta ~ normal(0, 1);
+ lambda ~ normal(0, 1);
+ tau ~ normal(0, 1);
  sigR ~ inv_gamma(2.1, 1.1);
  // error variance prior
  // for(i in 1:Nv){
