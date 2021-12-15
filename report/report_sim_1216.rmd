@@ -1,0 +1,144 @@
+---
+title: "Simulation Report"
+author: ""
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    css: "style.css"
+    code_folding: show
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r library, message = FALSE, echo = FALSE}
+# Suppress summarise info
+options(dplyr.summarise.inform = FALSE,scipen = 1, digits = 4)
+
+
+knitr::opts_chunk$set(echo = FALSE,
+                      fig.width=12, fig.height=8)
+library(kableExtra)
+library(tidyverse)
+library(knitr); library(kableExtra)
+library(ggpubr); 
+library(ggrepel)
+
+root <- rprojroot::find_rstudio_root_file()
+report_path <- file.path(root)
+
+param_info_list <- readRDS(file.path(report_path, "report/rds/irt_info_1214.rds"))
+param_pinfo_list <- readRDS(file.path(report_path, "report/rds/irt_pinfo_1214.rds"))
+param_noinfo_list <- readRDS(file.path(report_path, "report/rds/irt_noinfo_1214.rds"))
+
+test_plot <- function(pickname="flps_param", yname = "b1", yint = 0, p.title = "", p.subt = "", p.cap = "info: informative prior for all parameters; partial: informative prior for factor loading; noinfo: noninformative prior") {
+  info.param <- lapply(param_info_list, "[[", pickname) %>% bind_rows(.id = "rep")
+  pinfo.param <- lapply(param_pinfo_list, "[[", pickname) %>% bind_rows(.id = "rep")
+  noinfo.param <- lapply(param_noinfo_list, "[[", pickname) %>% bind_rows(.id = "rep")
+
+  c.data <- bind_rows(info.param, pinfo.param, noinfo.param, .id = "prior") %>%
+    mutate(prior = case_when(prior == 1 ~ "info", prior == 2 ~ "partial", prior == 3 ~ "noinfo"),
+           prior = factor(prior, levels = c("info","partial","noinfo")))
+
+  c.data %>%
+    filter(chain != 0 & rep %in% c(1:10) ) %>%
+    ggplot(aes_string(x = "rep", y = yname)) +
+    geom_point(
+      aes(colour = as.factor(chain)
+          # shape = as.factor(chain)
+          ),
+      alpha = 0.6,
+      size = 4, position = position_jitter(w = 0.3, h = 0)) +
+    geom_hline(yintercept = yint, alpha = .5) +
+    geom_hline(yintercept = 0, alpha = .2) +
+    scale_y_continuous(n.breaks = 20) +
+    labs(
+      colour = "chain",
+      title = p.title,
+      subtitle = p.subt,
+      caption = p.cap) +
+    scale_shape_discrete(guide="none") +
+    facet_grid(. ~ prior) +
+    # facet_grid(rows = vars(category.2), vars(cols = category.1))
+    ggforce::geom_mark_hull() +
+    # theme(legend.position = "none") +
+    scale_color_brewer(palette = "Set1") +
+    theme_bw(base_size = 14)
+}
+
+
+```
+
+<div class = "row">
+<div class = "col-md-6">
+
+## Simulation model
+
+```{r echo=FALSE, out.width="100%"}
+include_graphics(file.path(report_path, "report/fig2.png"))
+```
+</div>
+
+<div class = "col-md-6">
+
+## Condition
+
+- **2PL model**
+  - 20 items (40% missing)
+  - difficulty ~ N(0, 1)
+  - discrimination ~ Unif(0.6, 1.4)
+ 
+- **FLPS parameters**
+  - a1 =  0.2
+  - b0 =  0.4
+  - b1 = -0.2 
+ 
+- **Informative prior**: prior for parameters related to latent scores, corresponding to the signs. (ex. for -0.2 of b1,  prior = N(-1, 1) )
+
+- **Partial informative prior**: prior only for factor loadings (N(1, 0.5) for all factor loadings to prevent them from having opposite signs).
+
+- **Non-informative prior**: all priors are N(0, 1) (this is still a bit informative, but to be consistent with the previous tests).
+</div>
+</div>
+
+## results
+
+### factor loading (discrimination)
+
+```{r}
+test_plot(pickname="comb_lambda", yname = "`lambda[2]`", yint = 0,
+          p.title = "one factor loading across 10 replications by priors")
+```
+
+### b1
+
+```{r}
+test_plot(pickname="flps_param", yname = "b1", yint = -0.2,
+          p.title = "b1 estimate across 10 replications by priors")
+```
+
+### a1
+
+```{r}
+test_plot(pickname="flps_param", yname = "a1", yint = 0,
+          p.title = "a1 estimate across 10 replications by priors")
+```
+
+### bu1
+
+```{r}
+test_plot(pickname="flps_param", yname = "bu1", yint = 0,
+          p.title = "bu1 estimate across 10 replications by priors")
+```
+
+### bu2
+
+```{r}
+test_plot(pickname="flps_param", yname = "bu2", yint = 0,
+          p.title = "bu2 estimate across 10 replications by priors")
+```
+
