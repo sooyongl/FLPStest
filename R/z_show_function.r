@@ -37,8 +37,8 @@ setMethod("print", "flps", function(x) {
 setMethod("show", "flpsData", function(object) {
 
   print(object)
+  # return(invisible(NULL))
 
-  return(invisible(NULL))
 })
 
 #' @aliases print,flps-method
@@ -46,16 +46,17 @@ setMethod("show", "flpsData", function(object) {
 #' @rdname print-methods
 setMethod("print", "flpsData", function(x) {
 
-  z0_mean <- round(mean(x@stan_data$Y [x@stan_data$Z == 0], na.rm = T),3)
-  z1_mean <- round(mean(x@stan_data$Y [x@stan_data$Z == 1], na.rm = T),3)
+  # z0_mean <- round(mean(x@stan_data$Y[x@stan_data$Z == 0], na.rm = T),3)
+  # z1_mean <- round(mean(x@stan_data$Y[x@stan_data$Z == 1], na.rm = T),3)
+  #
+  # out <- paste0(
+  #   paste("LVM type:", x@lv_type, "\n"),
+  #   paste("LVM syntax: ", x@lv_model, "\n"),
+  #   paste("Z=0, mean_Y :", z0_mean,"Z=1, mean_Y :", z1_mean)
+  # )
+  #
+  # cat(out)
 
-  out <- paste0(
-    paste("LVM type:", x@lv_type, "\n"),
-    paste("LVM syntax: ", x@lv_model, "\n"),
-    paste("Z=0, mean_Y :", z0_mean,"Z=1, mean_Y :", z1_mean)
-  )
-
-  cat(out)
-
-  return(invisible(x))
+  # return(invisible(x))
+  return(x)
 })

@@ -83,10 +83,10 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
 
     Y <- rep(0, N)
 
-    idx.c1 <- which(info.data$resp$class==1)
+    idx.c1 <- which(info.data$resp$class==0)
     Y[idx.c1] <- 0 + 0*Z[idx.c1]
 
-    idx.c2 <- which(info.data$resp$class==2)
+    idx.c2 <- which(info.data$resp$class==1)
     Y[idx.c2] <- omega + tau1*Z[idx.c2]
 
     Y <- Y + tau0*Z + sqrt(R2Y/2)*(x2-x1) + random.Y
@@ -136,85 +136,6 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,nsec,lvmodel){
   }
 
   return(varlist)
-}
-
-
-
-#' #' S3 generic for data setting depending on latent variable models
-#' #'
-#' dataSetting <- function(info, ...) {
-#'   UseMethod("dataSetting", info)
-#' }
-#'
-#' #' get information for data generation ready
-#' #'
-#' infoSetting <- function(...) {
-#'
-#'   info <- list(...)
-#'   lv_type <- info$lv_type
-#'   info$lv_type <- NULL
-#'
-#'   structure(info, class = lv_type)
-#' }
-
-#' Convert a matrix to a FLPS data
-#'
-#' @export
-makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type) {
-
-  # flps_data <- dataSetting() ; S3 class
-
-  inp_data <- data.frame(inp_data)
-
-  outcome.data <- unname(unlist(inp_data[outcome]))
-  group.data <- unname(unlist(inp_data[group]))
-  covariate.data <- inp_data[covariate]
-
-  lv_model1 <- unlist(strsplit(lv_model, "\n"))
-  lv_model2 <- do.call("rbind",strsplit(lv_model1, "=~"))
-  lv_model3 <- unlist(strsplit(lv_model2[, 2], "\\+"))
-  lv_model4 <- unlist(strsplit(lv_model3, " "))
-
-  obs.v.name <- lv_model4[lv_model4 != ""]
-  obs.v.matrix <- inp_data[obs.v.name]
-
-  obs.v.partial <- obs.v.matrix[group.data == 1, ]
-
-  nsec <- ncol(obs.v.partial)
-  nstu <- nrow(obs.v.matrix)
-
-  obs.v.idx <- which(!is.na(obs.v.partial), arr.ind = T)
-
-  obs.v.vector <- sapply(1:nrow(obs.v.idx),
-                         function(n) obs.v.matrix[obs.v.idx[n,1], obs.v.idx[n,2]])
-
-
-  flps_data <- list(
-    nsecWorked = length(obs.v.idx[,2]),
-    nstud = nstu,
-    nsec = nsec,
-    max_k = max(obs.v.vector),
-
-    studentM = unname(obs.v.idx[,1]),
-    section = unname(obs.v.idx[,2]),
-
-    grad = obs.v.vector,
-    X = covariate.data,
-    ncov = ncol(covariate.data),
-
-    Z = group.data,
-    Y = outcome.data
-  )
-
-  out <- new("flpsData")
-
-  out@outcome <- outcome
-  out@group <- group
-  out@lv_type <- lv_type
-  out@lv_model <- lv_model
-  out@stan_data <- flps_data
-
-  return(out)
 }
 
 #' Generate a matrix style data for simulation

@@ -143,6 +143,9 @@ generate.dich <- function(info, D = 1){
 
     b <- rnorm(nitem) ## this is not based on original model
     a <- runif(nitem, 0.6, 1.4) ## this is not based on original model
+
+    # a[11:20] <- -a[11:20]
+
     c <- runif(nitem,0,0) ## this is not based on original model
 
   } else if(inherits(info, "3pl")) {

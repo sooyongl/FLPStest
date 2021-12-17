@@ -17,7 +17,7 @@ loadRstan <- function(lv_type = "2pl") {
 
   stan_list <- stan_list[grep(toupper("scaling"), toupper(stan_list))]
 
-  if(tolower(lv_type) %in% c("2pl", "3pl")) {
+  if(tolower(lv_type) %in% c("rasch","2pl", "3pl")) {
     lv_type <- "IRT"
   }
 
