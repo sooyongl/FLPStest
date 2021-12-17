@@ -64,7 +64,7 @@ model{
  //priors
  // IRT priors
  tau ~ normal(0, 1);
- lambda ~ normal(0, 1);
+ lambda ~ normal(1, 1);
  //alpha ~ lognormal(0, .5);
 
  // PS priors

@@ -78,11 +78,11 @@ model{
 
  //priors
  // IRT priors
- tau_free ~ normal(0, 1);
- lambda_free ~ normal(0, 1);
+ tau_free ~ normal(0,1);// uniform(-10, 10);
+ lambda_free ~ normal(0,1);
 
  // PS priors
- betaY~normal(0,2);
+ betaY~normal(0,1);
 
  betaU[1]~normal(0,1);
  betaU[2]~normal(0,1);
@@ -90,7 +90,7 @@ model{
  a1~normal(0,1);
  b1~normal(0,1);
  
- b00~normal(0,2);
+ b00~normal(0,1);
  b0~normal(0,1);
  
  // Fully Latent Principal Stratification model

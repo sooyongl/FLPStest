@@ -94,7 +94,7 @@ model{
 
   //priors
   // IRT priors
-  lambda_free ~ uniform(-2, 2);
+  lambda_free ~ normal(0, 1);
   for(ii in 2:max_k) {
     tau_free[ii , ] ~ uniform(-10, 10);
   }

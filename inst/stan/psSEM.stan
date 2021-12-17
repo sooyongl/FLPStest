@@ -67,9 +67,11 @@ model{
  b1~normal(0,1);
 
  eta ~ normal(0, 1);
- lambda ~ normal(0, 1);
+ 
+ lambda ~ normal(1, 0.5);
+ 
  tau ~ normal(0, 1);
- sigR ~ inv_gamma(2.1, 1.1);
+ sigR ~ inv_gamma(2, 1);
  // error variance prior
  // for(i in 1:Nv){
  //   // sigma2 prior

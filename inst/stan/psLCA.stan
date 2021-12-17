@@ -8,7 +8,7 @@ data {
   int studentM[nsecWorked];      // student index for long-format data
   int section[nsecWorked];       // item index for long-format data
   int<lower=1> nclass;           // number of latent class
-  
+
   // data data
    int<lower=0,upper=1> grad[nsecWorked];
    matrix[nstud,ncov] X;
@@ -20,9 +20,9 @@ parameters {
   real alpha;                          // overall class proportion
   vector[ncov] betaY;
   vector[ncov] betaU;
-  
+
   real <lower = 0, upper = 1> p[nclass, nsec]; // probs of reponse = 1
-  
+
   vector[nclass] b00;
   // real a1;
   // real b0;
@@ -33,28 +33,31 @@ parameters {
 
 transformed parameters {
    vector[nstud] nu=inv_logit(alpha + X*betaU);
+
+   real b1 = b01[2] - b01[1];
+   real a1 = b00[2] - b00[1];
 }
 
 model{
   //vector[nclass] log_nu = log(nu);
-  
+
    betaY~normal(0,2);
    betaU~normal(0,2);
    b00~normal(0,2);
    b01~normal(0,1);
-   
-  
-  for (w in 1:nsecWorked) {
 
-    target += log_sum_exp( 
-      log(nu[studentM[w]]) + 
-	  bernoulli_lpmf(grad[w] | p[1,section[w]]) + 
-	  normal_lpdf(Y[studentM[w]] | b00[1] + b01[1]*Z[studentM[w]] + X[studentM[w],]*betaY, sigY[1]),
-	  
-	  log(1-nu[studentM[w]])+ 
-	  bernoulli_lpmf(grad[w] | p[2,section[w]]) + 
-	  normal_lpdf(Y[studentM[w]] | b00[2] + b01[2]*Z[studentM[w]] + X[studentM[w],]*betaY, sigY[2])
+  for (w in 1:nsecWorked) {
+    target += log_sum_exp(
+      log(nu[studentM[w]]) + bernoulli_lpmf(grad[w] | p[1,section[w]]),
+      log(1-nu[studentM[w]])+ bernoulli_lpmf(grad[w] | p[2,section[w]])
 	);
+
+	for(s in 1:nstud) {
+	  target += log_sum_exp(
+	    log(nu[s]) + normal_lpdf(Y[s] | b00[1] + b01[1]*Z[s] + X[s,]*betaY, sigY[1]),
+	    log(1-nu[s]) + normal_lpdf(Y[s] | b00[2] + b01[2]*Z[s] + X[s,]*betaY, sigY[2])
+	  );
+	};
   }
 }
 // last line is blank

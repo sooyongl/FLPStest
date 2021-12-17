@@ -63,7 +63,6 @@ transformed parameters {
     // }
     linPred[j] = tau[section[j]] + lambda[section[j]] * eta[studentM[j]];
   }
-
 }
 
 model{
@@ -83,24 +82,18 @@ model{
  //priors
  //muEta~normal(0, sqrt(1));
  //lambda_free~normal(0, sqrt(1));
+ 
  lambda_free ~ normal(1, 0.5);
-  
+ 
  tau_free~normal(0, 1);
- 
- sigR~inv_gamma(2.1, 1.1);
- 
+ sigR~inv_gamma(2, 1);
  betaY~normal(0,2);
- 
  betaU[1]~normal(1,1);
  betaU[2]~normal(-1,1);
- 
  b00~normal(0,2);
- 
- a1~normal(1,1);
- 
+ a1~normal(0,1);
  b0~normal(0,1);
- 
- b1~normal(-1,1);
+ b1~normal(0,1);
 
  grad~normal(linPred, sigR);
 

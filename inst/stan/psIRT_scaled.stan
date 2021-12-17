@@ -5,6 +5,9 @@ data{
  int<lower=1> nstud;
  int<lower=1> nsec;
 
+// prior information
+// real lambda_prior;
+
 // indices
  int<lower=1,upper=nstud> studentM[nsecWorked];
  int<lower=1,upper=nsec> section[nsecWorked];
@@ -23,7 +26,7 @@ parameters{
  vector[nstud] eta; // ability of student nstud
  real lambda_free[nsec]; // discrimination of nsec
  real tau_free[nsec]; // difficulty of question nsec
- 
+
  // vector[nstud] studEff;
  // real secEff[nsec];
 
@@ -54,9 +57,9 @@ transformed parameters {
 	} else {
       lambda[jj] = lambda_free[jj];
 	  tau[jj] = tau_free[jj];
-    }  
+    }
   }
- 
+
   for(j in 1:nsecWorked) {
     linPred[j] = tau[section[j]] + lambda[section[j]] * eta[studentM[j]];
   }
@@ -80,19 +83,23 @@ model{
  // IRT priors
  tau_free ~ normal(0, 1);
  lambda_free ~ normal(1, 0.5);
-
+ //for(i in 1:nsec) {
+ //  lambda_free[i] ~ normal(lambda_prior[i], 0.5);
+ //};
+ //for(i in 1:10){
+ 
  // PS priors
- betaY~normal(0,2);
+ betaY~ uniform(-5, 5);//normal(0,2);
 
- betaU[1]~normal(0,1);
- betaU[2]~normal(0,1);
- 
- a1~normal(0,1);
- b1~normal(0,1);
- 
- b00~normal(0,2);
- b0~normal(0,1);
- 
+ betaU[1]~ uniform(-5, 5);//normal(0,1);
+ betaU[2]~ uniform(-5, 5);//normal(0,1);
+
+ a1~ uniform(-5, 5);//normal(0,1);
+ b1~ uniform(-5, 5);//normal(0,1);
+
+ b00~ uniform(-5, 5);//normal(0,1);
+ b0~ uniform(-5, 5);//normal(0,1);
+
  // Fully Latent Principal Stratification model
  // Latent variable model
  grad~bernoulli_logit(linPred);
