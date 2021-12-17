@@ -73,6 +73,27 @@ test_plot <- function(pickname="flps_param", yname = "b1", yint = 0, p.title = "
 
 ```
 
+## in the case of LCA
+
+```{r}
+res_LCA <- readRDS(file.path(report_path, "report/rds/res_combined_LCA_1129.rds"))
+
+  p <- ggarrange(res_LCA[[1]]$post_plot[[1]],
+                 res_LCA[[1]]$post_plot[[2]],
+                 res_LCA[[1]]$post_plot[[3]], nrow = 3)
+  p
+```
+
+## in the case of FLPS
+
+```{r}
+
+include_graphics(file.path(report_path, "report/traceplot.png"))
+
+```
+
+
+
 <div class = "row">
 <div class = "col-md-6">
 

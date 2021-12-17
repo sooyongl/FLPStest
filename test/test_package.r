@@ -1,6 +1,6 @@
 # rm(list = ls())
 library(FLPS)
-
+# for(i in fs::dir_ls("R", regexp = "r$")) source(i); rm(i)
 # https://mc-stan.org/users/documentation/case-studies/Latent_class_case_study.html#data-generation-and-label-switching
 
 # simulation factors ------------------------------------------------------
@@ -10,7 +10,7 @@ param_list <- parsFromMod <- list(
   omega = 0.2,
   tau0 = 0.13,
   tau1 = -0.06,
-  lambda = 10,
+  lambda = .6,
   R2eta = 0.2,
   nsec = 20,
   lvmodel = "2pl" # tag for latent variable model
@@ -18,22 +18,34 @@ param_list <- parsFromMod <- list(
 
 
 # package version ---------------------------------------------------------
-sim_dt <- do.call(FLPS::makeInpData, parsFromMod);
 
-sim_dt$lv.par
-sim_dt$true_eta
-head(sim_dt$inp_data)
-tail(sim_dt$inp_data)
-
-fit <- FLPS::runFLPS(
+## default version
+sim_dt <- do.call(makeInpData, parsFromMod);
+fit <- runFLPS(
   inp_data = sim_dt$inp_data,
   outcome = "Y",
   group = "Z",
   covariate = c("x1","x2"),
   lv_type = "2pl",
   lv_model = paste0("F =~ ", paste(paste0("X", 1:20), collapse = "+")),
-  stan_options = list(iter = 4000, warmup = 1000, cores = 1, chains = 1)
+  stan_options = list()
 )
+
+## Custom version
+custom_dt <- do.call(makeDat, parsFromMod);
+custom_stancode <- paste(readLines("inst/stan/psSEM_scaled.stan"), collapse = "\n")
+
+fit <- runFLPS(
+  custom_data = custom_dt,
+  custom_stan = custom_stancode,
+  outcome = "Y",
+  group = "Z",
+  covariate = c("x1","x2"),
+  lv_type = "2pl",
+  lv_model = paste0("F =~ ", paste(paste0("X", 1:20), collapse = "+")),
+  stan_options = list()
+)
+
 
 # fit <- readRDS("results/res_rasch_new.rds")
 

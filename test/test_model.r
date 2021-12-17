@@ -16,8 +16,8 @@ file_list <- c(
 lvmodel_list <- c("2PL", "GPCM", "sem","lca")
 #
 # model ---------------------------------------------------------
-stan_file_name <- file_list[4]
-lvmodel <- lvmodel_list[4]
+stan_file_name <- file_list[3]
+lvmodel <- lvmodel_list[3]
 
 # for(l in 0.6) { #seq(0.2,1, 0.2)) {
   for(i in 1:1) {
@@ -28,8 +28,8 @@ lvmodel <- lvmodel_list[4]
       N = 500, # sample size
       R2Y = 0.2,
       omega = 0.2,  # a1
-      tau0 = 0.4,  # b0
-      tau1 = -0.2, # b1
+      tau0 = 0.13,  # b0
+      tau1 = -0.06, # b1
       # lambda = 10,
       lambda = 0.6,
       R2eta = 0.2,
@@ -40,8 +40,8 @@ lvmodel <- lvmodel_list[4]
 
     # data <- data.frame(Y=sdat$Y,Z=sdat$Z,sdat$X,eta=sdat$true_eta)
     # lm(Y ~ Z + x1 + x2 + Z*eta, data = data)
-
-    # glm(class ~ x1 + x2, data.frame(class = sdat$lv.rep$class-1, sdat$X),
+    #
+    # glm(class ~ x1 + x2, data.frame(class = sdat$lv.rep$class, sdat$X),
     #     family = "binomial")
 
     # sdat <- do.call("makeInpData", parsFromMod)
@@ -60,10 +60,33 @@ lvmodel <- lvmodel_list[4]
     # sdat <- sdat1@stan_data
     sdat$nclass <- 2
 
-    fit <- stan(stan_file_name,data=sdat,iter=5000,warmup=2000,chains=1)
+    fit <- stan(
+      stan_file_name,
+      data = sdat,
+      iter = 5000,
+      warmup = 2000,
+      chains = 4
+    )
 
-    # stan_file_noinfo <- "inst/stan/psIRT_scaled_noinfo.stan"
-    # fit <- stan(stan_file_noinfo,data=sdat,iter=10000,warmup=2000,chains=4)
+    # generate a list of lists to specify initial values
+    # https://solomonkurz.netlify.app/post/2021-06-05-don-t-forget-your-inits/
+
+    # init_func <- function(chain_id=1) {list (lambda_free = rep(1, 20))}
+    # # In your case just two chains is needed.
+    # n_chains <- 4
+    # init_list <- lapply(1:n_chains, function(id) init_func(chain_id = id))
+    # sdat$lv.par
+
+    # stan_file_noinfo <- "inst/stan/psSEM.stan"
+    # fit <- stan(
+    #   stan_file_noinfo,
+    #   data = sdat,
+    #   iter = 5000,
+    #   warmup = 2000,
+    #   chains = 4
+    #   # ,init = init_list
+    # )
+
 
     # print(fit, c("b1"))
     # print(fit, c("lambda[2]","lambda[3]","lambda[4]","lambda[5]"))
@@ -114,13 +137,13 @@ for(i in 1:length(res_list)) {
 
   # item param
   df.fit <- as.data.frame(fit)
-  df.fit$chain <- rep(c(1:4), each = 8000)
+  df.fit$chain <- rep(c(1:4), each = 3000)
   df.fit <- df.fit %>% group_by(chain)
   #
   # df.fit %>%
   #   select(matches("^nu|^p|^b00|^b01|betaY|betaU")) %>%
-  #   summarise_all(mean)
-
+  #   summarise_all(mean) %>%
+  #   select(contains("b01"), contains("b00"))
 
   lambda <- df.fit %>%
     select(chain, matches("^lambda\\[")) %>%

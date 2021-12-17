@@ -960,3 +960,7 @@ i = 20
   annotate_figure(p, top = text_grob(paste(res_LCA[[i]][[1]],i), face = "bold", size = 14))
   
 ```
+
+
+
+
