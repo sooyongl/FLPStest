@@ -85,7 +85,6 @@ model{
   beta2 ~ normal(0, 1);
   beta3 ~ normal(0, 1);
   alpha ~ normal(0, 1);
-  //alpha ~ lognormal(0.5, 1);
 
   // PS priors
   betaY~normal(0,2);

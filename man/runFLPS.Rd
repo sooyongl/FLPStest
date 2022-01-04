@@ -6,20 +6,23 @@
 \usage{
 runFLPS(
   inp_data = NULL,
-  flps_data = NULL,
+  custom_data = NULL,
+  custom_stan = NULL,
   outcome,
   group,
   covariate,
   lv_model,
   lv_type,
-  stan_options = list(...),
+  stan_options = list(),
   ...
 )
 }
 \arguments{
-\item{inp_data}{A matrix}
+\item{inp_data}{A matrix or a data frame}
 
-\item{flps_data}{A list}
+\item{custom_data}{A list. should be provided with custome_stan}
+
+\item{custom_stan}{A string. should be provided with custome_data}
 
 \item{outcome}{A character indicating the name of an outcome variable}
 
@@ -33,7 +36,7 @@ runFLPS(
 
 \item{stan_options}{A list containing \code{\link{stan}} options, using 'name = value'.}
 
-\item{...}{Additional options.}
+\item{...}{Additional arguments for latent variable models information (e.g., nclass = 2).}
 }
 \value{
 an object of class \code{flps}

@@ -1,8 +1,9 @@
 #' S3 generic for latent model data generation
 #'
-generate <- function(parsForLVM, ...) {
-  UseMethod("generate", parsForLVM)
+generate <- function(info, ...) {
+  UseMethod("generate", info)
 }
+
 
 #' get information for data generation ready
 #'
@@ -14,13 +15,49 @@ parsForLVM <- function(..., data_type = "1pl") {
   return(info)
 }
 
+generateLV <- function(...) {
+
+  info <- list(...)
+  class(info) <- append(class(info), info$lv_model)
+
+  N      <- info$N
+  nsec   <- info$nsec
+  lambda <- info$lambda
+
+  lv.gen.dt <- generate(info)
+
+  lv.par <- lv.gen.dt$lv.par
+  grad <- lv.gen.dt$resp
+
+  # nworked <- sample(1:nsec,N/2,replace=TRUE,prob=dexp(1:nsec,rate=1/lambda))
+  nworked <- rep(floor(nsec * lambda), N/2)
+
+  studentM <- do.call("c", lapply(seq(N/2),function(n) rep(n,each=nworked[n])))
+  section <- do.call("c", lapply(seq(N/2),
+                                 function(n) {
+                                   sort(sample(1:nsec, nworked[n],
+                                               replace = FALSE))}))
+  ss <- cbind(studentM, section)
+  grad <- sapply(1:dim(ss)[1], function(n) grad[ss[n,1], ss[n,2]] )
+
+
+  list(
+
+    lv.par = lv.par,
+    lv.resp = lv.gen.dt$resp,
+    grad = grad,
+    studentM = studentM,
+    section = section
+  )
+}
+
 ## #~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~# ##
 ##                    IRT model                    ##
 ## #~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~# ##
 
-#' generate item pool
+#' generate IRT parameters
 #'
-genItemPool <- function(items = 20, nrCat = 4, model = "GPCM", same.nrCat = T){
+genIRTparam <- function(items = 20, nrCat = 4, model = "GPCM", same.nrCat = T){
 
   if(same.nrCat){
     gj <- rep(nrCat - 1, items)
@@ -31,10 +68,11 @@ genItemPool <- function(items = 20, nrCat = 4, model = "GPCM", same.nrCat = T){
   }
   res <- matrix(NA, items, (max(gj) + 1))
 
-  alphaj <- rlnorm(items, 0, 0.5)
+  # alphaj <- rlnorm(items, 0, 0.5)
+  alphaj <- runif(items, 0.7, 1.4)
 
   for (i in 1:items) {
-    pars <- rnorm(gj[i], .111, 1.060)
+    pars <- sort(rnorm(gj[i], 0, 1))
     res[i, 1:(length(pars) + 1)] <- c(alphaj[i], pars)
   }
 
@@ -49,55 +87,9 @@ genItemPool <- function(items = 20, nrCat = 4, model = "GPCM", same.nrCat = T){
     colnames(res) <- name
     res <- data.frame(res, K_j = gj)
   }
+
   return(res)
 }
-
-# getResponse <- function(th, it, model="GPCM",  D = 1.7) {
-#   if(model == "binary") {
-#     it <- it[,1:2]
-#     pr <- (1/(1+exp(-D*it[,1]*(th-it[,2]))))
-#     RES <- ifelse(pr > runif(1,0,1), 1, 0)
-#   } else {
-#     it <- it[, 1:(ncol(it)-1)]
-#
-#     nc <- ncol(it)
-#     prov <- prov1 <- prov2 <- prov3 <- matrix(NA, nrow(it),nc)
-#
-#     dj <- v <- 0
-#
-#     for (t in 1:(ncol(it) - 1)) {
-#       dj <- c(dj, dj[t] + it[1, 1] * D * (th - it[1, t + 1]))
-#       v <- c(v, it[1, 1] * t)
-#     }
-#
-#     v <- v[!is.na(dj)]
-#     dj <- dj[!is.na(dj)]
-#     Gammaj <- exp(dj)
-#     dGammaj <- Gammaj * v
-#     d2Gammaj <- Gammaj * v^2
-#     d3Gammaj <- Gammaj * v^3
-#     Sg <- sum(Gammaj)
-#     Sdg <- sum(dGammaj)
-#     Sd2g <- sum(d2Gammaj)
-#     Sd3g <- sum(d3Gammaj)
-#     n <- length(Gammaj)
-#     prov[1, 1:n] <- Gammaj/Sg
-#     prov1[1, 1:n] <- dGammaj/Sg - Gammaj * Sdg/Sg^2
-#     prov2[1, 1:n] <- d2Gammaj/Sg - 2 * dGammaj * Sdg/Sg^2 - Gammaj * Sd2g/Sg^2 + 2 * Gammaj * Sdg^2/Sg^3
-#     prov3[1, 1:n] <- d3Gammaj/Sg - (Gammaj * Sd3g + 3 * dGammaj * Sd2g + 3 * d2Gammaj * Sdg)/Sg^2 + (6 * Gammaj * Sdg * Sd2g + 6 * dGammaj * Sdg^2)/Sg^3 - 6 * Gammaj * Sdg^3/Sg^4
-#
-#     res <- list(Pi = prov, dPi = prov1, d2Pi = prov2, d3Pi = prov3)
-#
-#     pr <- res$Pi
-#     RES <- rep(NA, nrow(pr))
-#     for (i in 1:nrow(pr)) {
-#       pp <- pr[i, ][!is.na(pr[i, ])]
-#       vec <- rmultinom(n = 1, size = 1, prob = pp)
-#       RES[i] <- (1:nrow(vec))[vec[, 1] == 1] - 1
-#     }
-#   }
-#   list(prob = pr, RES = RES)
-# }
 
 #' methods for rasch model
 #'
@@ -119,57 +111,24 @@ generate.3pl   <- function(.x, ...) {.Class <- "dich"; NextMethod()}
 #'
 generate.dich <- function(info, D = 1){
   # set up for data generation
-  theta <- info$theta; nitem <- info$nsec
+  theta <- info$theta; nitem <- info$nsec; lv_info <- info$lv_info
 
   nexaminee <- length(theta)
   nitem <- nitem
 
-  if(inherits(info, "rasch")) {
-
-    ni <- nitem/5
-
-    b <- rnorm(nitem) ## this is not based on original model
-    b <- c(rep(-0.3, ni),rep(-0.1, ni),rep(0, ni),rep(0.4, ni),rep(0.6, ni))
-    a <- runif(nitem, 1, 1) ## this is not based on original model
-    c <- runif(nitem,0,0) ## this is not based on original model
-
-  } else if(inherits(info, "1pl")) {
-
-    b <- rnorm(nitem, 0, .7) ## this is not based on original model
-    a <- runif(nitem, 1, 1) ## this is not based on original model
-    c <- runif(nitem,0,0) ## this is not based on original model
-
-  } else if(inherits(info, "2pl")) {
-
-    b <- rnorm(nitem) ## this is not based on original model
-    a <- runif(nitem, 0.6, 1.4) ## this is not based on original model
-
-    # a[11:20] <- -a[11:20]
-
-    c <- runif(nitem,0,0) ## this is not based on original model
-
-  } else if(inherits(info, "3pl")) {
-
-    b <- rnorm(nitem) ## this is not based on original model
-    a <- runif(nitem, 0.6, 1.4) ## this is not based on original model
-    c <- runif(nitem,0,.2) ## this is not based on original model
-
-  } else {
-
-    b <- rnorm(nitem) ## this is not based on original model
-    a <- rlnorm(nitem, 0, 0.5) ## this is not based on original model
-    c <- runif(nitem,0,0) ## this is not based on original model
-
-  }
+  ipar <- lv_info$ipar
+  a <- ipar$a
+  b <- ipar$b
+  g <- ipar$g
 
   # data generation
   pr <- matrix(NA, nexaminee, nitem)
   for (j in 1:nexaminee){
-    pr[j,] <- c + (1 - c) / (1 + exp(-D * (a * (theta[j] - b))))
+    pr[j,] <- g + (1 - g) / (1 + exp(-D * (a * (theta[j] - b))))
   }
   resp <- (matrix(runif(nexaminee*nitem), nexaminee, nitem) < pr) * 1
 
-  ipar <- data.frame(a = a, b = b, c = c)
+  ipar <- data.frame(a = a, b = b, c = g)
   return(list(resp = resp, lv.par = ipar))
 }
 
@@ -192,9 +151,7 @@ generate.gpcm <- function(info){
   ## ------------------------|
 
   # set up for data generation
-  theta <- info$theta
-
-  ipar <- genItemPool(info$nsec, 4, "GPCM", T)
+  theta <- info$theta; lv_info <- info$lv_info; ipar <- lv_info$ipar
 
   # getResponse(theta[1], ipar[1,], model=model,  D = 1.7)
 
@@ -281,10 +238,43 @@ generate.ln <- function(info){
 generate.sem <- function(info) {
 
   # set up for data generation
-  theta <- info$theta; nitem <- info$nsec
+  theta <- info$theta; nitem <- info$nsec; lv_info <- info$lv_info
 
-  loadings <- matrix(round(runif(nitem, 0.8, 1.5),2), ncol = 1)
-  residuals <- diag(1, nitem)
+  cpar <- lv_info$cpar
+
+  loadings <- matrix(cpar$loading, ncol = 1)
+  residuals <- diag(loadings %*% cov(matrix(theta)) %*% t(loadings)) * .4
+
+  if(is.null(dim(theta))) {
+    n_sample <- length(theta)
+    theta <- matrix(theta)
+
+  } else {
+    n_sample <- dim(theta)[1]
+  }
+
+  residuals <- MASS::mvrnorm(n_sample,
+                             rep(0, nitem),
+                             diag(residuals),
+                             empirical = T)
+
+  # data generation
+  latent <- tcrossprod(theta, loadings)
+  resp <- latent + residuals
+
+  return(list(resp = resp, lv.par = loadings))
+}
+
+#' method for genderating lgm data
+#'
+generate.lgm <- function(info) {
+
+  # set up for data generation
+  theta <- info$theta; ntp <- info$nsec; lv_info <- info$lv_info
+
+  loadings <- lv_info$time_loading
+  # residuals <- diag(loadings %*% cov(theta) %*% t(loadings)) * .4
+  residuals <- diag(var(theta[,1]) * .4, nrow(loadings))
 
   if(is.null(dim(theta))) {
     n_sample <- length(theta)
@@ -300,8 +290,16 @@ generate.sem <- function(info) {
                              empirical = T)
 
   # data generation
-  latent <- tcrossprod(theta, loadings);
+  latent <- tcrossprod(theta, loadings)
   resp <- latent + residuals
+
+  # test
+  # library(lavaan)
+  # cov(theta); colMeans(theta)
+  # growth(model = "I =~ 1*X1+1*X2+1*X3+1*X4+1*X5+1*X6+1*X7+1*X8+1*X9+1*X10+1*X11+1*X12+1*X13+1*X14+1*X15+1*X16+1*X17+1*X18+1*X19+1*X20
+  #        S =~ 0*X1+1*X2+2*X3+3*X4+4*X5+5*X6+6*X7+7*X8+8*X9+9*X10+10*X11+11*X12+12*X13+13*X14+14*X15+15*X16+16*X17+17*X18+18*X19+19*X20",
+  #        data = data.frame(resp)) %>% summary()
+
 
   return(list(resp = resp, lv.par = loadings))
 }
@@ -340,11 +338,12 @@ class_assign <- function(...) {
 generate.lca <- function(info) {
 
   # n_class <- info$n_class
-  n_class <- 2
+
   n_indi <- info$nsec
   theta <- info$theta
   # seperation <- info$seperation
-  seperation <- 0.9
+  n_class <- info$lv_info$nclass
+  seperation <- info$lv_info$separation
   seperation <- c(seperation, 1- seperation)
 
   latent_class <- class_assign(theta)
@@ -387,17 +386,31 @@ generate.lca <- function(info) {
   resp <- resp[order(resp$id),]
   resp$id <- NULL
 
-  return(list(lv.par = seperation, resp = resp))
+  return(list(lv.par = seperation, resp = as.matrix(resp)))
 }
 
 # generate lpa data ---------------------------------------------------
 generate.lpa <- function(info) {
 
-  n_class <- info$n_class
-  n_indi <- info$n_indi
+  n_indi <- info$nsec
   theta <- info$theta
-  mean_list <- info$mean_list
-  # seperation <- c(seperation, 1- seperation)
+  n_class <- info$lv_info$nclass
+  separation <- info$lv_info$separation # this is Mahalanobis Distance; James Peugh & Xitao Fan(2013)
+
+  if(separation == 1) {
+    mean_list <- list()
+
+    mean_list[[1]] <- rep(1, n_indi)
+    mean_list[[2]] <- rep(1.41, n_indi)
+
+  }
+  if(separation == 2) {
+    mean_list <- list()
+
+    mean_list[[1]] <- rep(1, n_indi)
+    mean_list[[2]] <- rep(1.58, n_indi)
+
+  }
 
   latent_class <- class_assign(theta)
   class_prop <- table(latent_class)
@@ -418,10 +431,20 @@ generate.lpa <- function(info) {
     useData
   })
   #
-  data <- do.call('rbind', data)
+  # data <- do.call('rbind', data)
   #
-  return(data)
+  # return(data)
 
+  resp <- do.call('rbind', data)
+
+  idx <- data.frame(latent_class, id = 1:nrow(latent_class))
+  idx <- idx[order(idx$class),]
+
+  resp$id <- idx$id
+  resp <- resp[order(resp$id),]
+  resp$id <- NULL
+
+  return(list(lv.par = separation, resp = as.matrix(resp)))
 }
 
 # generate general mixture data -------------------------------------------

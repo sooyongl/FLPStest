@@ -1,27 +1,41 @@
 #' Set the options of rstan
 #'
 #' stanOptions(stan_options = list());
-stanOptions <- function(stan_options) {
+stanOptions <- function(stan_options, ...) {
 
-  .stanOptions$warmup <- floor(.stanOptions$iter / 2)
+  dots <- list(...)
 
-  # if (sys.parent() == 0)
-  e <- asNamespace("FLPS")
-  # else
-  # e <- parent.frame()
-  if(length(stan_options) > 0) {
-    for(i in 1:length(stan_options)){
-      .stanOptions[[which(names(.stanOptions) %in% names(stan_options)[i])]] <-
-        stan_options[[i]]
+  if(!"chain" %in% names(stan_options)) {
+    stan_options$chain <- 1
+  }
+
+  if(!"iter" %in% names(stan_options)) {
+    stan_options$iter <- 10000
+    stan_options$warmup <- 2000
+
+  } else {
+
+    if(!"warmup" %in% names(stan_options)) {
+      stan_options$warmup <- floor(stan_options$iter / 2)
     }
   }
-  .stanOptions$warmup <- floor(.stanOptions$iter / 2)
 
-  # for(i in 1:length(.stanOptions)) {
-  #   assign(names(.stanOptions)[i], .stanOptions[[i]], envir = e)
+  for(i in 1:length(dots)){
+    stan_options[[names(dots)[i]]] <- dots[[i]]
+  }
+
+  # if (sys.parent() == 0)
+  # e <- asNamespace("FLPS")
+  # else
+  # e <- parent.frame()
+  # if(length(stan_options) > 0) {
+  #   for(i in 1:length(stan_options)){
+  #     .stanOptions[[which(names(.stanOptions) %in% names(stan_options)[i])]] <-
+  #       stan_options[[i]]
+  #   }
   # }
-  # chain_id, init_r, test_grad, append_samples, refresh, enable_random_init
-  return(.stanOptions)
+
+  return(stan_options)
 }
 
 

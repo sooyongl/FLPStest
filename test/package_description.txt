@@ -1,0 +1,40 @@
+Structure of FLPS package
+
+two cases:
+
+1. for simulation study; with a structured stan data and stan model
+  - custom_data is a structured stan data (a list format)
+  - custom_stan is a user-specified stan syntax or stan model class
+  - specify variable names in FLPS model
+  - specify a latent variable type and write a latent variable model according to `lavaan` syntax.
+  - specify stan options you want (e.g., number of chains, number of cores, iteration ...).
+  
+  1) generate flpsData class
+    - it contains the information for FLPS analysis.
+	- The slot `stan_data` is the same as the custom_data
+  2) flps_model is either a string of stan model or a stanmodel class.
+  
+  3) if flps_model class == "stanmodel" -> rstan::sampling is used for FLPS analysis to avoid recompling the stan code.
+     if flps_model is a string -> rstan::stan is used. This way is a bit slow because of complining the stan code.
+ 
+  4) stan options is a list and the stan data and the stan model are included.
+  
+
+2. for user-friendly version.
+  - inp_data is a dataframe containing all the data related to FLPS analysis.
+  
+  1) generate flpsData class
+    - inp_data will be transformed into a structured stan data given the information.
+
+  2) flps_model is not yet decided, but it would be loading a stanmodel class prespecified for each latent variable model.
+     or just make a string of stan model based on the information
+	 
+  3) FLPS analysis is the same as above.
+  
+  
+At last,
+
+  all the results are stored into a flps class.
+  
+
+  

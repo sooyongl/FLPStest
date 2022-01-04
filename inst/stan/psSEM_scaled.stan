@@ -5,6 +5,9 @@ data{
  int<lower=1> nstud;
  int<lower=1> nsec;
 
+// prior information
+ real lambda_prior[nsec];
+
 // indices
  int<lower=1,upper=nstud> studentM[nsecWorked];
  int<lower=1,upper=nsec> section[nsecWorked];
@@ -83,7 +86,9 @@ model{
  //muEta~normal(0, sqrt(1));
  //lambda_free~normal(0, sqrt(1));
  
- lambda_free ~ normal(1, 0.5);
+ for(i in 1:nsec) {
+   lambda_free[i] ~ normal(lambda_prior[i], 1);
+ };
  
  tau_free~normal(0, 1);
  sigR~inv_gamma(2, 1);

@@ -17,6 +17,18 @@
 
 #' Convert a matrix to a FLPS data
 #'
+#' @param inp_data A matrix or a data frame
+#' @param custom_data A list. should be provided with custome_stan
+#' @param custom_stan A string. should be provided with custome_data
+#' @param outcome A character indicating the name of an outcome variable
+#' @param group A character indicating the name of a treatment/control group variable
+#' @param covariate A character indicating the names of covariates variables
+#' @param lv_model A description of the latent variable model, which is similar to the lavaan model syntax.
+#' @param lv_type  A character indicating the type of latent variable models
+#' @param ... Additional arguments for latent variable models information (e.g., nclass = 2).
+#'
+#' @returns a flpsData class.
+#'
 #' @export
 makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type, custom = F, ...) {
   # flps_data <- dataSetting() ; S3 class
@@ -112,6 +124,8 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type,
       flps_data$nclass <- dotdotdot$nclass
 
       out <- new("flpsMixture")
+      out@nclass <- dotdotdot$nclass
+
     }
 
     out@outcome <- outcome

@@ -1,15 +1,19 @@
 data{
-  //Sample sizes
+//Sample sizes
   int<lower=1> nsecWorked;                        // number of rows in long-format data
   int<lower=1> nstud;                             // number of students (I)
   int<lower=1> nsec;                              // number of items    (J)
   int<lower=2> max_k;                             // Max category
   int<lower=0> ncov;
+  
+// prior information
+ real lambda_prior[nsec];
+ 
   // indices
   int<lower=1,upper=nstud> studentM[nsecWorked];
   int<lower=1,upper=nsec> section[nsecWorked];
 
-  // data data
+// data data
   int<lower=1,upper=max_k> grad[nsecWorked];
   matrix[nstud,ncov] X;
   int<lower=0,upper=1> Z[nstud];
@@ -94,10 +98,13 @@ model{
 
   //priors
   // IRT priors
-  lambda_free ~ normal(0, 1);
-  for(ii in 2:max_k) {
-    tau_free[ii , ] ~ uniform(-10, 10);
-  }
+  for(i in 1:nsec) {
+   lambda_free[i] ~ normal(lambda_prior[i], 1);
+    for(ii in 1:(max_k-1)) {
+      tau_free[i , ii] ~ uniform(-5, 5);
+   }
+  };
+  
 
   // PS priors
   //muEta~normal(0, sqrt(1));

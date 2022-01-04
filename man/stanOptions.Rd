@@ -4,7 +4,7 @@
 \alias{stanOptions}
 \title{Set the options of rstan}
 \usage{
-stanOptions(stan_options)
+stanOptions(stan_options, ...)
 }
 \description{
 stanOptions(stan_options = list());

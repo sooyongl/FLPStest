@@ -6,7 +6,7 @@ data{
  int<lower=1> nsec;
 
 // prior information
-// real lambda_prior;
+ real lambda_prior[nsec];
 
 // indices
  int<lower=1,upper=nstud> studentM[nsecWorked];
@@ -82,11 +82,11 @@ model{
  //priors
  // IRT priors
  tau_free ~ normal(0, 1);
- lambda_free ~ normal(1, 0.5);
- //for(i in 1:nsec) {
- //  lambda_free[i] ~ normal(lambda_prior[i], 0.5);
- //};
- //for(i in 1:10){
+ 
+ for(i in 1:nsec) {
+   lambda_free[i] ~ normal(lambda_prior[i], 1);
+ };
+ 
  
  // PS priors
  betaY~ uniform(-5, 5);//normal(0,2);

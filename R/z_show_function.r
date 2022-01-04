@@ -30,7 +30,6 @@ setMethod("print", "flps", function(x) {
 })
 
 
-
 #' @aliases show,flps-method
 #' @docType methods
 #' @rdname show-methods

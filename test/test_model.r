@@ -11,13 +11,15 @@ file_list <- c(
   "inst/stan/psIRT_scaled.stan",
   "inst/stan/psGPCM_scaled.stan",
   "inst/stan/psSEM_scaled.stan",
-  "inst/stan/psLCA.stan"
+  "inst/stan/psLCA.stan",
+  "inst/stan/psLGM.stan",
+  "inst/stan/psLPA.stan"
 )
-lvmodel_list <- c("2PL", "GPCM", "sem","lca")
+lvmodel_list <- c("2PL", "GPCM", "sem","lca", "lgm","lpa")
 #
 # model ---------------------------------------------------------
-stan_file_name <- file_list[3]
-lvmodel <- lvmodel_list[3]
+stan_file_name <- file_list[5]
+lvmodel <- lvmodel_list[5]
 
 # for(l in 0.6) { #seq(0.2,1, 0.2)) {
   for(i in 1:1) {
@@ -28,16 +30,45 @@ lvmodel <- lvmodel_list[3]
       N = 500, # sample size
       R2Y = 0.2,
       omega = 0.2,  # a1
-      tau0 = 0.13,  # b0
-      tau1 = -0.06, # b1
+      tau0 = 0.4,  # b0
+      tau1 = -0.2, # b1
       # lambda = 10,
       lambda = 0.6,
       R2eta = 0.2,
       nsec = 20,
-      lvmodel = lvmodel # tag for latent variable model
+      linear = T,
+      lvmodel = lvmodel, # tag for latent variable model
+      lvinfo  =
+        # list(
+        #   ipar=data.frame(a = runif(20, 0.7, 1.4), b = rnorm(20), g = rep(0, 20))
+        # )
+        # list(
+        #   ipar=genIRTparam(20, 4, "GPCM", T)
+        # )
+        # list(
+        #   cpar=data.frame(loading = round(runif(20, 0.8, 1.5),2))
+        # )
+        list(
+          nfac = 2,
+          time_loading =
+            matrix(
+              c(rep(1,20), seq(0, 9, length.out = 20)),
+              ncol = 2
+              ),
+          growth_mean = c(3, 0.1)
+          )
+      # list(
+      #   separation = 2,
+      #   nclass = 2
+      # )
     )
-    sdat <- do.call("makeDat", parsFromMod)
 
+    for(i in 1:length(parsFromMod)) {
+      assign(names(parsFromMod)[i], parsFromMod[[i]]) }
+
+
+    sdat <- do.call("makeDat", parsFromMod)
+    # sdat$model_type <- 2
     # data <- data.frame(Y=sdat$Y,Z=sdat$Z,sdat$X,eta=sdat$true_eta)
     # lm(Y ~ Z + x1 + x2 + Z*eta, data = data)
     #
@@ -58,14 +89,18 @@ lvmodel <- lvmodel_list[3]
     #              lv_type = lvmodel)
     #
     # sdat <- sdat1@stan_data
-    sdat$nclass <- 2
+    # sdat$nclass <- 2
+    # sdat$gmean <- c(3, 0.5)
+    # sdat$nfac <- 2
+    # sdat$Y
 
-    fit <- stan(
+    fit <- rstan::stan(
       stan_file_name,
       data = sdat,
       iter = 5000,
       warmup = 2000,
-      chains = 4
+      chains = 1,
+      open_progress = F
     )
 
     # generate a list of lists to specify initial values
@@ -77,15 +112,15 @@ lvmodel <- lvmodel_list[3]
     # init_list <- lapply(1:n_chains, function(id) init_func(chain_id = id))
     # sdat$lv.par
 
-    # stan_file_noinfo <- "inst/stan/psSEM.stan"
-    # fit <- stan(
-    #   stan_file_noinfo,
-    #   data = sdat,
-    #   iter = 5000,
-    #   warmup = 2000,
-    #   chains = 4
-    #   # ,init = init_list
-    # )
+    stan_file_noinfo <- "inst/stan/psGPCM.stan"
+    fit_non <- stan(
+      stan_file_noinfo,
+      data = sdat,
+      iter = 5000,
+      warmup = 2000,
+      chains = 4
+      # ,init = init_list
+    )
 
 
     # print(fit, c("b1"))
@@ -140,18 +175,19 @@ for(i in 1:length(res_list)) {
   df.fit$chain <- rep(c(1:4), each = 3000)
   df.fit <- df.fit %>% group_by(chain)
   #
-  # df.fit %>%
-  #   select(matches("^nu|^p|^b00|^b01|betaY|betaU")) %>%
-  #   summarise_all(mean) %>%
-  #   select(contains("b01"), contains("b00"))
+  df.fit %>%
+    select(matches("^nu|^p|^b00|^b01|betaY|betaU")) %>%
+    summarise_all(mean) %>%
+    select(contains("b01"), contains("b00"))
 
   lambda <- df.fit %>%
-    select(chain, matches("^lambda\\[")) %>%
+    select(chain, matches("^lambda_free\\[")) %>%
     summarise_all(mean)
 
   tau <- df.fit %>%
     select(chain, matches("^tau\\[")) %>%
     summarise_all(mean)
+
 
   # lambda <- colMeans(df.fit[str_detect(names(df.fit), "alpha\\[")])
   # tau <- colMeans(df.fit[str_detect(names(df.fit), "beta\\[")])
@@ -169,6 +205,13 @@ for(i in 1:length(res_list)) {
     select(chain, matches("^eta")) %>%
     summarise_all(mean)
 
+  # eta <- df.fit %>%
+  #   select(matches("^eta")) %>%
+  #   summarise_all(mean) %>%
+  #   matrix(., nrow = 500)
+  # apply(eta, 2, function(x) mean(unlist(x)))
+  # apply(eta, 2, function(x) var(unlist(x)))
+  #
   comb_eta <- rbind(c(0, sdat$true_eta), eta)
 
   # plot(unlist(comb_eta[1,]), unlist(comb_eta[2,]))
@@ -199,6 +242,12 @@ for(i in 1:length(res_list)) {
 
   est_param <- df.fit %>%
     select(chain, matches("^b00|^b0|b1|a1|betaY|betaU")) %>%
+    summarise_all(mean) %>%
+    set_names(c("chain","bu1","bu2","by1","by2","b00","a1","b0","b1")) %>%
+    select(chain, b00, b0, b1, a1, by1, by2, bu1, bu2)
+
+  est_param <- df.fit %>%
+    select(matches("^b00|^b0|b1|a1|betaY|betaU")) %>%
     summarise_all(mean) %>%
     set_names(c("chain","bu1","bu2","by1","by2","b00","a1","b0","b1")) %>%
     select(chain, b00, b0, b1, a1, by1, by2, bu1, bu2)

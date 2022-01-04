@@ -12,13 +12,17 @@ loadRstan <- function(lv_type = "2pl") {
   # if(!dir.exists(file.path("inst", "stan")))
   #   stop("The stan code does not exist!")
   # stan_path <- "inst/stan"
-  stan_path <- system.file("stan", package = "FLPS")
-  stan_list <- list.files(stan_path)
-
-  stan_list <- stan_list[grep(toupper("scaling"), toupper(stan_list))]
 
   if(tolower(lv_type) %in% c("rasch","2pl", "3pl")) {
     lv_type <- "IRT"
+  }
+
+  # stan_path <- system.file("rds", package = "FLPS")
+  stan_path <- system.file("stan", package = "FLPS")
+  stan_list <- list.files(stan_path)
+
+  if(tolower(lv_type) != "lca") {
+    stan_list <- stan_list[grep(toupper("scaled"), toupper(stan_list))]
   }
 
   stan_picked <- grep(toupper(lv_type), toupper(stan_list))
