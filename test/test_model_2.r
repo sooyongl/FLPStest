@@ -66,8 +66,8 @@ lvmodel <- lvmodel_list[5]
     for(i in 1:length(parsFromMod)) {
       assign(names(parsFromMod)[i], parsFromMod[[i]]) }
 
-
     sdat <- do.call("makeDat", parsFromMod)
+
     # sdat$model_type <- 2
     # data <- data.frame(Y=sdat$Y,Z=sdat$Z,sdat$X,eta=sdat$true_eta)
     # lm(Y ~ Z + x1 + x2 + Z*eta, data = data)

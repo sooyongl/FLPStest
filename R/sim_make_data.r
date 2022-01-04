@@ -10,8 +10,10 @@
 #' @param tau1 a numeric indicating the relationship between eta_T and Y_T-Y_C;
 #' (for now, single level (not multilevel), linear, normal).
 #' @param lambda a numeric indicating the mean of Worked problems/person.
-#' @param R2eta a numeric indicating Predictive power of latent variable (extent to which covariates predict eta).
-#' @param nsec a numeric indicating the number of maximum sections given to students.
+#' @param R2eta a numeric indicating Predictive power of latent variable
+#'  (extent to which covariates predict eta).
+#' @param nsec a numeric indicating the number of maximum sections given to
+#'  students.
 #' @param lvmodel a character specifying a type of latent variable model.
 #' @return a list containing the data for running FLPS.
 #'
@@ -27,7 +29,10 @@
 #'   linear = T,
 #'   nsec = 10,
 #'   lvmodel = "2PL",
-#'   lvinfo = data.frame(a = runif(20, 0.7, 1.4), b = rnorm(20), g = rep(0, 20))
+#'   lvinfo = data.frame(
+#'   a = runif(20, 0.7, 1.4),
+#'   b = rnorm(20),
+#'   g = rep(0, 20))
 #' )
 #'
 #' @export
@@ -42,24 +47,6 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,linear,nsec,lvmodel,lvinf
   } else {
     data <- genTrueEta(N, R2eta, linear)
   }
-
-  # Generate LVM data -------------------------------------------------------
-  # info <- parsForLVM(theta = data[,grep("eta", colnames(data))], nsec = nsec, data_type = lvmodel, lv_info = lvinfo)
-  # info.data <- generateLV(info); # methods(generate)
-
-  # lv.par <- info.data$lv.par
-  # grad <- info.data$resp
-  #
-  # # nworked <- sample(1:nsec,N/2,replace=TRUE,prob=dexp(1:nsec,rate=1/lambda))
-  # nworked <- rep(floor(nsec * lambda), N/2)
-  #
-  # studentM <- do.call("c", lapply(seq(N/2),function(n) rep(n,each=nworked[n])))
-  # section <- do.call("c", lapply(seq(N/2),
-  #                                function(n) {
-  #                                  sort(sample(1:nsec, nworked[n],
-  #                                              replace = FALSE))}))
-  # ss <- cbind(studentM, section)
-  # grad <- sapply(1:dim(ss)[1], function(n) grad[ss[n,1], ss[n,2]] )
 
   lv.data <-
     generateLV(
@@ -205,15 +192,18 @@ makeInpData <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,linear,nsec,lvmodel, 
 
   ## generate covariates ----------------------------------------------------
 
-  ### Treatment or Control
-  Z <- rep(c(1,0), each=N/2)
-
   # Generate True eta -------------------------------------------------------
   ## generate eta
-  data <- genTrueEta(N, R2eta, linear)
+  ## generate eta
+  if(lvmodel == "lgm") {
+    data <- genTrueEta.lgm(N, R2eta, linear, lvinfo$nfac, lvinfo$growth_mean)
+  } else {
+    data <- genTrueEta(N, R2eta, linear)
+  }
 
   # Generate LVM data -------------------------------------------------------
-  info <- parsForLVM(theta = data[,"eta"], nsec = nsec, data_type = lvmodel, lv_info = lvinfo)
+  info <- parsForLVM(theta = data[, grep("eta", colnames(data))],
+                     nsec = nsec, data_type = lvmodel, lv_info = lvinfo)
   info.data <- generate(info); # methods(generate)
 
   lv.par <- info.data$lv.par
@@ -238,6 +228,9 @@ makeInpData <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,linear,nsec,lvmodel, 
   d3 <- rbind(d1, d2)
 
   ### simulate Y -------------------------------------------------------------
+  ### Treatment or Control
+  Z <- rep(c(1,0), each=N/2)
+
   if(lvmodel %in% c("lca", "lpa")) {
     Y.res = 1 - R2Y
     eta <- data[, "eta"]
@@ -269,7 +262,7 @@ makeInpData <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,linear,nsec,lvmodel, 
   list(
     lv.rep = info.data$resp,
     lv.par = lv.par,
-    true_eta = data[,"eta"],
+    true_eta = data[, grep("eta", colnames(data))],
     inp_data = inp_data
   )
 }
