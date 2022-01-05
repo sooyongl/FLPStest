@@ -1,6 +1,17 @@
+#' S3 generic for individual latent scores data generation
+#'
+genTrueEta <- function(Data, ...) {
+  UseMethod("genTrueEta", Data)
+}
+
 #' generate true eta (theta)
 #'
-genTrueEta <- function(N = 1000, R2eta = 0.5, linear = T) {
+genTrueEta.default <- function(Data) {
+
+  N <- Data$N
+  R2eta <- Data$R2eta
+  linear <- Data$linear
+  lvinfo <- Data$lvinfo
 
   eta.res = 1 - R2eta
 
@@ -21,10 +32,23 @@ genTrueEta <- function(N = 1000, R2eta = 0.5, linear = T) {
     data <- cbind(x1, x1sq, x2, eta)
   }
 
-  return(data)
+  Data$x <- data[, grep("x", colnames(data))]
+  Data$theta = data[, grep("eta", colnames(data))]
+
+  return(Data)
 }
 
-genTrueEta.lgm <- function(N = 1000, R2eta = 0.5, linear = T, nfac = 2, gmean) {
+#' generate true eta (theta)
+#'
+
+genTrueEta.lgm <- function(Data) {
+
+  N <- Data$N
+  R2eta <- Data$R2eta
+  linear <- Data$linear
+  lvinfo <- Data$lvinfo
+  nfac  <- lvinfo$nfac
+  gmean <- lvinfo$gmean
 
   eta.res = 1 - R2eta
 
@@ -42,7 +66,6 @@ genTrueEta.lgm <- function(N = 1000, R2eta = 0.5, linear = T, nfac = 2, gmean) {
 
   eta <- cbind(eta1, eta2) + resi
 
-
   data <- cbind(x1, x2, eta)
 
   # library(lavaan)
@@ -57,36 +80,8 @@ genTrueEta.lgm <- function(N = 1000, R2eta = 0.5, linear = T, nfac = 2, gmean) {
   #               ", data = data.frame(data),
   #             meanstructure = T) %>% summary()
 
-  return(data)
-}
+  Data$x <- data[, grep("x", colnames(data))]
+  Data$theta = data[, grep("eta", colnames(data))]
 
-
-#' generate outcome (Y)
-#'
-genOutcome <- function(data, R2Y, omega, tau0, tau1, linear = T) {
-
-  Y.res = 1 - R2Y
-  N <- dim(data)[1]
-  Z <- data[,"Z"]
-  eta <- data[, grep("eta", colnames(data))]
-  x1 <- data[,"x1"]
-  x2 <- data[,"x2"]
-
-  if(!is.null(dim(eta))) {
-    omega <- rep(omega, dim(eta)[2])
-    tau1 <- rep(tau1, dim(eta)[2])
-  }
-
-  if(linear) {
-
-    Y <- tau0*Z + matrix(eta)%*%omega + (Z*matrix(eta))%*%tau1 + x1 + 0.5*x2 + rnorm(N, 0, Y.res)
-
-  } else {
-
-    x1sq <- data[,"x1sq"]
-    Y <- tau0*Z + matrix(eta)%*%omega + (Z*matrix(eta))%*%tau1 + x1 + 0.5*x1sq + 0.5*x2 + rnorm(N, 0, Y.res)
-
-  }
-
-  return(c(Y))
+  return(Data)
 }

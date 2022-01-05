@@ -1,35 +1,16 @@
-#' S3 generic for latent model data generation
+#' Generate LV model data
 #'
-generate <- function(info, ...) {
-  UseMethod("generate", info)
-}
-
-
-#' get information for data generation ready
-#'
-parsForLVM <- function(..., data_type = "1pl") {
-
-  info <- list(...)
-  class(info) <- append(class(info), data_type)
-
-  return(info)
-}
-
-generateLV <- function(...) {
-
-  info <- list(...)
-  class(info) <- append(class(info), info$lv_model)
+genLVM <- function(info) {
 
   N      <- info$N
   nsec   <- info$nsec
   lambda <- info$lambda
 
-  lv.gen.dt <- generate(info)
+  lv.gen.dt <- generateLV(info)
 
   lv.par <- lv.gen.dt$lv.par
-  grad <- lv.gen.dt$resp
+  lv.resp <- lv.gen.dt$resp
 
-  # nworked <- sample(1:nsec,N/2,replace=TRUE,prob=dexp(1:nsec,rate=1/lambda))
   nworked <- rep(floor(nsec * lambda), N/2)
 
   studentM <- do.call("c", lapply(seq(N/2),function(n) rep(n,each=nworked[n])))
@@ -38,80 +19,48 @@ generateLV <- function(...) {
                                    sort(sample(1:nsec, nworked[n],
                                                replace = FALSE))}))
   ss <- cbind(studentM, section)
-  grad <- sapply(1:dim(ss)[1], function(n) grad[ss[n,1], ss[n,2]] )
+  grad <- sapply(1:dim(ss)[1], function(n) lv.resp[ss[n,1], ss[n,2]] )
 
-
-  list(
-
-    lv.par = lv.par,
-    lv.resp = lv.gen.dt$resp,
-    grad = grad,
+  res <- list(
+    lv.par   = lv.par,
+    lv.resp  = lv.resp,
+    grad     = grad,
     studentM = studentM,
-    section = section
+    section  = section
   )
+
+  info <- append(info, res)
+
+  return(info)
 }
 
-## #~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~# ##
-##                    IRT model                    ##
-## #~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~# ##
-
-#' generate IRT parameters
+#' S3 generic for latent model data generation
 #'
-genIRTparam <- function(items = 20, nrCat = 4, model = "GPCM", same.nrCat = T){
-
-  if(same.nrCat){
-    gj <- rep(nrCat - 1, items)
-  } else{
-    gj <- rpois(items, nrCat - 1)
-    gj[gj > nrCat - 1] <- nrCat - 1
-    gj[gj < 1] <- 1
-  }
-  res <- matrix(NA, items, (max(gj) + 1))
-
-  # alphaj <- rlnorm(items, 0, 0.5)
-  alphaj <- runif(items, 0.7, 1.4)
-
-  for (i in 1:items) {
-    pars <- sort(rnorm(gj[i], 0, 1))
-    res[i, 1:(length(pars) + 1)] <- c(alphaj[i], pars)
-  }
-
-  if(model == "binary"){
-
-    res <- cbind(res[,1],rowMeans(res[,2:nrCat-1])) %>% data.frame()
-    name <- c("alphaj","beta")
-    colnames(res) <- name
-
-  } else {
-    name <- c("a",paste("b", 1:(ncol(res)-1)))
-    colnames(res) <- name
-    res <- data.frame(res, K_j = gj)
-  }
-
-  return(res)
+generateLV <- function(info, ...) {
+  UseMethod("generateLV", info)
 }
 
 #' methods for rasch model
 #'
-generate.rasch <- function(.x, ...) {.Class <- "dich"; NextMethod()}
+generateLV.rasch <- function(.x, ...) {.Class <- "dich"; NextMethod()}
 
 #' method for 1PL model
 #'
-generate.1pl   <- function(.x, ...) {.Class <- "dich"; NextMethod()}
+generateLV.1pl   <- function(.x, ...) {.Class <- "dich"; NextMethod()}
 
 #' method for 2PL model
 #'
-generate.2pl   <- function(.x, ...) {.Class <- "dich"; NextMethod()}
+generateLV.2pl   <- function(.x, ...) {.Class <- "dich"; NextMethod()}
 
 #' method for 3PL model
 #'
-generate.3pl   <- function(.x, ...) {.Class <- "dich"; NextMethod()}
+generateLV.3pl   <- function(.x, ...) {.Class <- "dich"; NextMethod()}
 
 #' method for all dichotomous IRT model
 #'
-generate.dich <- function(info, D = 1){
+generateLV.dich <- function(info, D = 1){
   # set up for data generation
-  theta <- info$theta; nitem <- info$nsec; lv_info <- info$lv_info
+  theta <- info$theta; nitem <- info$nsec; lv_info <- info$lvinfo
 
   nexaminee <- length(theta)
   nitem <- nitem
@@ -135,7 +84,7 @@ generate.dich <- function(info, D = 1){
 
 #' method for Polytomous Response: GPCM
 #'
-generate.gpcm <- function(info){
+generateLV.gpcm <- function(info){
   ## Generate responses for multiple people to multiple items
 
   ## Pr(X_{ij} = k | \theta_i)
@@ -151,7 +100,9 @@ generate.gpcm <- function(info){
   ## ------------------------|
 
   # set up for data generation
-  theta <- info$theta; lv_info <- info$lv_info; ipar <- lv_info$ipar
+  theta <- info$theta; lv_info <- info$lvinfo;
+
+  ipar <- lv_info$ipar
 
   # getResponse(theta[1], ipar[1,], model=model,  D = 1.7)
 
@@ -201,44 +152,45 @@ generate.gpcm <- function(info){
 
 #' method for Polytomous Response: GRM
 #'
-generate.grm <- function(info) {
+generateLV.grm <- function(info) {
   print("not yet")
 }
 
 #' method for Polytomous Response: NRM
 #'
-generate.nominal <- function(info) {
+generateLV.nominal <- function(info) {
   print("not yet")
 }
 
 #' method for Polytomous Response: Response Time (Lognormal)
 #'
-generate.ln <- function(info){
-  # set up for data generation
-  tau <- info$tau; ipar <- info$ipar
-
-  # data generation
-  nexaminee <- length(tau)
-  nitem <- nrow(ipar)
-  alp <- ipar[,"alp"]; bet <- ipar[,"bet"]
-
-  retime <- matrix(NA, nexaminee, nitem)
-  for (j in 1:nexaminee){
-    retime[j,] <- rlnorm(nitem, bet-tau[j], 1/alp)
-    #m <- bet - tau[j]
-    #s <- 1/alp
-    #logmu <- log(m^2 / sqrt(s^2 + m^2))
-    #logsd <- sqrt(log(1 + (s^2 / m^2)))
-  }
-  return(retime)
+generateLV.ln <- function(info){
+  # # set up for data generation
+  # tau <- info$tau; ipar <- info$ipar
+  #
+  # # data generation
+  # nexaminee <- length(tau)
+  # nitem <- nrow(ipar)
+  # alp <- ipar[,"alp"]; bet <- ipar[,"bet"]
+  #
+  # retime <- matrix(NA, nexaminee, nitem)
+  # for (j in 1:nexaminee){
+  #   retime[j,] <- rlnorm(nitem, bet-tau[j], 1/alp)
+  #   #m <- bet - tau[j]
+  #   #s <- 1/alp
+  #   #logmu <- log(m^2 / sqrt(s^2 + m^2))
+  #   #logsd <- sqrt(log(1 + (s^2 / m^2)))
+  # }
+  # return(retime)
+  print("not yet")
 }
 
-#' method for genderating sem data
+#' method for generating sem data
 #'
-generate.sem <- function(info) {
+generateLV.sem <- function(info) {
 
   # set up for data generation
-  theta <- info$theta; nitem <- info$nsec; lv_info <- info$lv_info
+  theta <- info$theta; nitem <- info$nsec; lv_info <- info$lvinfo
 
   cpar <- lv_info$cpar
 
@@ -265,12 +217,12 @@ generate.sem <- function(info) {
   return(list(resp = resp, lv.par = loadings))
 }
 
-#' method for genderating lgm data
+#' method for generating lgm data
 #'
-generate.lgm <- function(info) {
+generateLV.lgm <- function(info) {
 
   # set up for data generation
-  theta <- info$theta; ntp <- info$nsec; lv_info <- info$lv_info
+  theta <- info$theta; ntp <- info$nsec; lv_info <- info$lvinfo
 
   loadings <- lv_info$time_loading
   # residuals <- diag(loadings %*% cov(theta) %*% t(loadings)) * .4
@@ -334,16 +286,17 @@ class_assign <- function(...) {
 
 # https://mc-stan.org/users/documentation/case-studies/Latent_class_case_study.html#data-generation-and-label-switching
 
-# generate lca data ---------------------------------------------------
-generate.lca <- function(info) {
+#' generate lca data
+#'
+generateLV.lca <- function(info) {
 
   # n_class <- info$n_class
 
   n_indi <- info$nsec
   theta <- info$theta
   # seperation <- info$seperation
-  n_class <- info$lv_info$nclass
-  seperation <- info$lv_info$separation
+  n_class <- info$lvinfo$nclass
+  seperation <- info$lvinfo$separation
   seperation <- c(seperation, 1- seperation)
 
   latent_class <- class_assign(theta)
@@ -389,13 +342,14 @@ generate.lca <- function(info) {
   return(list(lv.par = seperation, resp = as.matrix(resp)))
 }
 
-# generate lpa data ---------------------------------------------------
-generate.lpa <- function(info) {
+#' genLV lpa data
+#'
+generateLV.lpa <- function(info) {
 
   n_indi <- info$nsec
   theta <- info$theta
-  n_class <- info$lv_info$nclass
-  separation <- info$lv_info$separation # this is Mahalanobis Distance; James Peugh & Xitao Fan(2013)
+  n_class <- info$lvinfo$nclass
+  separation <- info$lvinfo$separation # this is Mahalanobis Distance; James Peugh & Xitao Fan(2013)
 
   if(separation == 1) {
     mean_list <- list()
@@ -447,8 +401,9 @@ generate.lpa <- function(info) {
   return(list(lv.par = separation, resp = as.matrix(resp)))
 }
 
-# generate general mixture data -------------------------------------------
-generate.mixture <- function(info) {
+#' generate general mixture data
+#'
+generateLV.mixture <- function(info) {
 
  # return(data)
   print("not yet")
