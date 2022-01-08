@@ -32,14 +32,16 @@ makeDat(
 
 \item{lambda}{a numeric indicating the mean of Worked problems/person.}
 
-\item{R2eta}{a numeric indicating Predictive power of latent variable (extent to which covariates predict eta).}
+\item{R2eta}{a numeric indicating Predictive power of latent variable
+(extent to which covariates predict eta).}
 
-\item{nsec}{a numeric indicating the number of maximum sections given to students.}
+\item{nsec}{a numeric indicating the number of maximum sections given to
+students.}
 
 \item{lvmodel}{a character specifying a type of latent variable model.}
 }
 \value{
-a list containing the data for running FLPS.
+a list containing all the data related to population values and running FLPS.
 }
 \description{
 \code{\link{makeDat}} is a function for generating a data based on the given
@@ -57,7 +59,10 @@ sdat <- makeDat(
   linear = T,
   nsec = 10,
   lvmodel = "2PL",
-  lvinfo = data.frame(a = runif(20, 0.7, 1.4), b = rnorm(20), g = rep(0, 20))
+  lvinfo = data.frame(
+  a = runif(20, 0.7, 1.4),
+  b = rnorm(20),
+  g = rep(0, 20))
 )
 
 }

@@ -2,10 +2,10 @@
 % Please edit documentation in R/sim_generate_true_eta.r
 \name{genTrueEta}
 \alias{genTrueEta}
-\title{generate true eta (theta)}
+\title{S3 generic for individual latent scores data generation}
 \usage{
-genTrueEta(N = 1000, R2eta = 0.5, linear = T)
+genTrueEta(Data, ...)
 }
 \description{
-generate true eta (theta)
+S3 generic for individual latent scores data generation
 }
