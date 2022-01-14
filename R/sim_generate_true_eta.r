@@ -17,7 +17,7 @@ genTrueEta.default <- function(Data) {
 
   x1 = rnorm(N, 0, 1)
   x1sq = x1^2
-  x2 = rbinom(N, 1, .5)
+  x2 = rnorm(N, 0, 1) # rbinom(N, 1, .5)
 
   if(linear){
     # linear
@@ -48,20 +48,20 @@ genTrueEta.lgm <- function(Data) {
   linear <- Data$linear
   lvinfo <- Data$lvinfo
   nfac  <- lvinfo$nfac
-  gmean <- lvinfo$gmean
+  gmean <- lvinfo$growth_mean
 
   eta.res = 1 - R2eta
 
   x1 = rnorm(N, 0, 1)
   x1sq = x1^2
-  x2 = rbinom(N, 1, .5)
+  x2 = rnorm(N, 0, 1) # rbinom(N, 1, .5)
 
   eta1 <- lvinfo$growth_mean[1] + -x1 + 0.5*x2
   eta2 <- lvinfo$growth_mean[2] + -x1 + 0.5*x2
 
   resi <- MASS::mvrnorm(
     N, c(0,0),
-    Sigma = matrix(c(eta.res, 0, 0, eta.res), ncol = 2),
+    Sigma = matrix(c(eta.res, 0.1, 0.1, eta.res), ncol = 2),
     empirical = T)
 
   eta <- cbind(eta1, eta2) + resi

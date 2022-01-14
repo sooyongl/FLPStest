@@ -1,7 +1,7 @@
 #' Generate LV model data
 #'
 genLVM <- function(info) {
-
+  # info = sim_info
   N      <- info$N
   nsec   <- info$nsec
   lambda <- info$lambda
@@ -29,7 +29,7 @@ genLVM <- function(info) {
     section  = section
   )
 
-  info <- append(info, res)
+  info <- structure(append(info, res), class = attr(info, "class"))
 
   return(info)
 }
@@ -245,12 +245,10 @@ generateLV.lgm <- function(info) {
   latent <- tcrossprod(theta, loadings)
   resp <- latent + residuals
 
-  # test
+  # test -------------------------
   # library(lavaan)
   # cov(theta); colMeans(theta)
-  # growth(model = "I =~ 1*X1+1*X2+1*X3+1*X4+1*X5+1*X6+1*X7+1*X8+1*X9+1*X10+1*X11+1*X12+1*X13+1*X14+1*X15+1*X16+1*X17+1*X18+1*X19+1*X20
-  #        S =~ 0*X1+1*X2+2*X3+3*X4+4*X5+5*X6+6*X7+7*X8+8*X9+9*X10+10*X11+11*X12+12*X13+13*X14+14*X15+15*X16+16*X17+17*X18+18*X19+19*X20",
-  #        data = data.frame(resp)) %>% summary()
+  # data.frame(resp,sim_info$x) %>% growth(model = "I =~ 1*X1+1*X2+1*X3+1*X4+1*X5+1*X6+1*X7+1*X8+1*X9+1*X10+1*X11+1*X12+1*X13+1*X14+1*X15+1*X16+1*X17+1*X18+1*X19+1*X20;S =~ 0*X1+1*X2+2*X3+3*X4+4*X5+5*X6+6*X7+7*X8+8*X9+9*X10+10*X11+11*X12+12*X13+13*X14+14*X15+15*X16+16*X17+17*X18+18*X19+19*X20;I ~ x1 + x2;S ~ x1 + x2", data = .) %>% summary()
 
 
   return(list(resp = resp, lv.par = loadings))

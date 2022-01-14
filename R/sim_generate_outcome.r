@@ -34,13 +34,16 @@ genOutcome.default <- function(Data) {
   if(!is.null(dim(eta))) {
     omega <- rep(omega, dim(eta)[2])
     tau1 <- rep(tau1, dim(eta)[2])
+    n.eta <- ncol(eta)
+  } else {
+    n.eta <- 1
   }
 
   if(linear) {
-    Y <- tau0*Z + matrix(eta)%*%omega + (Z*matrix(eta))%*%tau1 + x1 + 0.5*x2 + rnorm(N, 0, Y.res)
+    Y <- tau0*Z + matrix(eta, ncol=n.eta)%*%matrix(omega) + (Z*matrix(eta, ncol=n.eta))%*%tau1 + x1 + 0.5*x2 + rnorm(N, 0, Y.res)
   } else {
     x1sq <- xdata[,"x1sq"]
-    Y <- tau0*Z + matrix(eta)%*%omega + (Z*matrix(eta))%*%tau1 + x1 + 0.5*x1sq + 0.5*x2 + rnorm(N, 0, Y.res)
+    Y <- tau0*Z + matrix(eta, ncol=n.eta)%*%omega + (Z*matrix(eta, ncol=n.eta))%*%tau1 + x1 + 0.5*x1sq + 0.5*x2 + rnorm(N, 0, Y.res)
   }
 
   Data$stan_dt <- list(
