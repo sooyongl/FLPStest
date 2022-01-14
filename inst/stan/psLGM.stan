@@ -1,3 +1,5 @@
+// need to refer https://mc-stan.org/docs/2_25/stan-users-guide/multivariate-outcomes.html
+
 data{
 //Sample sizes
  int<lower=1> nsecWorked;
@@ -84,6 +86,7 @@ model{
  L ~ lkj_corr_cholesky(nfac);
  A0 = diag_pre_multiply(A, L);
  
+ //L_sigma ~ cauchy(0, 2.5);
  sigR~inv_gamma(2, 1);
  betaY~normal(0,2);
  betaU1[1]~normal(1,1);
