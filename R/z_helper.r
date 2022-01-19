@@ -1,3 +1,10 @@
+#' make NULL S3 class
+#'
+S3class <- function(class) {
+  out <- structure(list(), class = class)
+  out
+}
+
 #' obtain the signs of factor loadings
 #'
 obv_lambda <- function(obs.v.partial) {
@@ -17,19 +24,19 @@ obv_lambda <- function(obs.v.partial) {
 
 #' make stanmodel class
 #'
-makeStanModel <- function(stan_code_path) {
-
-  stanfit <- rstan::stanc_builder("inst/stan/psIRT_scaled.stan",
-                                  allow_undefined = TRUE,
-                                  obfuscate_model_name = FALSE)
-  stanfit$model_cpp <- list(model_cppname = stanfit$model_name,
-                            model_cppcode = stanfit$cppcode)
-  # create stanmodel object
-  sm <- methods::new(Class = "stanmodel",
-                     model_name = stanfit$model_name,
-                     model_code = stanfit$model_code,
-                     model_cpp = stanfit$model_cpp,
-                     mk_cppmodule = function(x) get(paste0("model_", model_name)))
-
-  sm
-}
+# makeStanModel <- function(stan_code_path) {
+#
+#   stanfit <- rstan::stanc_builder(stan_code_path,
+#                                   allow_undefined = TRUE,
+#                                   obfuscate_model_name = FALSE)
+#   stanfit$model_cpp <- list(model_cppname = stanfit$model_name,
+#                             model_cppcode = stanfit$cppcode)
+#   # create stanmodel object
+#   sm <- methods::new(Class = "stanmodel",
+#                      model_name = stanfit$model_name,
+#                      model_code = stanfit$model_code,
+#                      model_cpp = stanfit$model_cpp,
+#                      mk_cppmodule = function(x) get(paste0("model_", model_name)))
+#
+#   sm
+# }

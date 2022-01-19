@@ -1,19 +1,27 @@
-#' #' data setting depending on latent variable models
-#' #'
-#' dataSetting <- function(info, ...) {
-#'   UseMethod("dataSetting", info)
-#' }
+#' data setting depending on latent variable models
 #'
-#' #' get information for data generation ready
-#' #'
-#' infoSetting <- function(...) {
+setData <- function(info, ...) {
+  UseMethod("setData", info)
+}
+
+setData.default <- function(info) {
+
+}
+
+setData.flpsIRT <- function(info) {
+
+}
+
+#' get information for data generation ready
 #'
-#'   info <- list(...)
-#'   lv_type <- info$lv_type
-#'   info$lv_type <- NULL
-#'
-#'   structure(info, class = lv_type)
-#' }
+infoSetting <- function(...) {
+
+  info <- list(...)
+  lv_type <- info$lv_type
+  info$lv_type <- NULL
+
+  structure(info, class = lv_type)
+}
 
 #' Convert a matrix to a FLPS data
 #'
@@ -36,14 +44,25 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type,
 
   if(custom) {
 
-    out <- new("flpsData")
+    ## S3
+    out <- S3class("flpsData")
 
-    out@outcome <- outcome
-    out@group <- group
-    out@covariate <- covariate
-    out@lv_type <- lv_type
-    out@lv_model <- lv_model
-    out@stan_data <- inp_data
+    out$outcome <- outcome
+    out$group <- group
+    out$covariate <- covariate
+    out$lv_type <- class(inp_data)
+    out$lv_model <- lv_model
+    out$stan_data <- inp_data
+
+    ## S4
+    # out <- new("flpsData")
+    #
+    # out@outcome <- outcome
+    # out@group <- group
+    # out@covariate <- covariate
+    # out@lv_type <- lv_type
+    # out@lv_model <- lv_model
+    # out@stan_data <- inp_data
 
   } else {
 
@@ -98,43 +117,74 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type,
     if(lv_type %in% c("IRT","RASCH","2PL","3PL")) {
       flps_data$lambda_prior <- obtain_prior(obs.v.partial)
 
-      out <- new("flpsIRT")
+      ## S3
+      out <- S3class("flpsIRT")
+
+      ## S4
+      # out <- new("flpsIRT")
     }
 
     if(lv_type %in% c("GPCM","PCM","RSM")) {
       flps_data$lambda_prior <- obtain_prior(obs.v.partial)
       flps_data$max_k <- max(obs.v.vector)
 
-      out <- new("flpsGPCM")
+      ## S3
+      out <- S3class("flpsGPCM")
+
+      ## S4
+      # out <- new("flpsGPCM")
     }
 
     if(lv_type %in% c("SEM","CFA")) {
       flps_data$lambda_prior <- obtain_prior(obs.v.partial)
 
-      out <- new("flpsSEM")
+      ## S3
+      out <- S3class("flpsSEM")
+
+      ## S4
+      # out <- new("flpsSEM")
     }
 
     if(lv_type %in% c("LGM")) {
       flps_data$time_loading <- dotdotdot$time_loading
 
-      out <- new("flpsLGM")
+      ## S3
+      out <- S3class("flpsLGM")
+
+      ## S4
+      # out <- new("flpsLGM")
     }
 
     if(lv_type %in% c("LPA","LCA","MIXTURE","GMM")) {
       flps_data$nclass <- dotdotdot$nclass
 
-      out <- new("flpsMixture")
-      out@nclass <- dotdotdot$nclass
+      ## S3
+      out <- S3class("flpsMixture")
+      out$nclass <- dotdotdot$nclass
+
+      ## S4
+      # out <- new("flpsMixture")
+      # out@nclass <- dotdotdot$nclass
 
     }
 
-    out@outcome <- outcome
-    out@group <- group
-    out@covariate <- covariate
-    out@lv_type <- lv_type
-    out@lv_model <- lv_model
-    out@lv_data <- obs.v.partial
-    out@stan_data <- flps_data
+    ## S3
+    out$outcome <- outcome
+    out$group <- group
+    out$covariate <- covariate
+    out$lv_type <- lv_type
+    out$lv_model <- lv_model
+    out$lv_data <- obs.v.partial
+    out$stan_data <- flps_data
+
+    ## S4
+    # out@outcome <- outcome
+    # out@group <- group
+    # out@covariate <- covariate
+    # out@lv_type <- lv_type
+    # out@lv_model <- lv_model
+    # out@lv_data <- obs.v.partial
+    # out@stan_data <- flps_data
   }
 
 

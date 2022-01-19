@@ -14,7 +14,17 @@
 #' @examples
 #'
 #' @export
-runFLPS <- function(inp_data = NULL, custom_data = NULL, custom_stan = NULL, outcome, group, covariate, lv_model, lv_type, stan_options = list(), ...) {
+runFLPS <- function(inp_data = NULL,
+                    custom_data = NULL,
+                    custom_stan = NULL,
+                    outcome = NULL,
+                    group = NULL,
+                    covariate = NULL,
+                    lv_model = NULL,
+                    lv_type = NULL,
+                    stan_options = list(),
+                    ...
+) {
 
   # time record ----------------------------------------------------------
   start.time <- proc.time()[3L]
@@ -34,6 +44,7 @@ runFLPS <- function(inp_data = NULL, custom_data = NULL, custom_stan = NULL, out
   # data and code -------------------------------------------------------------
   if(is.null(inp_data) && !is.null(custom_data) && !is.null(custom_stan)) {
     flps_data_class <- makeFLPSdata(custom_data, outcome, group, covariate, lv_model, lv_type, custom = T)
+
     flps_model <- custom_stan # loadRstan(lv_type) # cat(flps_model)
   }
 
@@ -41,31 +52,61 @@ runFLPS <- function(inp_data = NULL, custom_data = NULL, custom_stan = NULL, out
     flps_data_class <- makeFLPSdata(inp_data, outcome, group, covariate, lv_model, lv_type, ...)
 
     # flps_model <- makeFLPSmodel(x = flps_data_class)
-    flps_model <- loadRstan(flps_data_class@lv_type)
+    # flps_model <- loadRstan(flps_data_class@lv_type)
+    flps_model <- loadRstan(flps_data_class$lv_type)
   }
 
   # fit FLPS ----------------------------------------------------------------
+  ## S3
   if(class(flps_model) == "stanmodel") {
-    stan_options <- stanOptions(stan_options, data = flps_data_class@stan_data, object = flps_model)
-    flps_fit <-  do.call(rstan::sampling, stan_options)
+    # stan_options <- stanOptions(stan_options,
+    #                             data = flps_data_class$stan_data$stan_dt,
+    #                             object = flps_model)
+    #
+    # flps_fit <-  do.call(rstan::sampling, stan_options)
 
   } else {
-    stan_options <- stanOptions(stan_options, data = flps_data_class@stan_data, model_code = flps_model)
+    stan_options <- stanOptions(stan_options,
+                                data = flps_data_class$stan_data$stan_dt,
+                                model_code = flps_model)
     flps_fit <-  do.call(rstan::stan, stan_options)
   }
 
+  ## S4
+  # if(class(flps_model) == "stanmodel") {
+  #   stan_options <- stanOptions(stan_options, data = flps_data_class@stan_data, object = flps_model)
+  #   flps_fit <-  do.call(rstan::sampling, stan_options)
+  #
+  # } else {
+  #   stan_options <- stanOptions(stan_options, data = flps_data_class@stan_data, model_code = flps_model)
+  #   flps_fit <-  do.call(rstan::stan, stan_options)
+  # }
+
   # class output ------------------------------------------------------------
-  o <- new("flps")
 
-  o@call       <- .call
-  o@inp_data   <- inp_data
-  o@flps_model <- flps_model
-  o@flps_data  <- flps_data_class
-  o@flps_fit   <- flps_fit
+  ## S3
+  o <- S3class("flps")
+  o$call       <- .call
+  o$inp_data   <- inp_data
+  o$flps_model <- flps_model
+  o$flps_data  <- flps_data_class
+  o$flps_fit   <- flps_fit
 
-  o@time <- c("Timing:" = as.numeric(proc.time()[3L] - time$start.time))
+  o$time <- c("Timing:" = as.numeric(proc.time()[3L] - start.time))
 
-
+  ## S4
+  # o <- new("flps")
+  # o@call       <- .call
+  # o@inp_data   <- inp_data
+  # o@flps_model <- flps_model
+  # o@flps_data  <- flps_data_class
+  # o@flps_fit   <- flps_fit
+  #
+  # o@time <- c("Timing:" = as.numeric(proc.time()[3L] - time$start.time))
 
   return(o)
+}
+
+print.flps <- function(obj) {
+  print(obj$flps_fit)
 }
