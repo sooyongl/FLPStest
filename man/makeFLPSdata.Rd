@@ -2,11 +2,7 @@
 % Please edit documentation in R/make_FLPSdata.r
 \name{makeFLPSdata}
 \alias{makeFLPSdata}
-\title{#' data setting depending on latent variable models
-#'
-dataSetting <- function(info, ...) {
-  UseMethod("dataSetting", info)
-}}
+\title{Convert a matrix to a FLPS data}
 \usage{
 makeFLPSdata(
   inp_data,
@@ -42,8 +38,5 @@ makeFLPSdata(
 a flpsData class.
 }
 \description{
-
-}
-\details{
-
+Convert a matrix to a FLPS data
 }

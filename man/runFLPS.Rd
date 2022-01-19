@@ -8,11 +8,11 @@ runFLPS(
   inp_data = NULL,
   custom_data = NULL,
   custom_stan = NULL,
-  outcome,
-  group,
-  covariate,
-  lv_model,
-  lv_type,
+  outcome = NULL,
+  group = NULL,
+  covariate = NULL,
+  lv_model = NULL,
+  lv_type = NULL,
   stan_options = list(),
   ...
 )
