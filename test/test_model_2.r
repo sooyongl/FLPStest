@@ -12,6 +12,7 @@ file_list <- c(
   "inst/stan/psGPCM_scaled.stan",
   "inst/stan/psSEM_scaled.stan",
   "inst/stan/psLGM.stan",
+  # "inst/stan/test_lgm_1.stan",
   "inst/stan/psLCA.stan",
   "inst/stan/psLPA.stan"
 )
@@ -87,12 +88,12 @@ fit <- rstan::stan(
 
 # save --------------------------------------------------------------------
 res <- list(fit = fit, sdat = sdat)
-saveRDS(res, paste0("results/res_lgm.rds"))
+saveRDS(res, paste0("results/res_lgm_1.rds"))
 
 
 # cleaning ----------------------------------------------------------------
 res_list <- fs::dir_ls("results")
-res <- readRDS(res_list[1])
+res <- readRDS(res_list[2])
 
 fit <- res$fit
 sdat <- res$sdat
@@ -107,8 +108,9 @@ df.fit$chain <- rep(c(1:chain), each = iter)
 df.fit <- df.fit %>% group_by(chain)
 #
 df.fit %>%
-  select(matches("^nu|^p|^b00|^b01|betaY|betaU")) %>%
+  select(matches("^nu|^p|^b00|^b01|betaY|betaU|b1|a1")) %>%
   summarise_all(mean)
+
 
 lambda <- df.fit %>%
   select(chain, matches("^lambda_free\\[")) %>%
@@ -180,6 +182,14 @@ true_param <- c(0, true_param, true_param1[2:3])
 
 names(true_param) <- c("chain","b00", "b0", "a1", "by1","by2", "b1", "bu1","bu2")
 true_param <- true_param[c("chain", "b00", "b0", "b1", "a1", "by1","by2", "bu1","bu2")]
+
+df.fit %>%
+  select(chain, matches("^b00|^b0|b1|a1|betaY|betaU|gm")) %>%
+  summarise_all(mean)
+
+df.fit %>%
+  select(chain, matches("^b00|^b0|b1|a1|betaY|betaU|b111|b222")) %>%
+  summarise_all(mean)
 
 est_param <- df.fit %>%
   select(chain, matches("^b00|^b0|b1|a1|betaY|betaU")) %>%
