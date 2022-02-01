@@ -36,17 +36,18 @@
 #' )
 #'
 #' @export
-makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,linear,nsec,lvmodel,lvinfo){
+makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,linear,nsec,nfac,lvmodel,lvinfo){
+
 
   mc <- match.call(expand.dots = TRUE)
   mc[[1L]] <- quote(list); # mc.list <- as.list(match.call(mc)[-1]))}
 
   # set up S3 class ---------------------------------------------------------
   sim_info <- structure(eval(mc), class = tolower(lvmodel))
-  # sim_info <- structure(setup_dat$sim_condition, class = tolower(setup_dat$sim_condition$lvmodel))
+  # sim_info <- structure(sim_condition, class = tolower(sim_condition$lvmodel))
 
   # Generate True eta -------------------------------------------------------
-  sim_info <- genTrueEta(sim_info)
+  sim_info <- genTrueEta(Data=sim_info)
 
   # Generate LV part --------------------------------------------------------
   sim_info <- genLVM(sim_info)

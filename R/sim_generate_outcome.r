@@ -13,6 +13,7 @@ genOutcome.default <- function(Data) {
   R2Y    <- Data$R2Y
   theta  <- Data$theta
   xdata  <- Data$x
+  nfac   <- ncol(Data$theta)
 
   R2Y    <- Data$R2Y
   omega  <- Data$omega
@@ -24,6 +25,9 @@ genOutcome.default <- function(Data) {
   studentM <- Data$studentM
   grad <- Data$grad
   lv.resp <- Data$lv.resp
+
+  a_idx <- gen_a_idx(nsec, nfac)
+  fi_idx <- detect_firstitem(a_idx)
 
   Y.res = 1 - R2Y
   eta <- theta
@@ -47,16 +51,23 @@ genOutcome.default <- function(Data) {
   }
 
   Data$stan_dt <- list(
+    # data info
     nsecWorked = length(section),
     nstud = N,
     nsec = nsec,
+    nfac = nfac,
+    min_k = min(grad),
     max_k = max(grad),
-    lambda_prior = obv_lambda(lv.resp[1:(N/2), ]),
+    ncov = ncol(xdata),
+    # index
     studentM = studentM,
     section = section,
+    lambda_prior = obv_lambda(obs.v.partial = lv.resp[1:(N/2), ], a_idx),
+    factoridx  = a_idx,
+    firstitem = fi_idx,
+    # data
     grad = grad,
     X = xdata,
-    ncov = ncol(xdata),
     Z = Z,
     Y = c(Y)
   )

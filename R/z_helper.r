@@ -7,7 +7,11 @@ S3class <- function(class) {
 
 #' obtain the signs of factor loadings
 #'
-obv_lambda <- function(obs.v.partial) {
+obv_lambda <- function(obs.v.partial, a_idx) {
+
+  nsec <- nrow(a_idx)
+  nfac <- ncol(a_idx)
+
   fs.prior.info <- apply(obs.v.partial, 2, function(x) {
     cor(x, rowMeans(obs.v.partial, na.rm = T), use = "pairwise.complete.obs")
   })
@@ -16,7 +20,15 @@ obv_lambda <- function(obs.v.partial) {
   fs.prior.info[which(fs.prior.info < 0)] <- -1
   fs.prior.info[which(is.na(fs.prior.info))] <- 0
 
-  fs.prior.info
+  temp_idx <- apply(a_idx, 2, function(x) which(x == 1))
+
+  a1 <- matrix(rep(0, nsec*nfac), ncol=nfac)
+  for(x in 1:nfac) {
+    a1[temp_idx[,x],x] <- fs.prior.info[temp_idx[,x]]
+
+  }
+
+  a1
 }
 
 # latent_labmda <- function(obs.v.partial, lv_type) {
