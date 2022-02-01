@@ -1,11 +1,11 @@
 DATA:	FILE IS gpcm.csv;
 
-VARIABLE:	NAMES ARE u1-u10;
-CATEGORICAL ARE u1-u10 (gpcm);
+VARIABLE:	NAMES ARE u1-u20;
+CATEGORICAL ARE u1-u20 (gpcm);
 
 ANALYSIS:	ESTIMATOR = MLR;
 
-MODEL:	f BY u1-u10*;
+MODEL:	f BY u1-u20*;
   
   f@1;
   [f@0];

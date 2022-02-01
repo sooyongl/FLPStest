@@ -38,7 +38,7 @@ transformed parameters {
     }
     linPred[j] = diff[section[j]] + disc[section[j]] * eta[studentM[j]];
 }
-
+}
 model{
   disc_free ~ uniform(-10, 10);
   diff_free ~ uniform(-10, 10);  

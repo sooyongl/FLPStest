@@ -34,17 +34,17 @@ functions {
 }
 data {
   int<lower=1> I;                // # items
-    int<lower=1> J;                // # persons
-      int<lower=1> N;                // # responses
-        int<lower=1,upper=I> ii[N];    // i for n
-        int<lower=1,upper=J> jj[N];    // j for n
-        int<lower=0> y[N];             // response for n; y in {0 ... m_i}
-        int<lower=1> K;                // # person covariates
-          matrix[J,K] W;                 // person covariate matrix
+  int<lower=1> J;                // # persons
+  int<lower=1> N;                // # responses
+  int<lower=1,upper=I> ii[N];    // i for n
+  int<lower=1,upper=J> jj[N];    // j for n
+  int<lower=0> y[N];             // response for n; y in {0 ... m_i}
+  int<lower=1> K;                // # person covariates
+  matrix[J,K] W;                 // person covariate matrix
 }
 transformed data {
   int m;                         // # steps
-    matrix[2,K] adj;               // values for centering and scaling covariates
+  matrix[2,K] adj;               // values for centering and scaling covariates
   matrix[J,K] W_adj;             // centered and scaled covariates
   m = max(y);
   adj = obtain_adjustments(W);

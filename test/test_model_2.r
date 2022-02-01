@@ -70,7 +70,7 @@ setup <- function(sim_condition, i = 1) {
 }
 
 # set up rstan data -------------------------------------------------------
-setup_dat <- setup(sim_condition, 4)
+setup_dat <- setup(sim_condition, 2)
 sdat <- do.call("makeDat", setup_dat$sim_condition)
 
 # run FLPS ----------------------------------------------------------------
