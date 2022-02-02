@@ -1,0 +1,278 @@
+---
+title: "Test Multivariate IRT Model"
+author: ""
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    css: "style.css"
+    code_folding: show
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = T)
+
+library(rstan); library(tidyverse); library(knitr)
+
+base_path <- rprojroot::find_rstudio_root_file()
+source_path <- file.path(base_path, "R")
+
+for(i in fs::dir_ls(source_path, regexp = "r$")) {source(i)};
+
+```
+
+## Condition
+
+```{r}
+sim_condition <- list(
+  N = 2000, # sample size
+  R2Y = 0.2,
+  omega = 0.2,  # a1
+  tau0 = 0.4,  # b0
+  tau1 = -0.2, # b1
+  lambda = 0.6,
+  R2eta = 0.2,
+  linear = T,
+  nsec = 20,
+  nfac = 2,
+  lvmodel="2pl",
+  lvinfo =
+    list(
+      ipar = round(genIRTpar(nitem = 20,
+                             nfac = 2,
+                             lvmodel = "2pl"),3)
+    )
+)
+```
+
+## Data Generation
+
+```{r}
+sdat <- do.call("makeDat", sim_condition)
+stan_dt <- sdat$stan_dt
+```
+
+### item parameter
+
+#### Two factor model 
+
+```{r}
+sdat$lvinfo$ipar
+```
+
+###  factor index
+
+#### Index for factor loading matrix
+
+If all matrix elements are filled with 1, all indicators are affected by all the factors like EFA.
+
+```{r}
+stan_dt$factoridx
+```
+
+#### Index for the first indicator per factor (for the factor loading constraint)
+
+```{r}
+stan_dt$firstitem
+```
+
+## Run FLPS
+
+### stan model
+
+- [multivariate IRT](https://github.com/sooyongl/FLPS/blob/main/inst/stan/psIRT_multi.stan)
+
+- Other models are [multivariate GPCM](https://github.com/sooyongl/FLPS/blob/main/inst/stan/psGPCM_multi.stan) and [multivariate GRM](https://github.com/sooyongl/FLPS/blob/main/inst/stan/psGRM_multi.stan).
+
+- First loadings of each factor are fixed to 1. Free loadings are estimated corresponding factoridx matrix above.
+
+```
+data{
+//Sample sizes
+ int<lower=1> nsecWorked;
+ int<lower=1> ncov;
+ int<lower=1> nstud;
+ int<lower=1> nsec;
+ int<lower=1> nfac;
+  int<lower=0> min_k; 
+  int<lower=1> max_k; 
+ // prior information
+ matrix[nsec, nfac] lambda_prior;
+
+ // indices
+ int<lower=1,upper=nstud> studentM[nsecWorked];
+ int<lower=1,upper=nsec> section[nsecWorked];
+
+  // index for factor loadings
+  matrix[nsec, nfac] factoridx;
+  int<lower=0> firstitem[nsec];
+  
+ // data data
+ int<lower=min_k,upper=max_k> grad[nsecWorked];
+ matrix[nstud,ncov] X;
+ int<lower=0,upper=1> Z[nstud];
+ real Y[nstud];
+}
+
+parameters{
+ // IRT model
+ vector[nfac] eta[nstud];       // person scores for each factor
+ cholesky_factor_corr[nfac] L; // Cholesky decomp of corr mat of random slopes
+ 
+ matrix[nsec, nfac] lambda_free; // discrimination of nsec
+ real tau[nsec];                 // difficulty of question nsec
+
+ matrix[ncov, nfac] betaU;
+ vector[ncov] betaY;
+
+ real b00;
+ vector[nfac] a1;
+ real b0;
+ 
+ vector[nfac] b1;
+
+ real<lower=0> sigY[2];
+}
+
+transformed parameters {
+  real linPred[nsecWorked];
+  matrix[nsec, nfac] lambda;
+
+// Factor loading constraints
+  for(jjj in 1:nfac) {
+    for(jj in 1:nsec) {
+ 	  if(factoridx[jj, jjj] != 0) { 
+        if(firstitem[jj] == 1) { // first loading per factor constrained to 1.
+          lambda[jj, jjj] = 1;
+        } else {
+          lambda[jj, jjj] = lambda_free[jj, jjj];
+        }
+      } else {
+        lambda[jj, jjj] = 0;
+      }
+    }
+  };
+
+  for(j in 1:nsecWorked) {
+    linPred[j] = tau[section[j]] + lambda[section[j],1:nfac] * eta[studentM[j]];
+  }
+}
+
+model{
+  vector[nfac] A = rep_vector(1, nfac);
+  matrix[nfac, nfac] A0;  
+  vector[nfac] fac_mean;
+  
+  vector[nstud] muY;
+  real useEff[nstud];
+  real trtEff[nstud];
+  real sigYI[nstud];
+ 
+  L ~ lkj_corr_cholesky(nfac);
+  A0 = diag_pre_multiply(A, L);
+  
+  for(i in 1:nstud){
+    useEff[i] = to_row_vector(a1)*eta[i];
+    trtEff[i] = b0 + to_row_vector(b1)*eta[i];
+    muY[i]=b00+useEff[i]+Z[i]*trtEff[i];
+    sigYI[i]=sigY[Z[i]+1];
+  };
+
+  for(i in 1:nfac) {
+    fac_mean[i] = mean(X*betaU[,i]);
+  };
+ 
+//priors
+  // IRT priors
+  tau ~ normal(0, 1);
+  for(i in 1:nsec) {
+    for(j in 1:nfac) {
+      lambda_free[i, j] ~ normal(lambda_prior[i, j], .5);
+	};
+  };
+  
+  // PS priors
+  betaY ~ uniform(-5, 5);
+  //betaU ~ uniform(-5, 5);
+  for(i in 1:nfac) {
+    betaU[,i] ~ uniform(-5, 5);
+  };
+
+  a1 ~ uniform(-5, 5);
+  b1 ~ uniform(-5, 5);
+  b00 ~ uniform(-5, 5);
+  b0  ~ uniform(-5, 5);
+
+// Fully Latent Principal Stratification model
+  // Latent variable model
+  grad~bernoulli_logit(linPred);
+  // Causal model
+  eta ~ multi_normal_cholesky(fac_mean, A0);
+  Y~normal(muY+X*betaY,sigYI);
+}
+// last line blank
+```
+
+### run stan
+
+```{r  eval = F}
+# run flps ----------------------------------------------------------------
+fit <- rstan::stan(
+  file = "inst/stan/psIRT_multi.stan",
+  data = stan_dt,
+  iter = 10000,
+  warmup = 2000,
+  chains = 1,
+  open_progress = F
+)
+```
+
+## Results
+
+```{r}
+# res <- clean_temp(fit, sdat)
+res <- readRDS(file.path(base_path,"report/report_sim_0202.rds"))
+```
+
+### FLPS parameters
+
+```{r}
+res$flps_param %>% 
+  mutate_if(is.numeric, round, 3) %>% 
+  kable()
+```
+
+### Discrimination
+
+```{r}
+data.frame(round(res$comb_lambda,3)) %>% 
+  set_names(c("pop_disc_f1","pop_disc_f2", "est_disc_f1","est_disc_f2")) %>% 
+  select(pop_disc_f1, est_disc_f1, pop_disc_f2,est_disc_f2)
+```
+
+
+```{r}
+
+
+data.frame(round(res$comb_tau[,c(1,3)],3)) %>% 
+  set_names(c("pop_diff","est_diff")) %>% 
+  select(pop_diff, est_diff)
+```
+
+### true eta
+
+```{r}
+est <- data.frame(res$comb_eta) %>% 
+  set_names(c("pop_fs_f1","pop_fs_f2", "est_fs_f1","est_fs_f2"))
+
+plot(est[,1], est[,3], xlab = "est_f1", ylab = "pop_f1")
+plot(est[,2], est[,4], xlab = "est_f2", ylab = "pop_f2")
+```
+
+
