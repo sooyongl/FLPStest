@@ -1,3 +1,89 @@
+clean_temp <- function(fit, sdat) {
+  N <- sdat$N
+  stan_dt <- sdat$stan_dt
+  nb <- max(sdat$grad) - min(sdat$grad)
+  nfac <- sdat$nfac
+
+  iter = fit@sim$iter - fit@sim$warmup
+  chain = fit@sim$chains
+
+  # item param
+  df.fit <- as.data.frame(fit)
+  df.fit$chain <- rep(c(1:chain), each = iter)
+  df.fit <- df.fit %>% group_by(chain)
+
+
+  lambda <- df.fit %>%
+    select(matches("^lambda\\[")) %>%
+    summarise_all(mean) %>%
+    select(-chain) %>%
+    matrix(., ncol = nfac)
+
+  tau <- df.fit %>%
+    select(chain, matches("^tau\\[")) %>%
+    summarise_all(mean) %>%
+    select(-chain) %>%
+    matrix(., ncol = nb)
+
+  comb_lambda <- cbind(sdat$lv.par[,1:nfac],lambda)
+  comb_lambda <- apply(comb_lambda, 2, as.numeric)
+  comb_tau    <- cbind(sdat$lv.par[,(nfac+1):ncol(sdat$lv.par)], tau)
+  comb_tau    <- apply(comb_tau, 2, as.numeric)
+
+  eta <- df.fit %>%
+    select(chain, matches("^eta")) %>%
+    summarise_all(mean) %>%
+    select(-chain) %>%
+    matrix(., ncol = nfac, nrow = N)
+
+  comb_eta <- cbind(sdat$theta, eta)
+  comb_eta <- apply(comb_eta, 2, as.numeric)
+
+  # apply(comb_eta, 2, function(x) mean(unlist(x)))
+  # apply(comb_eta, 2, function(x) var(unlist(x)))
+  #
+  #
+  # plot(unlist(comb_eta[,1]), unlist(comb_eta[,3]))
+  # plot(unlist(comb_eta[,2]), unlist(comb_eta[,4]))
+
+  # main effect ------------------------------------------
+  true_data <- data.frame(Y = stan_dt$Y, X1 = stan_dt$X[,1], X2 = stan_dt$X[,2], eta = sdat$theta, Z = stan_dt$Z)
+
+  etas <- names(true_data)[str_detect(names(true_data), "eta")]
+
+  etapart<- paste(etas, collapse = "+")
+  etazpart <- paste(paste0(etas, "*Z"), collapse = "+")
+  true_form <- as.formula(glue::glue("Y ~ Z + {etapart} + {etazpart} + X1 + X2"))
+  true_param <- lm(true_form, data = true_data)
+  true_param <- coefficients(true_param)
+
+  true_param1 <- lm(eta.eta1 ~ X1 + X2, data = true_data)
+  true_param2 <- lm(eta.eta2 ~ X1 + X2, data = true_data)
+  true_param12 <- c(coefficients(true_param1)[2:3],
+                    coefficients(true_param2)[2:3])
+
+  true_param <- c(true_param, true_param12)
+
+  names(true_param) <- c("b00", "b0", "a11","a12", "by1","by2", "b11","b12", "bu11","bu12","bu21","bu22")
+  true_param <- true_param[c("b00", "b0", "b11","b12", "a11","a12", "by1","by2", "bu11","bu12","bu21","bu22")]
+
+  est_param <- df.fit %>%
+    select(matches("^b00|^b0|b1|a1|betaY|betaU")) %>%
+    summarise_all(mean) %>%
+    select(-chain) %>%
+    set_names(c("bu11","bu12","bu21","bu22","by1","by2","b00","a11","a12","b0","b11","b12")) %>%
+    select(b00, b0, b11,b12, a11,a12, by1,by2,bu11,bu12,bu21,bu22)
+
+  flps_param <- bind_rows(true = true_param, est = est_param, .id = "type")
+
+  list(flps_param=flps_param,
+       comb_lambda=comb_lambda,
+       comb_tau=comb_tau,
+       comb_eta=comb_eta)
+
+}
+
+
 #' gelman diagnostic with chol.default error addressed.
 #'
 # my.gelman.diag <- function(x,confidence = 0.95,transform = FALSE,autoburnin = FALSE,multivariate = TRUE) {
