@@ -271,6 +271,8 @@ data.frame(round(res$comb_tau[,c(1,3)],3)) %>%
 est <- data.frame(res$comb_eta) %>% 
   set_names(c("pop_fs_f1","pop_fs_f2", "est_fs_f1","est_fs_f2"))
 
+cov(est)
+
 plot(est[,1], est[,3], xlab = "est_f1", ylab = "pop_f1")
 plot(est[,2], est[,4], xlab = "est_f2", ylab = "pop_f2")
 ```
