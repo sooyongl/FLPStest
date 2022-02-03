@@ -13,7 +13,7 @@ genOutcome.default <- function(Data) {
   R2Y    <- Data$R2Y
   theta  <- Data$theta
   xdata  <- Data$x
-  nfac   <- ncol(Data$theta)
+  nfac   <- Data$nfac
 
   R2Y    <- Data$R2Y
   omega  <- Data$omega

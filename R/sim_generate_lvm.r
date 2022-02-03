@@ -1,3 +1,4 @@
+#' Generate IRT parameters
 #'
 #' @examples
 #' genIRTpar(20, 4, 3, "grm")
@@ -78,50 +79,6 @@ genIRTpar <- function(nitem=25, ncat=4, nfac=3, lvmodel) {
 }
 
 
-# test ---------------------------------------------------
-#' @examples
-#'
-#' lvmodel <- "2pl"
-#' ipar <- genIRTpar(20, ncat = 3, 2, lvmodel)
-#' eta <- MASS::mvrnorm(100, rep(0, 2), matrix(c(1,0,0,1),ncol=2))
-#' dat <- genIRTdt(lvmodel, eta, ipar)
-#' check_irt(dat, lvmodel, 2, IRTpars = F)
-#'
-check_irt <- function(dat, lvmodel, nfac, IRTpars) {
-
-  nitem <- ncol(dat);
-
-  idx_ <- rep(floor(nitem / nfac),nfac)
-  idx_[length(idx_)] <- nitem - sum(idx_[-length(idx_)])
-  idx_c <- c(0,cumsum(idx_))
-
-  mirt_model <- ""
-  for(j in 1:nfac) { # j=1
-    mirt_model <- paste(mirt_model, paste0("F", j, "=",(idx_c[j]+1),"-", idx_c[(j+1)]), sep = "\n")
-  }
-
-  lvmodel <- switch(lvmodel,
-                    "rasch" = "Rasch",
-                    "2pl" = "2PL",
-                    "3pl" = "3PL",
-                    "gpcm" = "gpcm",
-                    "grm" = "graded",
-                    lvmodel)
-
-  res <- mirt::mirt(
-    data = dat,
-    model = mirt_model, # paste0("F = 1-",ncol(dat)),
-    itemtype = lvmodel,
-    SE = F,
-    verbose = FALSE
-  )
-
-  coef.res <- coef(res, IRTpars = IRTpars, simplify = TRUE)
-  items.res <- as.data.frame(coef.res$items)
-  items.res
-}
-
-
 #' Generate LV model data
 #'
 genLVM <- function(info) { # info = sim_info
@@ -189,7 +146,7 @@ generateLV.pcm   <- function(.x, ...) {.Class <- "irt"; NextMethod()}
 generateLV.ggrm   <- function(.x, ...) {.Class <- "irt"; NextMethod()}
 generateLV.grm   <- function(.x, ...) {.Class <- "irt"; NextMethod()}
 
-#' method for all dichotomous IRT model
+#' method for all IRT model
 #'
 #' @examples
 #'
@@ -236,7 +193,8 @@ generateLV.irt <- function(info) { #function(lvmodel, eta, ipar) {
 
   return(list(resp = data.frame(resp), lv.par = ipar))
 }
-#'
+
+#' Generate IRT data
 #'
 simData <- function(a, d, guess, N, theta, itemtype) {
 
@@ -257,7 +215,8 @@ simData <- function(a, d, guess, N, theta, itemtype) {
   }
   resp
 }
-#'
+
+#' Generate GPCM data
 #'
 simData.pcm <- function(a,d,theta) {
 
