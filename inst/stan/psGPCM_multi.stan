@@ -78,7 +78,7 @@ transformed parameters{
 model{
   vector[nfac] A = rep_vector(1, nfac);
   matrix[nfac, nfac] A0;  
-  vector[nfac] fac_mean;
+  //vector[nfac] fac_mean;
  
   vector[nstud] muY;
   real useEff[nstud];
@@ -95,9 +95,9 @@ model{
     sigYI[i]=sigY[Z[i]+1];
   };
 
-  for(i in 1:nfac) {
-    fac_mean[i] = mean(X*betaU[,i]);
-  };
+  //for(i in 1:nfac) {
+  //  fac_mean[i] = mean(X*betaU[,i]);
+  //};
 
 //priors
   // IRT priors
@@ -126,7 +126,9 @@ model{
     grad[i] ~ categorical(p[,i]);
   }
   // Causal model
-  eta ~ multi_normal_cholesky(fac_mean, A0);
+   for(i in 1:nstud){
+      eta[i, ] ~ multi_normal_cholesky(X[i, ]*betaU, A0);
+    }
   Y~normal(muY+X*betaY,sigYI);
 }
 // last line
