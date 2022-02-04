@@ -1,62 +1,58 @@
-library(rstan); library(tidyverse)
+library(rstan); library(tidyverse); library(foreach)
 for(i in fs::dir_ls("R", regexp = "r$")) source(i);
 
-# generate data -----------------------------------------------------------
+cond_list <- data.frame()
+for(i in 1:dim(cond_list)[1]) {
+
+}
+
+
+# generate data ------------------------------------------
 sim_condition <- list(
-  N = 1000, # sample size
-  R2Y = 0.2,
-  omega = 0.2,  # a1
-  tau0 = 0.4,  # b0
-  tau1 = -0.2, # b1
-  lambda = 0.6,
-  R2eta = 0.2,
-  linear = T,
-  nsec = 20,
-  nfac = 1,
-  lvmodel="gpcm",
-  lvinfo =
-    list(
-      ipar = round(genIRTpar(nitem = 20,
-                             nfac = 1,
-                             lvmodel = "gpcm"),3)
-    )
+  N       = 1000, # sample size
+  R2Y     = 0.2,
+  R2eta   = 0.2,
+  omega   = 0.2,  # a1
+  tau0    = 0.4,  # b0
+  tau1    = -0.2, # b1
+  linear  = T,
+  lambda  = 0.6,
+  nsec    = 20,
+  nfac    = 1,
+  lvmodel ="2pl"
 )
 
 sdat <- do.call("makeDat", sim_condition)
 # sdat <- readRDS("test/test_sdata_0.rds")
 
-stan_dt <- sdat$stan_dt
-
 # check LV part -----------------------------------------------
 check_lv(
   dat = sdat$lv.resp,
-  covdata = NULL, #data.frame(sdat$x),
-  lvmodel = "gpcm",
-  nfac = 1,
-  IRTpars = T
+  covdata = NULL,
+  # covdata = data.frame(sdat$x),,
+  lvmodel = sdat$lvmodel,
+  nfac = sdat$nfac,
+  IRTpars = ifelse(sdat$lvmodel=="gpcm", T, F)
 )
 # item parameter
 sdat$lvinfo$ipar
 
 # check model part --------------------------------------------------------
-check_flps(stan_dt)
+check_flps(sdat$stan_dt)
 
-# factor index
-stan_dt$factoridx
-stan_dt$firstitem
-
-# run flps ----------------------------------------------------------------
+# run flps ----------------------------------------------
 fit <- rstan::stan(
-  file = "inst/stan/psGPCM_multi.stan",
-  data = stan_dt,
+  file = "inst/stan/psIRT_multi.stan",
+  data = sdat$stan_dt,
   iter = 6000,
   warmup = 2000,
   chains = 1,
   open_progress = F
 )
 o <- list(fit=fit, sdat=sdat)
-# cleaning ----------------------------------------------------------------
 saveRDS(o, "test/test_model_gpcm.rds")
+
+# cleaning ----------------------------------------------
 o <- readRDS("test/test_model_0.rds")
 
 res <- clean_temp(fit = o[[1]], sdat = o[[2]])
