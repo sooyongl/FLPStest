@@ -28,15 +28,12 @@
 #'   R2eta = 0.5,
 #'   linear = T,
 #'   nsec = 10,
-#'   lvmodel = "2PL",
-#'   lvinfo = data.frame(
-#'   a = runif(20, 0.7, 1.4),
-#'   b = rnorm(20),
-#'   g = rep(0, 20))
+#'   lvmodel = "2PL"
 #' )
 #'
 #' @export
-makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,linear,nsec,nfac,lvmodel,lvinfo){
+makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,linear,nsec,nfac,
+                    lvmodel,lvinfo){
 
 
   mc <- match.call(expand.dots = TRUE)
@@ -45,6 +42,9 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,linear,nsec,nfac,lvmodel,
   # set up S3 class ---------------------------------------------------------
   sim_info <- structure(eval(mc), class = tolower(lvmodel))
   # sim_info <- structure(sim_condition, class = tolower(sim_condition$lvmodel))
+
+  # Generate Latent Variable Model Information ------------------------------
+  sim_info <- genLVinfo(sim_info)
 
   # Generate True eta -------------------------------------------------------
   sim_info <- genTrueEta(Data=sim_info)
@@ -61,8 +61,8 @@ makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,linear,nsec,nfac,lvmodel,
 #' Generate a matrix style data for simulation
 #'
 #' @description
-#' \code{\link{makeInpDat}} is a function for generating a data based on the given
-#' information.
+#' \code{\link{makeInpDat}} is a function for generating a data based on
+#' the given information.
 #' @param N a numeric indicating sample size.
 #' @param R2Y a numeric indicating predictive power of covariates.
 #' @param omega a numeric indicating the relationship between eta_T and Y_C.

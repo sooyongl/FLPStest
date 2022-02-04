@@ -1,6 +1,6 @@
 #' S3 generic for individual latent scores data generation
 #'
-genTrueEta <- function(Data, ...) {
+genTrueEta <- function(Data, ...) { # Data = sim_info
   UseMethod("genTrueEta", Data)
 }
 

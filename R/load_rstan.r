@@ -22,11 +22,11 @@ loadRstan <- function(lv_type = "2pl") {
   stan_list <- list.files(stan_path)
 
   if(tolower(lv_type) != "lca") {
-    stan_list <- stan_list[grep(toupper("scaled"), toupper(stan_list))]
+    stan_list <- stan_list[grepl(toupper("multi"), toupper(stan_list))]
   }
 
-  stan_picked <- grep(toupper(lv_type), toupper(stan_list))
-  stan_picked2 <- grep("stan", stan_list[stan_picked])
+  stan_picked <- grepl(toupper(lv_type), toupper(stan_list))
+  stan_picked2 <- grepl("stan", stan_list[stan_picked])
   stan_model <- stan_list[stan_picked][stan_picked2]
 
   stan_file <- file.path(stan_path, stan_model)

@@ -1,4 +1,5 @@
 #' Check simulated latent variable model parameters
+#'
 #' @examples
 #'
 #' lvmodel <- "2pl"
@@ -17,7 +18,9 @@ check_lv <- function(dat, covdata=NULL, lvmodel, nfac, IRTpars) {
 
   mirt_model <- ""
   for(j in 1:nfac) { # j=1
-    mirt_model <- paste(mirt_model, paste0("F", j, "=",(idx_c[j]+1),"-", idx_c[(j+1)]), sep = "\n")
+    mirt_model <- paste(mirt_model,
+                        paste0("F", j, "=",(idx_c[j]+1),"-", idx_c[(j+1)]),
+                        sep = "\n")
   }
 
   lvmodel <- switch(lvmodel,

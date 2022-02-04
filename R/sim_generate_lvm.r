@@ -1,13 +1,48 @@
+#' Set latent variable model information
+#'
+genLVinfo <- function(sim_info) {
+
+  nitem   <- sim_info$nsec
+  nfac    <- sim_info$nfac
+  lvmodel <- sim_info$lvmodel
+
+  if(sim_info$lvmodel %in% c("rasch","2pl","3pl","gpcm","pcm","grm","ggrm")){
+
+    ipar <- genIRTpar(nitem, nfac, lvmodel, ncat = 4)
+
+  } else if(sim_info$lvmodel %in% c("cfa","sem","lgm")) {
+
+    ipar <- genSEMpar(nitem, nfac, lvmodel)
+    sim_info$lvinfo$growth_mean <- c(3, 0.2)
+
+  }  else if(sim_info$lvmodel %in% c("lpa","lca","mixture")) {}
+
+  sim_info$lvinfo$ipar <- ipar
+
+  return(sim_info)
+}
+
+#' Generate SEM parameter
+#'
+genSEMpar <- function(nitem=25, nfac=2, lvmodel) {
+
+  if(lvmodel %in% c("sem","cfa")) {
+
+    a_list <- gen_a(nitem, nfac)
+    a_list$a <- unname(a_list$a)
+    loading <- a_list$a
+  }
+
+  if(lvmodel %in% c("lgm")) {
+    loading <- sapply(0:(nfac-1), function(i) {(0:(nitem-1))^i})
+  }
+
+  ipar <- data.frame(loading=loading)
+}
+
 #' Generate IRT parameters
 #'
-#' @examples
-#' genIRTpar(20, 4, 3, "grm")
-#' genIRTpar(20, 4, 3, "gpcm")
-#' genIRTpar(20, 2, 3, "1pl")
-#' genIRTpar(20, 2, 3, "2pl")
-#' genIRTpar(20, 2, 3, "3pl")
-#'
-genIRTpar <- function(nitem=25, ncat=4, nfac=3, lvmodel) {
+genIRTpar <- function(nitem=25, nfac=3, lvmodel, ncat = 4) {
 
   lvmodel <- tolower(lvmodel)
 
@@ -17,46 +52,18 @@ genIRTpar <- function(nitem=25, ncat=4, nfac=3, lvmodel) {
     stop("For GRM and GPCM, cateories should be at least 3")
   }
 
-  gen_a <- function(nitem, nfac) {
-    idx_ <- rep(floor(nitem / nfac),nfac)
-    idx_[length(idx_)] <- nitem - sum(idx_[-length(idx_)])
-    idx_c <- c(0,cumsum(idx_))
-    a    <- matrix(rep(0, nitem*nfac), ncol=nfac)
-    a_idx <- matrix(rep(0, nitem*nfac), ncol=nfac)
-    for(j in 1:nfac) { # j=1
-      a_idx[(idx_c[j]+1):idx_c[(j+1)],j] <- 1
-
-      a[(idx_c[j]+1):idx_c[(j+1)],j] <- c(1, matrix(rlnorm((idx_[(j)]-1), .2, .3))) #the first 1 here is the recommended constraint
-    }
-    colnames(a) <- paste0("a",1:ncol(a))
-
-    list(a_idx = a_idx, a = a)
-  }
   a_list <- gen_a(nitem, nfac)
   a <- a_list$a
   a_idx <- a_list$a_idx
 
   if(lvmodel %in% c("grm","gpcm")) {
-
-    if(lvmodel == "grm"){ # grm
-      # for the graded model, ensure that there is enough space between the intercepts,
-      # otherwise closer categories will not be selected often
-      # (minimum distance of 0.3 here)
-      diffs <- t(apply(matrix(runif(nitem * (ncat-1), .3, 1), nitem), 1, cumsum))
-      d <- -(diffs - rowMeans(diffs))
-    }
-    else { # gpcm
-
-      d <- t(apply(matrix(runif(nitem*(ncat-1), .3, 1), nitem), 1, cumsum))
-      d <- -(d - rowMeans(d))
-      # d <- d + rnorm(nitem)
-      # d <- d*-1
-
-      # d <- matrix(rnorm(nitem * (ncat-1)), nitem)
-    }
+    # for the graded model, ensure that there is enough space between
+    # the intercepts, otherwise closer categories will not be selected often
+    # (minimum distance of 0.5 here)
+    diffs <- t(apply(matrix(runif(nitem * (ncat-1), .5, 1), nitem), 1, cumsum))
+    d <- -(diffs - rowMeans(diffs))
 
     colnames(d) <- paste0("d",1:ncol(d))
-
     ipar <- data.frame(a, d)
 
   }
@@ -173,10 +180,13 @@ generateLV.irt <- function(info) { #function(lvmodel, eta, ipar) {
 
   lvmodel <- switch(lvmodel,
                     "rasch" = "dich",
+                    "1pl" = "dich",
                     "2pl" = "dich",
                     "3pl" = "dich",
                     "gpcm" = "gpcm",
-                    "grm" = "graded")
+                    "pcm" = "gpcm",
+                    "grm" = "graded",
+                    "ggrm" = "graded")
 
   if(lvmodel == "dich") { guess <- ipar[,grep("g",names(ipar))] }
 
@@ -394,9 +404,9 @@ generateLV.sem <- function(info) {
   # set up for data generation
   theta <- info$theta; nitem <- info$nsec; lv_info <- info$lvinfo
 
-  cpar <- lv_info$cpar
+  ipar <- lv_info$ipar
 
-  loadings <- matrix(cpar$loading, ncol = 1)
+  loadings <- matrix(ipar$loading, ncol = 1)
   residuals <- diag(loadings %*% cov(matrix(theta)) %*% t(loadings)) * .4
 
   if(is.null(dim(theta))) {
@@ -605,7 +615,7 @@ generateLV.lpa <- function(info) {
 #'
 generateLV.mixture <- function(info) {
 
- # return(data)
+  # return(data)
   print("not yet")
 }
 
