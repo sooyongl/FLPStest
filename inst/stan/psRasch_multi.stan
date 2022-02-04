@@ -25,12 +25,16 @@ data{
   real Y[nstud];
 }
 
+transformed data {
+   matrix[nsec, nfac] lambda = factoridx;
+
+}
+
 parameters{
   // IRT model
   vector[nfac] eta[nstud];       // person scores for each factor
   cholesky_factor_corr[nfac] L; // Cholesky decomp of corr mat of random slopes
 
-  matrix[nsec, nfac] lambda_free; // discrimination of nsec
   real tau[nsec];                 // difficulty of question nsec
 
   matrix[ncov, nfac] betaU;
@@ -47,22 +51,6 @@ parameters{
 
 transformed parameters {
   real linPred[nsecWorked];
-  matrix[nsec, nfac] lambda;
-
-  // Factor loading constraints
-  for(jjj in 1:nfac) {
-    for(jj in 1:nsec) {
-      if(factoridx[jj, jjj] != 0) {
-        if(firstitem[jj] == 1) { // first loading per factor constrained to 1.
-        lambda[jj, jjj] = 1;
-        } else {
-          lambda[jj, jjj] = lambda_free[jj, jjj];
-        }
-      } else {
-        lambda[jj, jjj] = 0;
-      }
-    }
-  };
 
   for(j in 1:nsecWorked) {
     linPred[j] = tau[section[j]] + lambda[section[j],1:nfac] * eta[studentM[j]];
@@ -72,13 +60,10 @@ transformed parameters {
 model{
   vector[nfac] A = rep_vector(1, nfac);
   matrix[nfac, nfac] A0;
-  //vector[nfac] fac_mean;
 
   vector[nfac] muEta[nstud];
   vector[nstud] muY0;
   vector[nstud] muY;
-  //real useEff[nstud];
-  //real trtEff[nstud];
   real sigYI[nstud];
 
   L ~ lkj_corr_cholesky(nfac);
@@ -97,16 +82,10 @@ model{
 	sigYI[i]=sigY[Z[i]+1];
   };
 
- //priors
+//priors
     // IRT priors
     //tau ~ normal(0, 1);
 	tau ~ uniform(-5, 5);
-    for(i in 1:nsec) {
-      for(j in 1:nfac) {
-        //lambda_free[i, j] ~ normal(lambda_prior[i, j], .5);
-		lambda_free[i, j] ~ uniform(-3, 3);
-      };
-    };
 
     // PS priors
     betaY ~ uniform(-5, 5);
@@ -130,4 +109,3 @@ model{
 	eta ~ multi_normal_cholesky(muEta, A0);
     Y~normal(muY,sigYI);
 }
-// last line blank
