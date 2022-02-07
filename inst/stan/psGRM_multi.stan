@@ -69,33 +69,30 @@ transformed parameters{
 model{
   vector[nfac] A = rep_vector(1, nfac);
   matrix[nfac, nfac] A0;  
-  //vector[nfac] fac_mean;
  
+  vector[nfac] muEta[nstud];
+  vector[nstud] muY0;
   vector[nstud] muY;
-  real useEff[nstud];
-  real trtEff[nstud];
   real sigYI[nstud];
 
   L ~ lkj_corr_cholesky(nfac);
   A0 = diag_pre_multiply(A, L);
 
   for(i in 1:nstud){
-    useEff[i] = to_row_vector(a1)*eta[i];
-    trtEff[i] = b0 + to_row_vector(b1)*eta[i];
-    muY[i]=b00+useEff[i]+Z[i]*trtEff[i];
-    sigYI[i]=sigY[Z[i]+1];
+ 	muEta[i] = to_vector(X[i, ]*betaU);
+	
+	muY0[i] = b00+ to_row_vector(a1)*eta[i] + Z[i] * (b0 + to_row_vector(b1)*eta[i]);
+	muY[i]  = muY0[i] + X[i,]*betaY;
+	
+	sigYI[i]=sigY[Z[i]+1];
   };
-
-  //for(i in 1:nfac) {
-  //  fac_mean[i] = mean(X*betaU[,i]);
-  //};
 
 //priors
   // IRT priors
   for(i in 1:nsec) {
-    for(ii in 1:(max_k-1)) {
-	  tau[i , ii] ~ uniform(-5, 5);
-    };
+    //for(ii in 1:(max_k-1)) {
+	//  tau[i , ii] ~ uniform(-5, 5);
+    //};
 	for(j in 1:nfac) {
       lambda_free[i,j] ~ normal(lambda_prior[i,j], 1);
 	  
@@ -115,12 +112,10 @@ model{
 // Fully Latent Principal Stratification model
   // Latent variable model
   for (i in 1:nsecWorked){
-    grad[i]~ordered_logistic(lambda[section[i]]*eta[studentM[i]],tau[section[i]]);
+    grad[i]~ordered_logistic(lambda[section[i],1:nfac]*eta[studentM[i]],tau[section[i]]);
   };
   // Causal model
-  for(i in 1:nstud){
-      eta[i, ] ~ multi_normal_cholesky(X[i, ]*betaU, A0);
-    }
-  Y~normal(muY+X*betaY,sigYI);
+  eta ~ multi_normal_cholesky(muEta, A0);
+  Y~normal(muY,sigYI);
 }
 // last line

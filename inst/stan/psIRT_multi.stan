@@ -46,7 +46,7 @@ parameters{
 }
 
 transformed parameters {
-  real linPred[nsecWorked];
+
   matrix[nsec, nfac] lambda;
 
   // Factor loading constraints
@@ -64,31 +64,24 @@ transformed parameters {
     }
   };
 
-  for(j in 1:nsecWorked) {
-    linPred[j] = tau[section[j]] + lambda[section[j],1:nfac] * eta[studentM[j]];
-  }
 }
 
 model{
+  real linPred[nsecWorked];
+  
   vector[nfac] A = rep_vector(1, nfac);
   matrix[nfac, nfac] A0;
-  //vector[nfac] fac_mean;
 
   vector[nfac] muEta[nstud];
   vector[nstud] muY0;
   vector[nstud] muY;
-  //real useEff[nstud];
-  //real trtEff[nstud];
   real sigYI[nstud];
 
   L ~ lkj_corr_cholesky(nfac);
   A0 = diag_pre_multiply(A, L);
 
   for(i in 1:nstud){
-    //useEff[i] = to_row_vector(a1)*eta[i];
-    //trtEff[i] = b0 + to_row_vector(b1)*eta[i];
-    //muY[i]=b00+useEff[i]+Z[i]*trtEff[i];
-    
+
 	muEta[i] = to_vector(X[i, ]*betaU);
 	
 	muY0[i] = b00+ to_row_vector(a1)*eta[i] + Z[i] * (b0 + to_row_vector(b1)*eta[i]);
@@ -103,14 +96,13 @@ model{
 	tau ~ uniform(-5, 5);
     for(i in 1:nsec) {
       for(j in 1:nfac) {
-        //lambda_free[i, j] ~ normal(lambda_prior[i, j], .5);
-		lambda_free[i, j] ~ uniform(-3, 3);
+        lambda_free[i, j] ~ normal(lambda_prior[i, j], 1);
+		//lambda_free[i, j] ~ uniform(-3, 3);
       };
     };
 
     // PS priors
     betaY ~ uniform(-5, 5);
-    //betaU ~ uniform(-5, 5);
     for(i in 1:nfac) {
       betaU[,i] ~ uniform(-5, 5);
     };
@@ -122,11 +114,12 @@ model{
 
 // Fully Latent Principal Stratification model
     // Latent variable model
-    grad~bernoulli_logit(linPred);
+	for(j in 1:nsecWorked) {
+      linPred[j] = tau[section[j]] + lambda[section[j],1:nfac] * eta[studentM[j]];
+	  grad[j] ~ bernoulli_logit(linPred[j]);
+	}
+	
     // Causal model
-    //for(i in 1:nstud){
-    //  eta[i, ] ~ multi_normal_cholesky(X[i, ]*betaU, A0);
-    //}
 	eta ~ multi_normal_cholesky(muEta, A0);
     Y~normal(muY,sigYI);
 }

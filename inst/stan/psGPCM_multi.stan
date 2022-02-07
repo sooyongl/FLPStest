@@ -46,8 +46,6 @@ parameters{
 }
 
 transformed parameters{
-  matrix[max_k, nsecWorked] p;      // probs of reponse
-  matrix[max_k, nsecWorked] s;      // logits of reponse
 
   matrix[nsec, nfac] lambda;
 
@@ -66,38 +64,32 @@ transformed parameters{
     }
   };
   
-  for(i in 1:nsecWorked) {
-    s[1,i] = 0; //reference
-    for(k in 2:max_k) {
-	  s[k,i] = s[k-1, i] + tau[section[i], k-1] + lambda[section[i], 1:nfac] * eta[studentM[i]];
-	}
-    p[,i] = softmax(s[,i]);
-  }
+ 
 }
 
 model{
+  matrix[max_k, nsecWorked] p;      // probs of reponse
+  matrix[max_k, nsecWorked] s;      // logits of reponse
+  
   vector[nfac] A = rep_vector(1, nfac);
   matrix[nfac, nfac] A0;  
-  //vector[nfac] fac_mean;
  
+  vector[nfac] muEta[nstud];
+  vector[nstud] muY0;
   vector[nstud] muY;
-  real useEff[nstud];
-  real trtEff[nstud];
   real sigYI[nstud];
 
   L ~ lkj_corr_cholesky(nfac);
   A0 = diag_pre_multiply(A, L);
-  
-  for(i in 1:nstud){
-    useEff[i] = to_row_vector(a1)*eta[i];
-    trtEff[i] = b0 + to_row_vector(b1)*eta[i];
-    muY[i]=b00+useEff[i]+Z[i]*trtEff[i];
-    sigYI[i]=sigY[Z[i]+1];
-  };
 
-  //for(i in 1:nfac) {
-  //  fac_mean[i] = mean(X*betaU[,i]);
-  //};
+  for(i in 1:nstud){
+ 	muEta[i] = to_vector(X[i, ]*betaU);
+	
+	muY0[i] = b00+ to_row_vector(a1)*eta[i] + Z[i] * (b0 + to_row_vector(b1)*eta[i]);
+	muY[i]  = muY0[i] + X[i,]*betaY;
+	
+	sigYI[i]=sigY[Z[i]+1];
+  };
 
 //priors
   // IRT priors
@@ -122,13 +114,17 @@ model{
 
 // Fully Latent Principal Stratification model
   // Latent variable model
-  for (i in 1:nsecWorked){
-    grad[i] ~ categorical(p[,i]);
+  for(i in 1:nsecWorked) {
+    s[1,i] = 0; //reference
+    for(k in 2:max_k) {
+	  s[k,i] = s[k-1, i] + tau[section[i], k-1] + lambda[section[i], 1:nfac] * eta[studentM[i]];
+	}
+    p[,i] = softmax(s[,i]);
+	grad[i] ~ categorical(p[,i]);
   }
+ 
   // Causal model
-   for(i in 1:nstud){
-      eta[i, ] ~ multi_normal_cholesky(X[i, ]*betaU, A0);
-    }
-  Y~normal(muY+X*betaY,sigYI);
+  eta ~ multi_normal_cholesky(muEta, A0);
+  Y~normal(muY,sigYI);
 }
 // last line
