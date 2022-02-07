@@ -1,15 +1,14 @@
 library(rstan); library(tidyverse); library(foreach)
 for(i in fs::dir_ls("R", regexp = "r$")) source(i);
 
-cond_list <- data.frame()
-for(i in 1:dim(cond_list)[1]) {
-
-}
-
+# cond_list <- data.frame()
+# for(i in 1:dim(cond_list)[1]) {
+#
+# }
 
 # generate data ------------------------------------------
 sim_condition <- list(
-  N       = 1000, # sample size
+  N       = 2000, # sample size
   R2Y     = 0.2,
   R2eta   = 0.2,
   omega   = 0.2,  # a1
@@ -19,13 +18,15 @@ sim_condition <- list(
   lambda  = 0.6,
   nsec    = 20,
   nfac    = 1,
-  lvmodel ="2pl"
+  lvmodel ="gpcm"
 )
 
 sdat <- do.call("makeDat", sim_condition)
+
+# saveRDS("test/test_sdata_0.rds")
 # sdat <- readRDS("test/test_sdata_0.rds")
 
-# check LV part -----------------------------------------------
+# check LV part -----------------------------------------
 check_lv(
   dat = sdat$lv.resp,
   covdata = NULL,
@@ -37,12 +38,14 @@ check_lv(
 # item parameter
 sdat$lvinfo$ipar
 
-# check model part --------------------------------------------------------
+# check model part --------------------------------------
 check_flps(sdat$stan_dt)
 
 # run flps ----------------------------------------------
 fit <- rstan::stan(
-  file = "inst/stan/psIRT_multi.stan",
+  # file = "inst/stan/psIRT_multi.stan",
+  file = "inst/stan/psGPCM_multi.stan",
+  # file = "inst/stan/psGRM_multi.stan",
   data = sdat$stan_dt,
   iter = 6000,
   warmup = 2000,
@@ -58,10 +61,10 @@ o <- readRDS("test/test_model_0.rds")
 res <- clean_temp(fit = o[[1]], sdat = o[[2]])
 saveRDS(res, "test/test_cleaned_gpcm.rds")
 
-
 data.frame(res$comb_lambda) %>%
-  set_names(c("pop.a1","pop.a2","est.a1","est.a2")) %>%
+  set_names(paste0(rep(c("pop.a", "est.a"), each = ncol(res$comb_lambda)), 1:ncol(res$comb_lambda))) %>%
   tibble()
+
 
 data.frame(res$comb_tau[,c(1,3)]) %>%
   set_names(c("pop.b","est.b")) %>%
@@ -69,7 +72,7 @@ data.frame(res$comb_tau[,c(1,3)]) %>%
 
 res$flps_param
 
-colnames(res$comb_eta) <- c("pop.est1", "pop.est2","est.eta1","est.eta2")
+colnames(res$comb_eta) <- paste0(rep(c("pop.est", "est.est"), each = ncol(res$comb_eta)), 1:ncol(res$comb_eta))
 round(cor(res$comb_eta),3)
 mean(res$comb_eta[,1] - res$comb_eta[,3])
 mean(res$comb_eta[,2] - res$comb_eta[,4])
