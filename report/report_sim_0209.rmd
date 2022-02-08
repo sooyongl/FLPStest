@@ -1,0 +1,369 @@
+---
+title: "Test Multivariate IRT Model"
+author: ""
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    highlight: py
+    css: "style.css"
+    code_folding: show
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = T, 
+                      class.source="rsource",
+                      class.output="routput")
+library(rstan); library(tidyverse); library(knitr)
+
+table_est<- function(x) { # x = res
+  
+  x$comb_tau <- x$comb_tau[, !grepl("g", colnames(x$comb_tau))]
+  
+  lambda_mat <- data.frame(x$comb_lambda) %>%
+    set_names(paste0(rep(
+      c("pop.a", "est.a"), each = (ncol(x$comb_lambda)/2)
+    ), 1:(ncol(x$comb_lambda)/2))) %>% 
+    tibble()
+  
+  if(ncol(x$comb_tau) > 2) {
+    x$comb_tau[, 4:6] <- x$comb_tau[, 4:6]*-1
+  }
+  
+  tau_mat <- data.frame(x$comb_tau[,]) %>%
+    set_names(paste0(rep(
+      c("pop.b", "est.b"), each = (ncol(x$comb_tau)/2)
+    ), 1:(ncol(x$comb_tau)/2))) %>% 
+    tibble()
+  
+  list(lambda_mat = lambda_mat, tau_mat = tau_mat,
+       flps_param = x$flps_param)
+}
+
+plot_eta <- function(x) {
+  theme_set(theme_bw(base_size = 16) +
+              theme(legend.position = "bottom"))
+  
+  temp <- ifelse(ncol(x) > 2, T, F)
+  
+  colnames(x) <- paste0(rep(c("pop.eta", "est.eta"), 
+                            each = (ncol(x)/2)), 1:(ncol(x)/2))
+  
+  data <- data.frame(x[],
+                     id = 1:nrow(x), 
+                     trtgroup = rep(c("trt","cnt"), each=nrow(x)/2))
+  
+  p1 <- ggplot(data) +
+    geom_point(aes(x = pop.eta1, y = est.eta1, color = trtgroup))
+  
+  if(temp){
+    p2 <- ggplot(data) +
+      geom_point(aes(x = pop.eta2, y = est.eta2, color = trtgroup))
+    p1 <- ggpubr::ggarrange(p1, p2, ncol = 2)
+  }
+  p1
+}
+
+base_path <- rprojroot::find_rstudio_root_file()
+report_path <- file.path(base_path, "report")
+source_path <- file.path(base_path, "R")
+rds_path <- file.path(base_path, "results")
+
+
+for(i in fs::dir_ls(source_path, regexp = "r$")) {source(i)};
+
+rds_name <- fs::dir_ls(rds_path, regexp = "cleaned")
+model_name <- str_split(rds_name, "_", simplify = T)[,3:4]
+model_name <- apply(model_name, 1, function(x) paste(x, collapse = "_"))
+
+res_list <- lapply(rds_name, readRDS)
+names(res_list) <- model_name
+```
+
+## FLPS model
+
+<div class = "row">
+<div class = "col-md-6">
+```{r echo=FALSE, fig.height=4}
+include_graphics(file.path(report_path, "twofactor.png"))
+```
+</div>
+
+<div class = "col-md-6">
+```{r echo=FALSE, fig.height=6}
+include_graphics(file.path(report_path, "onefactor.png"))
+```
+</div>
+</div>
+
+- FLPS models with one factor and two factor
+
+
+## generate data {.tabset}
+
+`makeDat()` function generates a list of data, which contains the data (`stan_dt`) for `stan()` to run the FLPS model. The list of data contains all other simulation inputs as well.
+
+
+### code
+
+```{r}
+# generate data ------------------------------------------
+sim_condition <- list(
+  N       = 2000,     # sample size
+  R2Y     = 0.2,      # strength of effects of covariates
+  R2eta   = 0.2,      # strength of effects of latent variable
+  omega   = 0.2,      # a11
+  tau0    = 0.4,      # b0
+  tau1    = -0.2,     # b11
+  linear  = T,
+  lambda  = 0.6,      # percentage of missing in latent variable models
+  nsec    = 20,       # Number of items
+  nfac    = 1,        # Number of latent factors
+  lvmodel ="2pl"      # Type of latent models: 2pl, gpcm, grm
+)
+
+sdat <- do.call("makeDat", sim_condition)
+```
+
+### data structure
+
+```{r}
+# a list of data for stan function
+str(sdat$stan_dt)
+```
+
+## Check the generated data {.tabset}
+
+### Check Latent variable model part
+
+<div class = "row">
+<div class = "col-md-6">
+```{r}
+# Generated item parameters
+check_lv(
+  dat = sdat$lv.resp,
+  covdata = NULL,
+  lvmodel = sdat$lvmodel,
+  nfac = sdat$nfac,
+  IRTpars = ifelse(sdat$lvmodel=="gpcm", T, F)
+)$items.est
+```
+</div>
+
+<div class = "col-md-6">
+```{r}
+# Population item parameters
+#
+#
+#
+#
+#
+# 
+sdat$lvinfo$ipar
+```
+</div>
+</div>
+
+### check flps model part
+
+```{r}
+check_flps(sdat$stan_dt)
+```
+
+## Run `stan()`
+
+- Using `sdat$stan_dt` as an input data for `stan()`, the FLPS model can be conducted. According to the type of latent variable model, the different stan script will be fed into `file`. 
+
+- 2PL: [multivariate IRT](https://github.com/sooyongl/FLPS/blob/main/inst/stan/psIRT_multi.stan)
+
+
+- GPCM: [multivariate GPCM](https://github.com/sooyongl/FLPS/blob/main/inst/stan/psGPCM_multi.stan)
+
+- GRM: [multivariate GRM](https://github.com/sooyongl/FLPS/blob/main/inst/stan/psGRM_multi.stan)
+
+```{r, eval = F}
+fit <- rstan::stan(
+  file = "inst/stan/psIRT_multi.stan",
+  data = sdat$stan_dt,
+  iter = 6000,
+  warmup = 2000,
+  chains = 1,
+  open_progress = F
+)
+```
+
+
+## Results
+
+### 2PL {.tabset}
+
+#### One factor {.tabset}
+
+##### lambda
+
+```{r}
+table_est(res_list[[1]])$lambda_mat
+```
+
+##### tau
+
+```{r}
+table_est(res_list[[1]])$tau_mat
+```
+
+##### flps parameters
+
+```{r}
+table_est(res_list[[1]])$flps_param
+```
+
+##### eta estimates
+
+```{r}
+plot_eta(res_list[[1]]$comb_eta)
+```
+
+#### Two factor {.tabset}
+
+##### lambda
+
+```{r}
+table_est(res_list[[2]])$lambda_mat
+```
+
+##### tau
+
+```{r}
+table_est(res_list[[2]])$tau_mat
+```
+
+##### flps parameters
+
+```{r}
+table_est(res_list[[2]])$flps_param
+```
+
+##### eta estimates
+
+```{r}
+plot_eta(res_list[[2]]$comb_eta)
+```
+
+
+### GPCM {.tabset}
+
+#### One factor {.tabset}
+
+##### lambda
+
+```{r}
+table_est(res_list[[3]])$lambda_mat
+```
+
+##### tau
+
+```{r}
+table_est(res_list[[3]])$tau_mat
+```
+
+##### flps parameters
+
+```{r}
+table_est(res_list[[3]])$flps_param
+```
+
+##### eta estimates
+
+```{r}
+plot_eta(res_list[[3]]$comb_eta)
+```
+
+#### Two factor {.tabset}
+
+##### lambda
+
+```{r}
+table_est(res_list[[4]])$lambda_mat
+```
+
+##### tau
+
+```{r}
+table_est(res_list[[4]])$tau_mat
+```
+
+##### flps parameters
+
+```{r}
+table_est(res_list[[4]])$flps_param
+```
+
+##### eta estimates
+
+```{r}
+plot_eta(res_list[[4]]$comb_eta)
+```
+
+### GRM {.tabset}
+
+#### One factor {.tabset}
+
+##### lambda
+
+```{r}
+table_est(res_list[[5]])$lambda_mat
+```
+
+##### tau
+
+```{r}
+table_est(res_list[[5]])$tau_mat
+```
+
+##### flps parameters
+
+```{r}
+table_est(res_list[[5]])$flps_param
+```
+
+##### eta estimates
+
+```{r}
+plot_eta(res_list[[5]]$comb_eta)
+```
+
+
+#### Two factor {.tabset}
+
+##### lambda
+
+```{r}
+table_est(res_list[[6]])$lambda_mat
+```
+
+##### tau
+
+```{r}
+table_est(res_list[[6]])$tau_mat
+```
+
+##### flps parameters
+
+```{r}
+table_est(res_list[[6]])$flps_param
+```
+
+##### eta estimates
+
+```{r}
+plot_eta(res_list[[6]]$comb_eta)
+```
+
+
+

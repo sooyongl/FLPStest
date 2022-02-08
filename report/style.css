@@ -1,3 +1,16 @@
+
+.rsource {
+	background-color:#fff;
+    font-size: 100%;
+	font-weight: 500;
+	
+}
+
+.routput {
+	background-color:#fff;
+	font-size: 100%;
+}
+
 #TOC {
   left: 0;
   top: 0;
@@ -6,18 +19,18 @@
 }
 
 div.main-container {
-  max-width: 1100px !important;
+  max-width: 2000px !important;
 }
 .toc-content {
-  padding-legt: 100px;
+  padding-left: 100px;
 }
 
 p {
-  line-height: 1.8;
+  line-height: 1.4;
 }
 body {
   font-size: 16px;
-  width: 100% !important;
+  width: 80% !important;
   max-width: 100% !important;
 }
 
@@ -64,7 +77,7 @@ h3 {
 }
 
 .tocify .list-group-item {
-  border-radius: 10px !important;
+  border-radius: 5px !important;
 }
 
 /* tabset color */
@@ -82,6 +95,6 @@ a {
 }
 
 .nav-tabs>li>a {
-  border-radius: 10px 10px 0 0;
+  border-radius: 5px 5px 5px 5px;
 }
 
