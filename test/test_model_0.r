@@ -72,7 +72,7 @@ data.frame(res$comb_tau[,c(1,3)]) %>%
 
 res$flps_param
 
-colnames(res$comb_eta) <- paste0(rep(c("pop.est", "est.est"), each = ncol(res$comb_eta)), 1:ncol(res$comb_eta))
+colnames(res$comb_eta) <- paste0(rep(c("pop.eta", "est.eta"), each = (ncol(res$comb_eta)/2)), 1:(ncol(res$comb_eta)/2))
 round(cor(res$comb_eta),3)
 mean(res$comb_eta[,1] - res$comb_eta[,3])
 mean(res$comb_eta[,2] - res$comb_eta[,4])
@@ -83,18 +83,18 @@ mean((res$comb_eta[,2] - res$comb_eta[,4])^2)
 data.frame(res$comb_eta[],id = 1:nrow(res$comb_eta), trtgroup = rep(c("trt","cnt"), each=nrow(res$comb_eta)/2)) %>%
   # gather("eta", "score", -id, -trtgroup) %>%
   ggplot() +
-  geom_point(aes(x = pop.est1, y = est.eta1, color = trtgroup))
+  geom_point(aes(x = pop.eta1, y = est.eta1, color = trtgroup))
 
 data.frame(res$comb_eta[],id = 1:nrow(res$comb_eta), trtgroup = rep(c("trt","cnt"), each=nrow(res$comb_eta)/2)) %>%
   # gather("eta", "score", -id, -trtgroup) %>%
   ggplot() +
-  geom_point(aes(x = pop.est2, y = est.eta2, color = trtgroup))
+  geom_point(aes(x = pop.eta2, y = est.eta2, color = trtgroup))
 
 
 data.frame(res$comb_eta[],id = 1:nrow(res$comb_eta), trtgroup = rep(c("trt","cnt"), each=nrow(res$comb_eta)/2)) %>%
   # gather("eta", "score", -id, -trtgroup) %>%
   ggplot() +
-  geom_point(aes(x = pop.est1, y = est.eta1, color = trtgroup))
+  geom_point(aes(x = pop.eta1, y = pop.eta2, color = trtgroup))
 
 data.frame(res$comb_eta[],id = 1:nrow(res$comb_eta), trtgroup = rep(c("trt","cnt"), each=nrow(res$comb_eta)/2)) %>%
   # gather("eta", "score", -id, -trtgroup) %>%
