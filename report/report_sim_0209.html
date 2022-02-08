@@ -374,7 +374,9 @@ div.tocify {
 </div>
 <div id="generate-data" class="section level2 tabset">
 <h2 class="tabset">generate data</h2>
-<p><code>makeDat()</code> function generates a list of data, which contains the data (<code>stan_dt</code>) for <code>stan()</code> to run the FLPS model. The list of data contains all other simulation inputs as well.</p>
+<ul>
+<li><code>makeDat()</code> function generates a list of data, which contains the data (<code>stan_dt</code>) for <code>stan()</code> to run the FLPS model. The list of data contains all other simulation inputs as well.</li>
+</ul>
 <div id="code" class="section level3">
 <h3>code</h3>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r rsource"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># generate data ------------------------------------------</span></span>
@@ -407,54 +409,57 @@ div.tocify {
 ##  $ max_k       : num 1
 ##  $ ncov        : int 2
 ##  $ studentM    : int [1:12000] 1 1 1 1 1 1 1 1 1 1 ...
-##  $ section     : int [1:12000] 3 4 7 8 9 10 11 13 14 15 ...
+##  $ section     : int [1:12000] 1 3 4 5 6 7 8 9 11 12 ...
 ##  $ lambda_prior: num [1:20, 1] 1 1 1 1 1 1 1 1 1 1 ...
 ##  $ factoridx   : num [1:20, 1] 1 1 1 1 1 1 1 1 1 1 ...
 ##  $ firstitem   : num [1:20] 1 0 0 0 0 0 0 0 0 0 ...
-##  $ grad        : num [1:12000] 0 0 0 0 1 0 0 0 0 0 ...
-##  $ X           : num [1:2000, 1:2] 0.898 0.116 -0.628 0.924 1.62 ...
+##  $ grad        : num [1:12000] 0 0 0 0 0 0 0 1 0 0 ...
+##  $ X           : num [1:2000, 1:2] 0.5962 0.7609 -0.0938 1.3749 -0.8105 ...
 ##   ..- attr(*, &quot;dimnames&quot;)=List of 2
 ##   .. ..$ : NULL
 ##   .. ..$ : chr [1:2] &quot;x1&quot; &quot;x2&quot;
 ##  $ Z           : num [1:2000] 1 1 1 1 1 1 1 1 1 1 ...
-##  $ Y           : num [1:2000] 0.172 0.964 -0.698 -0.307 1.428 ...</code></pre>
+##  $ Y           : num [1:2000] 2.125 -0.148 1.528 1.599 1.061 ...</code></pre>
 </div>
 </div>
 <div id="check-the-generated-data" class="section level2 tabset">
 <h2 class="tabset">Check the generated data</h2>
 <div id="check-latent-variable-model-part" class="section level3">
 <h3>Check Latent variable model part</h3>
+<ul>
+<li>To make sure the item response data is based on the population parameters, I ran <code>mirt()</code> and extracted the item parameters using <code>coef()</code>. The estimates with the generated response data is on the left-hand side, and the population value is on the right-hand side.</li>
+</ul>
 <div class="row">
 <div class="col-md-6">
 <div class="sourceCode" id="cb4"><pre class="sourceCode r rsource"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generated item parameters</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">check_lv</span>(</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dat =</span> sdat<span class="sc">$</span>lv.resp,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">covdata =</span> <span class="cn">NULL</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">lvmodel =</span> sdat<span class="sc">$</span>lvmodel,</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">nfac =</span> sdat<span class="sc">$</span>nfac,</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">IRTpars =</span> <span class="fu">ifelse</span>(sdat<span class="sc">$</span>lvmodel<span class="sc">==</span><span class="st">&quot;gpcm&quot;</span>, T, F)</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>)<span class="sc">$</span>items.est</span></code></pre></div>
-<pre class="routput"><code>##                a1          d g u
-## Item_1  1.4524846 -0.9908119 0 1
-## Item_2  1.9724958 -1.0275296 0 1
-## Item_3  0.9855651  1.1579433 0 1
-## Item_4  1.1261114 -0.3527583 0 1
-## Item_5  1.4351088 -0.1386813 0 1
-## Item_6  1.3557338  0.6327207 0 1
-## Item_7  1.4840013 -0.8006490 0 1
-## Item_8  0.6811954 -1.4088103 0 1
-## Item_9  2.3259151  0.2378196 0 1
-## Item_10 1.5870749  1.7073493 0 1
-## Item_11 1.6539154 -1.8481181 0 1
-## Item_12 1.9573427  1.9394058 0 1
-## Item_13 1.0867581 -2.5115471 0 1
-## Item_14 0.9465047  0.2635936 0 1
-## Item_15 1.9070733  0.1596707 0 1
-## Item_16 1.4712966  0.8284872 0 1
-## Item_17 1.7069740  0.7865103 0 1
-## Item_18 2.9702790 -0.3088262 0 1
-## Item_19 2.1003017 -1.9479406 0 1
-## Item_20 1.5050462  1.9419939 0 1</code></pre>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a> <span class="at">dat=</span>sdat<span class="sc">$</span>lv.resp,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a> <span class="at">covdata=</span><span class="cn">NULL</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a> <span class="at">lvmodel=</span>sdat<span class="sc">$</span>lvmodel,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a> <span class="at">nfac=</span>sdat<span class="sc">$</span>nfac,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a> <span class="at">IRTpars=</span><span class="fu">ifelse</span>(sdat<span class="sc">$</span>lvmodel<span class="sc">==</span><span class="st">&quot;gpcm&quot;</span>,T,F)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>)<span class="sc">$</span>items.est <span class="sc">%&gt;%</span> <span class="fu">round</span>(<span class="dv">3</span>)</span></code></pre></div>
+<pre class="routput"><code>##            a1      d g u
+## Item_1  1.441 -1.186 0 1
+## Item_2  1.950  0.749 0 1
+## Item_3  1.249  0.598 0 1
+## Item_4  1.863 -0.641 0 1
+## Item_5  1.831 -0.876 0 1
+## Item_6  1.861 -0.183 0 1
+## Item_7  1.658 -1.020 0 1
+## Item_8  1.392 -1.021 0 1
+## Item_9  2.286 -0.060 0 1
+## Item_10 2.262  0.202 0 1
+## Item_11 1.585 -1.200 0 1
+## Item_12 1.117  1.024 0 1
+## Item_13 2.120  0.774 0 1
+## Item_14 1.807 -0.199 0 1
+## Item_15 1.639 -0.308 0 1
+## Item_16 1.671  0.585 0 1
+## Item_17 1.568  0.254 0 1
+## Item_18 1.490 -0.203 0 1
+## Item_19 2.704  0.830 0 1
+## Item_20 1.729  0.325 0 1</code></pre>
 </div>
 <div class="col-md-6">
 <div class="sourceCode" id="cb6"><pre class="sourceCode r rsource"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Population item parameters</span></span>
@@ -464,44 +469,45 @@ div.tocify {
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>sdat<span class="sc">$</span>lvinfo<span class="sc">$</span>ipar</span></code></pre></div>
-<pre class="routput"><code>##           a1           d g
-## 1  1.0000000 -0.94431208 0
-## 2  1.4330186 -1.22221257 0
-## 3  0.6313007  1.16121373 0
-## 4  0.7248873 -0.32932999 0
-## 5  0.9857547 -0.22313726 0
-## 6  0.9919612  0.63492990 0
-## 7  0.8715434 -0.88867550 0
-## 8  0.4758651 -1.44344003 0
-## 9  1.4738179  0.17874539 0
-## 10 1.0457616  1.75220486 0
-## 11 1.1656897 -2.00532833 0
-## 12 1.2537321  1.76441164 0
-## 13 0.8353993 -2.73526845 0
-## 14 0.6936848  0.31072076 0
-## 15 1.3133828  0.07935166 0
-## 16 0.9670675  0.73291654 0
-## 17 1.1741606  0.76400675 0
-## 18 1.9799580 -0.44240914 0
-## 19 1.6259951 -2.21429553 0
-## 20 1.0011974  1.90303766 0</code></pre>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>sdat<span class="sc">$</span>lvinfo<span class="sc">$</span>ipar <span class="sc">%&gt;%</span> <span class="fu">round</span>(<span class="dv">3</span>)</span></code></pre></div>
+<pre class="routput"><code>##       a1      d g
+## 1  1.000 -1.172 0
+## 2  1.430  0.811 0
+## 3  0.745  0.656 0
+## 4  1.222 -0.592 0
+## 5  1.321 -0.927 0
+## 6  1.331 -0.021 0
+## 7  1.147 -0.981 0
+## 8  1.030 -1.038 0
+## 9  1.669  0.010 0
+## 10 1.650  0.193 0
+## 11 1.146 -1.126 0
+## 12 0.894  1.076 0
+## 13 1.497  0.855 0
+## 14 1.247 -0.190 0
+## 15 1.078 -0.322 0
+## 16 1.201  0.689 0
+## 17 1.147  0.204 0
+## 18 1.163 -0.113 0
+## 19 1.869  0.827 0
+## 20 1.247  0.367 0</code></pre>
 </div>
 </div>
 </div>
 <div id="check-flps-model-part" class="section level3">
 <h3>check flps model part</h3>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r rsource"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">check_flps</span>(sdat<span class="sc">$</span>stan_dt)</span></code></pre></div>
-<pre class="routput"><code>##          b00           b0          b11          a11          by1          by2 
-## -0.001559974  0.380853453 -0.195266824  0.214567075  1.007999482  0.514621455 
-##         bu11         bu12 
-## -0.996350043  0.500171699</code></pre>
+<ul>
+<li>To make sure the data is generated by the FLPS model parameters set by the condition, I ran a simple regression with interaction terms (because I have true eta scores) using <code>lm()</code>.</li>
+</ul>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r rsource"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">check_flps</span>(sdat<span class="sc">$</span>stan_dt) <span class="sc">%&gt;%</span> <span class="fu">round</span>(<span class="dv">3</span>)</span></code></pre></div>
+<pre class="routput"><code>##    b00     b0    b11    a11    by1    by2   bu11   bu12 
+##  0.001  0.402 -0.200  0.220  1.011  0.487 -0.990  0.470</code></pre>
 </div>
 </div>
 <div id="run-stan" class="section level2">
 <h2>Run <code>stan()</code></h2>
 <ul>
-<li><p>Using <code>sdat$stan_dt</code> as an input data for <code>stan()</code>, the FLPS model can be conducted. According to the type of latent variable model, the different stan script will be fed into <code>file</code>.</p></li>
+<li><p>Using <code>sdat$stan_dt</code> as an input data for <code>stan()</code>, the FLPS model can be conducted. According to the type of latent variable model, different <code>stan</code> scripts will be fed into <code>file</code>. In this example, the IRT model script is used. Other scripts are:</p></li>
 <li><p>2PL: <a href="https://github.com/sooyongl/FLPS/blob/main/inst/stan/psIRT_multi.stan">multivariate IRT</a></p></li>
 <li><p>GPCM: <a href="https://github.com/sooyongl/FLPS/blob/main/inst/stan/psGPCM_multi.stan">multivariate GPCM</a></p></li>
 <li><p>GRM: <a href="https://github.com/sooyongl/FLPS/blob/main/inst/stan/psGRM_multi.stan">multivariate GRM</a></p></li>
@@ -517,6 +523,11 @@ div.tocify {
 </div>
 <div id="results" class="section level2">
 <h2>Results</h2>
+<ul>
+<li><p>I ran 3 IRT models (2PL, GPCM, and GRM) varying the number of latent factors (1 and 2).</p></li>
+<li><p>With one factor, the estimates are close to the parameter values.</p></li>
+<li><p>With two factors, b11 or b12 (interaction effects, tau1) are biased, which needs to be investigated.</p></li>
+</ul>
 <div id="pl" class="section level3 tabset">
 <h3 class="tabset">2PL</h3>
 <div id="one-factor" class="section level4 tabset">
