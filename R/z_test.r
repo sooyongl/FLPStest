@@ -1,43 +1,52 @@
 clean_temp <- function(fit, sdat) {
-  N <- sdat$N
-  stan_dt <- sdat$stan_dt
-  nb <- max(sdat$grad) - min(sdat$grad)
-  nfac <- sdat$nfac
+  # N <- sdat$N
+  # stan_dt <- sdat$stan_dt
+  # nb <- max(sdat$grad) - min(sdat$grad)
+  # nfac <- sdat$nfac
 
-  iter = fit@sim$iter - fit@sim$warmup
-  chain = fit@sim$chains
+  # iter = fit@sim$iter - fit@sim$warmup
+  # n.chain = fit@sim$chains
 
   # item param
-  df.fit <- as.data.frame(fit)
-  df.fit$chain <- rep(c(1:chain), each = iter)
-  df.fit <- df.fit %>% group_by(chain)
+  # df.fit <- as.data.frame(fit)
+  # df.fit$chain <- rep(c(1:n.chain), each = iter)
+  # df.fit <- df.fit %>% group_by(chain)
 
+  # lambda <- df.fit %>%
+  #   select(chain, matches("^lambda\\[")) %>%
+  #   summarise_all(mean) %>%
+  #   select(-chain) %>%
+  #   as.matrix() %>%
+  #   matrix(., ncol = nfac, byrow = T)
+  #
+  # tau <- df.fit %>%
+  #   select(chain, matches("^tau\\[")) %>%
+  #   summarise_all(mean) %>%
+  #   select(-chain) %>%
+  #   as.matrix() %>%
+  #   matrix(., ncol = nfac, byrow = T)
 
-  lambda <- df.fit %>%
-    select(matches("^lambda\\[")) %>%
-    summarise_all(mean) %>%
-    select(-chain) %>%
-    matrix(., ncol = nfac)
+  # lambda <- summary(fit, pars = c("lambda"))$summary
+  # tau    <- summary(fit, pars = c("tau"))$summary
+  #
+  # comb_lambda <- cbind(sdat$lv.par[,1:nfac],lambda)
+  # # comb_lambda <- apply(comb_lambda, 2, as.numeric)
+  # true_tau <- sdat$lv.par[,(nfac+1):ncol(sdat$lv.par)]
+  # true_tau <- true_tau[!grepl("g", names(true_tau))]
+  #
+  # comb_tau    <- cbind(true_tau, tau)
+  # comb_tau    <- apply(comb_tau, 2, as.numeric)
 
-  tau <- df.fit %>%
-    select(chain, matches("^tau\\[")) %>%
-    summarise_all(mean) %>%
-    select(-chain) %>%
-    matrix(., ncol = nb)
-
-  comb_lambda <- cbind(sdat$lv.par[,1:nfac],lambda)
-  comb_lambda <- apply(comb_lambda, 2, as.numeric)
-  comb_tau    <- cbind(sdat$lv.par[,(nfac+1):ncol(sdat$lv.par)], tau)
-  comb_tau    <- apply(comb_tau, 2, as.numeric)
-
-  eta <- df.fit %>%
-    select(chain, matches("^eta")) %>%
-    summarise_all(mean) %>%
-    select(-chain) %>%
-    matrix(., ncol = nfac, nrow = N)
-
-  comb_eta <- cbind(sdat$theta, eta)
-  comb_eta <- apply(comb_eta, 2, as.numeric)
+  # eta <- df.fit %>%
+  #   select(chain, matches("^eta")) %>%
+  #   summarise_all(mean) %>%
+  #   select(-chain) %>%
+  #   as.matrix() %>%
+  #   matrix(., ncol = n.chain, nrow = N, byrow = T)
+#
+#   eta <- summary(fit, pars = c("eta"))$summary
+#   comb_eta <- cbind(true_theta=sdat$theta, eta)
+  # comb_eta <- apply(comb_eta, 2, as.numeric)
 
   # apply(comb_eta, 2, function(x) mean(unlist(x)))
   # apply(comb_eta, 2, function(x) var(unlist(x)))
@@ -46,7 +55,10 @@ clean_temp <- function(fit, sdat) {
   # plot(unlist(comb_eta[,1]), unlist(comb_eta[,3]))
   # plot(unlist(comb_eta[,2]), unlist(comb_eta[,4]))
 
-  true_param <- check_flps(stan_dt)
+  # true_param <- check_flps(stan_dt)
+
+   true_param <- c(-1,0.5,1.0, 0.5, 0, 0.2, 0.4, -0.2)
+   names(true_param) <- c("bu11","bu12","by1","by2","b00","a11","b0","b11")
   # colnames(stan_dt$X) <- paste0("X", 1:ncol(stan_dt$X))
   # # main effect ------------------------------------------
   # true_data <- data.frame(Y = stan_dt$Y, stan_dt$X, eta = sdat$theta, Z = stan_dt$Z)
@@ -71,24 +83,41 @@ clean_temp <- function(fit, sdat) {
   #                        "b11","b12", "bu11","bu21","bu12","bu22")
   # true_param <- true_param[c("b00", "b0", "b11","b12", "a11","a12",
   #                            "by1","by2", "bu11","bu21","bu12","bu22")]
-  bu <- names(true_param)[grep("bu", names(true_param))]
-  b1 <- names(true_param)[grep("b1", names(true_param))]
-  a1 <- names(true_param)[grep("a1", names(true_param))]
-  by <- names(true_param)[grep("by", names(true_param))]
+  # bu <- names(true_param)[grep("bu", names(true_param))]
+  # b1 <- names(true_param)[grep("b1", names(true_param))]
+  # a1 <- names(true_param)[grep("a1", names(true_param))]
+  # by <- names(true_param)[grep("by", names(true_param))]
 
-  est_param <- df.fit %>%
-    select(matches("^b00|^b0|b1|a1|betaY|betaU")) %>%
-    summarise_all(mean) %>%
-    select(-chain) %>%
-    set_names(c(bu, by, "b00", a1, "b0", b1)) %>%
-    select(names(true_param))
+  true_param <- true_param[c("bu11","bu12","by1","by2","b00","a11","b0","b11")]
 
-  flps_param <- bind_rows(true = true_param, est = est_param, .id = "type")
+  # est_param <- df.fit %>%
+  #   select(matches("^b00|^b0|b1|a1|betaY|betaU")) %>%
+  #   summarise_all(mean) %>%
+  #   select(-chain) %>%
+  #   set_names(c("bu1","bu2", "by1", "by2","b00", "a1", "b0", "b1")) #%>%
+    #select(names(true_param))
 
-  list(flps_param=flps_param,
-       comb_lambda=comb_lambda,
-       comb_tau=comb_tau,
-       comb_eta=comb_eta)
+  est_param <- summary(fit,
+          pars = c("betaU[1]","betaU[2]",
+                   "betaY[1]","betaY[2]",
+                   "b00","a1","b0","b1"))$summary #[, "n_eff"]
+
+  # est_param_sd <- df.fit %>%
+  #   select(matches("^b00|^b0|b1|a1|betaY|betaU")) %>%
+  #   summarise_all(sd) %>%
+  #   select(-chain) %>%
+  #   set_names(c("bu1","bu2", "by1", "by2","b00", "a1", "b0", "b1")) #%>%
+  # flps_param <- bind_rows(true = true_param, est = est_param, .id = "type")
+
+  flps_param <- cbind(true_param, est_param)
+
+
+
+  list(flps_param=flps_param#,
+       # comb_lambda=comb_lambda,
+       # comb_tau=comb_tau,
+       # comb_eta=comb_eta
+       )
 
 }
 

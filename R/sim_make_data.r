@@ -14,7 +14,9 @@
 #'  (extent to which covariates predict eta).
 #' @param nsec a numeric indicating the number of maximum sections given to
 #'  students.
+#' @param nfac a numeric indicating the number of latent factors
 #' @param lvmodel a character specifying a type of latent variable model.
+#' @param lvinfo a list containing the information corresponding the latent model.
 #' @return a list containing all the data related to population values and running FLPS.
 #'
 #' @examples
