@@ -9,8 +9,8 @@ data{
   int<lower=1> nfac; 
   
 // prior information
-  matrix[nsec, nfac] lambda_prior;
-
+ matrix[nsec, nfac] lambda_prior;
+ 
 // indices
   int<lower=1,upper=nstud> studentM[nsecWorked];
   int<lower=1,upper=nsec> section[nsecWorked];
@@ -27,68 +27,64 @@ data{
 }
 
 parameters{
-  vector[nfac] eta[nstud];
-  cholesky_factor_corr[nfac] L;  
+  vector[nstud] eta;
+  real<lower=0> sigU;
 
   matrix[nsec, nfac] lambda_free;
-  vector[max_k-1] tau[nsec];
+  ordered[max_k-1] tau[nsec]; //item category intercept
   
-  matrix[ncov, nfac] betaU;
+  vector[ncov] betaU;
   vector[ncov] betaY;
 
   real b00;
-  vector[nfac] a1;
+  //vector[nfac] a1;
+  real a1;
   real b0;
- 
-  vector[nfac] b1;
+
+  //vector[nfac] b1;
+  real b1;
 
   real<lower=0> sigY[2];
 }
 
 transformed parameters{
 
-  matrix[nsec, nfac] lambda;
+ matrix[nsec, nfac] lambda;
 
 // Factor loading constraints
   for(jjj in 1:nfac) {
     for(jj in 1:nsec) {
 	  if(factoridx[jj, jjj] != 0) {
-        if(firstitem[jj] == 1) {   // first loading per factor constrained to 1.
+        if(firstitem[jj] == 1) {  // first loading per factor constrained to 1.
           lambda[jj, jjj] = 1;
         } else {
           lambda[jj, jjj] = lambda_free[jj, jjj];
         }
-       } else {
-         lambda[jj, jjj] = 0;
-       }
+      } else {
+        lambda[jj, jjj] = 0;
+      }
     }
   };
-  
  
 }
 
 model{
-  matrix[max_k, nsecWorked] p;      // probs of reponse
-  matrix[max_k, nsecWorked] s;      // logits of reponse
-  
-  vector[nfac] A = rep_vector(1, nfac);
-  matrix[nfac, nfac] A0;  
- 
-  vector[nfac] muEta[nstud];
+
+  vector[nstud] muEta;
   vector[nstud] muY0;
   vector[nstud] muY;
   real sigYI[nstud];
 
-  L ~ lkj_corr_cholesky(nfac);
-  A0 = diag_pre_multiply(A, L);
-
   for(i in 1:nstud){
- 	  muEta[i] = to_vector(X[i, ]*betaU);
-	  
-	  muY0[i] = b00+ to_row_vector(a1)*eta[i] + Z[i] * (b0 + to_row_vector(b1)*eta[i]);
-	  muY[i]  = muY0[i] + X[i,]*betaY;
-	  
-	  sigYI[i]=sigY[Z[i]+1];
+ 	muEta[i] = X[i, ]*betaU;
+
+	muY0[i] = b00+ a1*eta[i] + Z[i] * (b0 + b1*eta[i]);
+	muY[i]  = muY0[i] + X[i,]*betaY;
+
+	sigYI[i]=sigY[Z[i]+1];
+
+	eta[i] ~ normal(muEta[i], sigU);
+	Y[i] ~ normal(muY[i], sigYI[i]);
   };
 
 //priors
@@ -102,29 +98,21 @@ model{
     };
   };
 
-  // PS priors
-  betaY ~ uniform(-5, 5);
-  for(i in 1:nfac) {
-    betaU[,i] ~ uniform(-5, 5);
-  };
-  a1 ~ uniform(-5, 5);
-  b1 ~ uniform(-5, 5);
-  b00 ~ uniform(-5, 5);
-  b0  ~ uniform(-5, 5);
+// PS priors
+  //betaY ~ uniform(-5, 5);
+  //betaU ~ uniform(-5, 5);
+  //a1 ~ uniform(-5, 5);
+  //b1 ~ uniform(-5, 5);
+  //b00 ~ uniform(-5, 5);
+  //b0  ~ uniform(-5, 5);
 
 // Fully Latent Principal Stratification model
   // Latent variable model
-  for(i in 1:nsecWorked) {
-    s[1,i] = 0; //reference
-    for(k in 2:max_k) {
-	    s[k,i] = s[k-1, i] + tau[section[i], k-1] + lambda[section[i], 1:nfac] * eta[studentM[i]];
-	  }
-    p[,i] = softmax(s[,i]);
-	  grad[i] ~ categorical(p[,i]);
-  }
- 
+  for (i in 1:nsecWorked){
+    grad[i]~ordered_logistic(lambda[section[i],1]*eta[studentM[i]],tau[section[i]]);
+  };
   // Causal model
-  eta ~ multi_normal_cholesky(muEta, A0);
-  Y ~ normal(muY,sigYI);
+  //eta ~ multi_normal_cholesky(muEta, A0);
+  //Y~normal(muY,sigYI);
 }
 // last line
