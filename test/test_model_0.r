@@ -18,7 +18,7 @@ sim_condition <- list(
   lambda  = 0.6,
   nsec    = 20,
   nfac    = 1,
-  lvmodel ="gpcm"
+  lvmodel ="2pl"
 )
 
 sdat <- do.call("makeDat", sim_condition)
@@ -55,49 +55,71 @@ fit <- rstan::stan(
 o <- list(fit=fit, sdat=sdat)
 saveRDS(o, "test/test_model_gpcm.rds")
 
+
 # cleaning ----------------------------------------------
-o <- readRDS("test/test_model_0.rds")
+# o <- readRDS("test/test_model_0.rds")
+rds_list <- fs::dir_ls("results")
+res_list <- vector("list", length(rds_list))
+for(i in 1:length(rds_list)) {
 
-res <- clean_temp(fit = o[[1]], sdat = o[[2]])
-saveRDS(res, "test/test_cleaned_gpcm.rds")
+  rds_file <- rds_list[i]
 
-data.frame(res$comb_lambda) %>%
-  set_names(paste0(rep(c("pop.a", "est.a"), each = ncol(res$comb_lambda)), 1:ncol(res$comb_lambda))) %>%
-  tibble()
+  o <- readRDS(rds_file)
 
+  res <- clean_temp(fit = o, sdat = sdat)
 
-data.frame(res$comb_tau[,c(1,3)]) %>%
-  set_names(c("pop.b","est.b")) %>%
-  tibble()
+  flps_param <- data.frame(res$flps_param)
 
-res$flps_param
+  flps_param$model = rds_file
+  flps_param$param_name = rownames(flps_param)
 
-colnames(res$comb_eta) <- paste0(rep(c("pop.eta", "est.eta"), each = (ncol(res$comb_eta)/2)), 1:(ncol(res$comb_eta)/2))
-round(cor(res$comb_eta),3)
-mean(res$comb_eta[,1] - res$comb_eta[,3])
-mean(res$comb_eta[,2] - res$comb_eta[,4])
-
-mean((res$comb_eta[,1] - res$comb_eta[,3])^2)
-mean((res$comb_eta[,2] - res$comb_eta[,4])^2)
-
-data.frame(res$comb_eta[],id = 1:nrow(res$comb_eta), trtgroup = rep(c("trt","cnt"), each=nrow(res$comb_eta)/2)) %>%
-  # gather("eta", "score", -id, -trtgroup) %>%
-  ggplot() +
-  geom_point(aes(x = pop.eta1, y = est.eta1, color = trtgroup))
-
-data.frame(res$comb_eta[],id = 1:nrow(res$comb_eta), trtgroup = rep(c("trt","cnt"), each=nrow(res$comb_eta)/2)) %>%
-  # gather("eta", "score", -id, -trtgroup) %>%
-  ggplot() +
-  geom_point(aes(x = pop.eta2, y = est.eta2, color = trtgroup))
+  res_list[[i]] <- flps_param
+}
+res_list <- do.call("rbind", res_list)
 
 
-data.frame(res$comb_eta[],id = 1:nrow(res$comb_eta), trtgroup = rep(c("trt","cnt"), each=nrow(res$comb_eta)/2)) %>%
-  # gather("eta", "score", -id, -trtgroup) %>%
-  ggplot() +
-  geom_point(aes(x = pop.eta1, y = pop.eta2, color = trtgroup))
+saveRDS(res_list, "report/0217_res_list.rds")
 
-data.frame(res$comb_eta[],id = 1:nrow(res$comb_eta), trtgroup = rep(c("trt","cnt"), each=nrow(res$comb_eta)/2)) %>%
-  # gather("eta", "score", -id, -trtgroup) %>%
-  ggplot() +
-  geom_point(aes(x = est.eta1, y = est.eta2, color = trtgroup))
 
+
+
+# data.frame(res$comb_lambda) %>%
+#   set_names(paste0(rep(c("pop.a", "est.a"), each = ncol(res$comb_lambda)), 1:ncol(res$comb_lambda))) %>%
+#   tibble()
+#
+#
+# data.frame(res$comb_tau[,c(1,3)]) %>%
+#   set_names(c("pop.b","est.b")) %>%
+#   tibble()
+#
+# res$flps_param
+#
+# colnames(res$comb_eta) <- paste0(rep(c("pop.eta", "est.eta"), each = (ncol(res$comb_eta)/2)), 1:(ncol(res$comb_eta)/2))
+# round(cor(res$comb_eta),3)
+# mean(res$comb_eta[,1] - res$comb_eta[,3])
+# mean(res$comb_eta[,2] - res$comb_eta[,4])
+#
+# mean((res$comb_eta[,1] - res$comb_eta[,3])^2)
+# mean((res$comb_eta[,2] - res$comb_eta[,4])^2)
+#
+# data.frame(res$comb_eta[],id = 1:nrow(res$comb_eta), trtgroup = rep(c("trt","cnt"), each=nrow(res$comb_eta)/2)) %>%
+#   # gather("eta", "score", -id, -trtgroup) %>%
+#   ggplot() +
+#   geom_point(aes(x = pop.eta1, y = est.eta1, color = trtgroup))
+#
+# data.frame(res$comb_eta[],id = 1:nrow(res$comb_eta), trtgroup = rep(c("trt","cnt"), each=nrow(res$comb_eta)/2)) %>%
+#   # gather("eta", "score", -id, -trtgroup) %>%
+#   ggplot() +
+#   geom_point(aes(x = pop.eta2, y = est.eta2, color = trtgroup))
+#
+#
+# data.frame(res$comb_eta[],id = 1:nrow(res$comb_eta), trtgroup = rep(c("trt","cnt"), each=nrow(res$comb_eta)/2)) %>%
+#   # gather("eta", "score", -id, -trtgroup) %>%
+#   ggplot() +
+#   geom_point(aes(x = pop.eta1, y = pop.eta2, color = trtgroup))
+#
+# data.frame(res$comb_eta[],id = 1:nrow(res$comb_eta), trtgroup = rep(c("trt","cnt"), each=nrow(res$comb_eta)/2)) %>%
+#   # gather("eta", "score", -id, -trtgroup) %>%
+#   ggplot() +
+#   geom_point(aes(x = est.eta1, y = est.eta2, color = trtgroup))
+#
