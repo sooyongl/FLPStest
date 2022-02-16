@@ -56,8 +56,8 @@ mean_est <-
 
 true_value <- 
   res_list %>% 
-  select(true_param, mean, param_name) %>% 
-  group_by(param_name) %>% 
+  select(model, true_param, mean, param_name) %>% 
+  group_by(param_name,model) %>% 
   summarise_all(mean) %>% 
   mutate_if(is.numeric, round, 2)
 
@@ -93,10 +93,10 @@ res_list %>%
   geom_point(aes(param_name, mean),
              size = 2, alpha = 0.8,
              position = position_jitter(width = 0.2)) +
-  geom_point(data = true_value,
+  geom_point(data = true_value %>% filter(model == "2pl"),
              aes(param_name, mean),
              color = "red", shape = 2, size = 4) +
-  geom_label(data = true_value,
+  geom_label(data = true_value %>% filter(model == "2pl"),
              aes(param_name, mean, label=mean),
              hjust = 1) +
   labs(
@@ -127,10 +127,10 @@ res_list %>%
   geom_point(aes(param_name, mean),
              size = 2, alpha = 0.8,
              position = position_jitter(width = 0.2)) +
-  geom_point(data = true_value,
+  geom_point(data = true_value %>% filter(model == "gpcm"),
              aes(param_name, mean),
              color = "red", shape = 2, size = 4) +
-  geom_label(data = true_value,
+  geom_label(data = true_value %>% filter(model == "gpcm"),
              aes(param_name, mean, label=mean),
              hjust = 1) +
   labs(
