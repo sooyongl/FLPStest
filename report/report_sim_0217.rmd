@@ -67,8 +67,8 @@ true_value <-
 
 ## FLPS model
 
-```{r echo=FALSE, fig.height=6}
-include_graphics(file.path(report_path, "onefactor.png"))
+```{r echo=FALSE, fig.height=4}
+include_graphics(file.path(report_path, "twofactor.png"))
 ```
 
 ## 2PL
