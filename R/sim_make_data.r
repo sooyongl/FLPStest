@@ -34,12 +34,10 @@
 #' )
 #'
 #' @export
-makeDat <- function(N,R2Y,omega,tau0,tau1,lambda,R2eta,linear,nsec,nfac,
-                    lvmodel,lvinfo){
-
+makeDat <- function(N,R2Y,R2eta,linear,ydist,lambda,nsec,nfac,lvmodel){
 
   mc <- match.call(expand.dots = TRUE)
-  mc[[1L]] <- quote(list); # mc.list <- as.list(match.call(mc)[-1]))}
+  mc[[1L]] <- quote(list); # mc <- as.list(match.call()[-1])
 
   # set up S3 class ---------------------------------------------------------
   sim_info <- structure(eval(mc), class = tolower(lvmodel))

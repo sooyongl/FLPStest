@@ -11,17 +11,15 @@ sim_condition <- list(
   N       = 2000, # sample size
   R2Y     = 0.2,
   R2eta   = 0.2,
-  omega   = 0.2,  # a1
-  tau0    = 0.4,  # b0
-  tau1    = -0.2, # b1
   linear  = T,
   lambda  = 0.6,
   nsec    = 20,
-  nfac    = 1,
+  nfac    = 2,
   lvmodel ="2pl"
 )
 
 sdat <- do.call("makeDat", sim_condition)
+
 
 # saveRDS("test/test_sdata_0.rds")
 # sdat <- readRDS("test/test_sdata_0.rds")
@@ -33,7 +31,7 @@ check_lv(
   # covdata = data.frame(sdat$x),,
   lvmodel = sdat$lvmodel,
   nfac = sdat$nfac,
-  IRTpars = ifelse(sdat$lvmodel=="gpcm", T, F)
+  IRTpars = ifelse(sdat$lvmodel=="2pl", T, F)
 )
 # item parameter
 sdat$lvinfo$ipar
@@ -44,11 +42,11 @@ check_flps(sdat$stan_dt)
 # run flps ----------------------------------------------
 fit <- rstan::stan(
   # file = "inst/stan/psIRT_multi.stan",
-  file = "inst/stan/psGPCM_multi.stan",
+  file = "inst/stan/example_model.stan",
   # file = "inst/stan/psGRM_multi.stan",
   data = sdat$stan_dt,
-  iter = 6000,
-  warmup = 2000,
+  # iter = 6000,
+  # warmup = 2000,
   chains = 1,
   open_progress = F
 )

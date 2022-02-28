@@ -9,7 +9,7 @@ data{
   int<lower=1> nfac; 
   
 // prior information
- matrix[nsec, nfac] lambda_prior;
+  matrix[nsec, nfac] lambda_prior;
  
 // indices
   int<lower=1,upper=nstud> studentM[nsecWorked];
@@ -37,11 +37,9 @@ parameters{
   vector[ncov] betaY;
 
   real b00;
-  //vector[nfac] a1;
   real a1;
   real b0;
 
-  //vector[nfac] b1;
   real b1;
 
   real<lower=0> sigY[2];
@@ -90,9 +88,9 @@ model{
 //priors
   // IRT priors
   for(i in 1:nsec) {
-    for(ii in 1:(max_k-1)) {
-	    tau[i , ii] ~ uniform(-5, 5);
-    };
+    //for(ii in 1:(max_k-1)) {
+	//    tau[i , ii] ~ uniform(-5, 5);
+    //};
 	  for(j in 1:nfac) {
       lambda_free[i,j] ~ normal(lambda_prior[i,j], 1);
     };
@@ -111,8 +109,5 @@ model{
   for (i in 1:nsecWorked){
     grad[i]~ordered_logistic(lambda[section[i],1]*eta[studentM[i]],tau[section[i]]);
   };
-  // Causal model
-  //eta ~ multi_normal_cholesky(muEta, A0);
-  //Y~normal(muY,sigYI);
 }
 // last line

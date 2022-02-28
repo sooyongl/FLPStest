@@ -74,22 +74,15 @@ transformed parameters {
 model{
   real linPred[nsecWorked];
 
-  //vector[nfac] A = rep_vector(1, nfac);
-  //matrix[nfac, nfac] A0;
-
-  //vector[nfac] muEta[nstud];
   vector[nstud] muEta;
   vector[nstud] muY0;
   vector[nstud] muY;
   real sigYI[nstud];
 
-  //L ~ lkj_corr_cholesky(nfac);
-  //A0 = diag_pre_multiply(A, L);
-
   for(i in 1:nstud){
 
 	//muEta[i] = to_vector(X[i, ]*betaU);
-  muEta[i] = X[i, ]*betaU;
+    muEta[i] = X[i, ]*betaU;
 
 	muY0[i] = b00+ a1*eta[i] + Z[i] * (b0 + b1*eta[i]);
 	muY[i]  = muY0[i] + X[i,]*betaY;
@@ -122,13 +115,9 @@ model{
     // Latent variable model
 	for(j in 1:nsecWorked) {
 
-    linPred[j] = tau[section[j]] + lambda[section[j],1] * eta[studentM[j]];
+      linPred[j] = tau[section[j]] + lambda[section[j],1] * eta[studentM[j]];
 
 	  grad[j] ~ bernoulli_logit(linPred[j]);
 	}
-
-    // Causal model
-	//eta ~ multi_normal_cholesky(muEta, A0);
-    //Y~normal(muY,sigYI);
 }
 // last line blank

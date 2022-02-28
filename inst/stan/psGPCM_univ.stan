@@ -116,9 +116,5 @@ model{
     p[,i] = softmax(s[,i]);
 	  grad[i] ~ categorical(p[,i]);
   }
- 
-  // Causal model
-  //eta ~ multi_normal_cholesky(muEta, A0);
-  //Y~normal(muY,sigYI);
 }
 // last line

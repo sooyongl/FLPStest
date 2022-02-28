@@ -1,57 +1,52 @@
-# rm(list= ls()); gc()
-library(tidyverse); library(rstan);library(lavaan); library(mirt)
+library(rstan); library(tidyverse); library(foreach)
+for(i in fs::dir_ls("R", regexp = "r$")) source(i);
 
-eta.dt <- matrix(rnorm(100))
-ipar.dt <- genIRTpar(20, 4, "grm")
+# cond_list <- data.frame()
+# for(i in 1:dim(cond_list)[1]) {
+#
+# }
 
-wide.dt <- genIRTdt(lvmodel="grm",
-         eta = eta.dt,
-         ipar = ipar.dt) %>%
-  data.frame(id = 1:nrow(.))
-
-grm.mirt <- mirt(
-  data = wide.dt[,1:20],
-  model = paste0("F = 1-",20),
-  itemtype = "graded")
-coef(grm.mirt, simplify = T)
-
-long.dt <- wide.dt %>% gather("item","y", -id) %>%
-  mutate(item = as.numeric(str_remove(item, pattern = "Item_")))
-
-grad <- long.dt$y
-
-nsecWorked <- nrow(long.dt)
-nstud <- nrow(wide.dt)
-nsec <- ncol(wide.dt)-1
-
-studentM <- long.dt$id
-section <- long.dt$item
-
-max_k <- max(grad) + 1
-
-dt <- list(
-  nsecWorked = nsecWorked,
-  nstud = nstud,
-  nsec = nsec,
-  max_k = max_k,
-  studentM = studentM,
-  section = section,
-  grad = grad
+# generate data ------------------------------------------
+sim_condition <- list(
+  N       = 2000, # sample size
+  R2Y     = 0.2,
+  R2eta   = 0.2,
+  omega   = 0.2,  # a1
+  tau0    = 0.4,  # b0
+  tau1    = -0.2, # b1
+  linear  = T,
+  lambda  = 0.6,
+  nsec    = 20,
+  nfac    = 1,
+  lvmodel ="grm"
 )
 
+sdat <- do.call("makeDat", sim_condition)
 
 stan_model <- paste(read_lines("test/test_lv_model/stan/GGRM.stan"),
                     collapse = "\n")
 cat(stan_model)
 
 grm.stan <- rstan::stan(
-  model_code = stan_model,
-  data = dt,
+  file = "test/test_lv_model/stan/GGRM.stan",
+  # model_code = stan_model,
+  data = sdat$stan_dt,
   iter = 4000,
   cores = 1,
   chains = 1
 )
+summary(grm.stan, pars = "alpha")
+beta <- summary(grm.stan, pars = "beta")
+
+matrix(beta$summary[,1], ncol = 3, byrow = T)
+sdat$lvinfo$ipar
 grm.stan <- as.data.frame(grm.stan)
+# item parameter
+
+
+
+
+
 
 ipar.dt
 coef(grm.mirt, simplify = T)

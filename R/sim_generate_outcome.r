@@ -1,6 +1,6 @@
 #' S3 generic for Outcome data generation
 #'
-genOutcome <- function(Data, ...) {
+genOutcome <- function(Data, ...) { # Data = sim_info
   UseMethod("genOutcome", Data)
 }
 
@@ -10,16 +10,17 @@ genOutcome.default <- function(Data) {
 
   N      <- Data$N
   nsec   <- Data$nsec
-  R2Y    <- Data$R2Y
   theta  <- Data$theta
   xdata  <- Data$x
   nfac   <- Data$nfac
 
   R2Y    <- Data$R2Y
-  omega  <- Data$omega
-  tau0   <- Data$tau0
-  tau1   <- Data$tau1
   linear <- Data$linear
+  ydist  <- Data$ydist
+
+  omega  <- round(runif(nfac, 0.1, 0.3),3) # Data$omega
+  tau0   <- round(runif(1, 0.1, 0.3),3)    # Data$tau0
+  tau1   <- round(runif(nfac, 0.1, 0.3),3) # Data$tau1
 
   section <- Data$section
   studentM <- Data$studentM
@@ -36,19 +37,36 @@ genOutcome.default <- function(Data) {
   Z <- rep(c(1,0), each=N/2)
 
   if(!is.null(dim(eta))) {
-    omega <- rep(omega, dim(eta)[2])
-    tau1 <- rep(tau1, dim(eta)[2])
+    # omega <- rep(omega, dim(eta)[2])
+    # tau1 <- rep(tau1, dim(eta)[2])
     n.eta <- ncol(eta)
   } else {
     n.eta <- 1
   }
 
-  if(linear) {
-    Y <- tau0*Z + matrix(eta, ncol=n.eta)%*%matrix(omega) + (Z*matrix(eta, ncol=n.eta))%*%tau1 + x1 + 0.5*x2 + rnorm(N, 0, Y.res)
-  } else {
-    x1sq <- xdata[,"x1sq"]
-    Y <- tau0*Z + matrix(eta, ncol=n.eta)%*%omega + (Z*matrix(eta, ncol=n.eta))%*%tau1 + x1 + 0.5*x1sq + 0.5*x2 + rnorm(N, 0, Y.res)
+  Y <-
+    tau0*Z +
+    matrix(eta, ncol=n.eta)%*%matrix(omega) +
+    (Z*matrix(eta, ncol=n.eta))%*%tau1 +
+    1*x1 +
+    0.5*x2 +
+    rnorm(N, 0, Y.res)
+  
+  if(!linear) {
+    Y <- Y + 0.5*x1sq
   }
+
+  
+  if(ydist == "t") {
+    trunc_point <- quantile(Y, c(.1, .9)) 
+    
+    Y[Y < trunc_point[1]] <- trunc_point[1]
+    Y[Y > trunc_point[2]] <- trunc_point[2]
+  }
+  
+  Data$omega <- omega
+  Data$tau0  <- tau0
+  Data$tau1  <- tau1
 
   Data$stan_dt <- list(
     # data info
