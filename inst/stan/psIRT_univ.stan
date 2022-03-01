@@ -27,24 +27,19 @@ data{
 
 parameters{
   // IRT model
-  //vector[nfac] eta[nstud];       // person scores for each factor
-  //cholesky_factor_corr[nfac] L; // Cholesky decomp of corr mat of random slopes
   vector[nstud] eta;
   real<lower=0> sigU;
 
   matrix[nsec, nfac] lambda_free; // discrimination of nsec
   real tau[nsec];                 // difficulty of question nsec
 
-  //matrix[ncov, nfac] betaU;
   vector[ncov] betaU;
   vector[ncov] betaY;
 
   real b00;
-  //vector[nfac] a1;
   real a1;
   real b0;
 
-  //vector[nfac] b1;
   real b1;
 
   real<lower=0> sigY[2];
@@ -81,7 +76,6 @@ model{
 
   for(i in 1:nstud){
 
-	//muEta[i] = to_vector(X[i, ]*betaU);
     muEta[i] = X[i, ]*betaU;
 
 	muY0[i] = b00+ a1*eta[i] + Z[i] * (b0 + b1*eta[i]);
@@ -102,8 +96,8 @@ model{
 		
       };
     };
-//
-    //// PS priors
+
+//// PS priors
   //betaY ~ uniform(-5, 5);
   //betaU ~ uniform(-5, 5);
   //a1 ~ uniform(-5, 5);
@@ -114,7 +108,6 @@ model{
 // Fully Latent Principal Stratification model
     // Latent variable model
 	for(j in 1:nsecWorked) {
-
       linPred[j] = tau[section[j]] + lambda[section[j],1] * eta[studentM[j]];
 
 	  grad[j] ~ bernoulli_logit(linPred[j]);

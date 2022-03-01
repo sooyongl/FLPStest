@@ -12,6 +12,7 @@ sim_condition <- list(
   R2Y     = 0.2,
   R2eta   = 0.2,
   linear  = T,
+  ydist   = 'n',
   lambda  = 0.6,
   nsec    = 20,
   nfac    = 2,
@@ -60,15 +61,21 @@ rds_list <- fs::dir_ls("results")
 res_list <- vector("list", length(rds_list))
 for(i in 1:length(rds_list)) {
 
+  condition <- str_split(rds_list[i], "/",simplify = T)[2]
+  condition <- str_split(condition, ".rds", simplify = T)[1]
+
   rds_file <- rds_list[i]
 
   o <- readRDS(rds_file)
 
-  res <- clean_temp(fit = o, sdat = sdat)
+  fit  <- o$fit
+  sdat <- o$sdat
+
+  res <- clean_temp(fit = fit, sdat = sdat)
 
   flps_param <- data.frame(res$flps_param)
 
-  flps_param$model = rds_file
+  flps_param$model = condition
   flps_param$param_name = rownames(flps_param)
 
   res_list[[i]] <- flps_param
@@ -77,6 +84,9 @@ res_list <- do.call("rbind", res_list)
 
 
 saveRDS(res_list, "report/0217_res_list.rds")
+
+
+
 
 
 

@@ -43,9 +43,9 @@ clean_temp <- function(fit, sdat) {
   #   select(-chain) %>%
   #   as.matrix() %>%
   #   matrix(., ncol = n.chain, nrow = N, byrow = T)
-#
-#   eta <- summary(fit, pars = c("eta"))$summary
-#   comb_eta <- cbind(true_theta=sdat$theta, eta)
+  #
+  #   eta <- summary(fit, pars = c("eta"))$summary
+  #   comb_eta <- cbind(true_theta=sdat$theta, eta)
   # comb_eta <- apply(comb_eta, 2, as.numeric)
 
   # apply(comb_eta, 2, function(x) mean(unlist(x)))
@@ -57,8 +57,13 @@ clean_temp <- function(fit, sdat) {
 
   # true_param <- check_flps(stan_dt)
 
-   true_param <- c(-1,0.5,1.0, 0.5, 0, 0.2, 0.4, -0.2)
-   names(true_param) <- c("bu11","bu12","by1","by2","b00","a11","b0","b11")
+  a11 <- sdat$omega
+  b0  <- sdat$tau0
+  b11 <- sdat$tau1
+
+  true_param <- c(-1, 0.5, 1.0, 0.5, 0, a11, b0, b11)
+
+  names(true_param) <- c("bu11","bu12","by1","by2","b00","a11", "b0", "b11")
   # colnames(stan_dt$X) <- paste0("X", 1:ncol(stan_dt$X))
   # # main effect ------------------------------------------
   # true_data <- data.frame(Y = stan_dt$Y, stan_dt$X, eta = sdat$theta, Z = stan_dt$Z)
@@ -95,12 +100,12 @@ clean_temp <- function(fit, sdat) {
   #   summarise_all(mean) %>%
   #   select(-chain) %>%
   #   set_names(c("bu1","bu2", "by1", "by2","b00", "a1", "b0", "b1")) #%>%
-    #select(names(true_param))
+  #select(names(true_param))
 
   est_param <- summary(fit,
-          pars = c("betaU[1]","betaU[2]",
-                   "betaY[1]","betaY[2]",
-                   "b00","a1","b0","b1"))$summary #[, "n_eff"]
+                       pars = c("betaU",
+                                "betaY",
+                                "b00","a1","b0","b1"))$summary #[, "n_eff"]
 
   # est_param_sd <- df.fit %>%
   #   select(matches("^b00|^b0|b1|a1|betaY|betaU")) %>%
@@ -111,13 +116,11 @@ clean_temp <- function(fit, sdat) {
 
   flps_param <- cbind(true_param, est_param)
 
-
-
   list(flps_param=flps_param#,
        # comb_lambda=comb_lambda,
        # comb_tau=comb_tau,
        # comb_eta=comb_eta
-       )
+  )
 
 }
 

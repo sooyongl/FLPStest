@@ -88,6 +88,9 @@ model{
 	muY[i]  = muY0[i] + X[i,]*betaY;
 
 	sigYI[i]=sigY[Z[i]+1];
+	
+	eta[i] ~ multi_normal_cholesky(muEta[i], A0);
+    Y[i] ~ normal(muY[i],sigYI[i]);
   };
 
  //priors
@@ -98,13 +101,12 @@ model{
         lambda_free[i, j] ~ normal(lambda_prior[i, j], 1);
       };
     };
-//
+
     //// PS priors
     //betaY ~ uniform(-5, 5);
     //for(i in 1:nfac) {
     //  betaU[,i] ~ uniform(-5, 5);
     //};
-//
     //a1 ~ uniform(-5, 5);
     //b1 ~ uniform(-5, 5);
     //b00 ~ uniform(-5, 5);
@@ -113,12 +115,13 @@ model{
 // Fully Latent Principal Stratification model
     // Latent variable model
 	for(j in 1:nsecWorked) {
-    linPred[j] = tau[section[j]] + lambda[section[j],1:nfac] * eta[studentM[j]];
+      linPred[j] = tau[section[j]] + lambda[section[j],1:nfac] * eta[studentM[j]];
+	  
 	  grad[j] ~ bernoulli_logit(linPred[j]);
 	}
 
     // Causal model
-	eta ~ multi_normal_cholesky(muEta, A0);
-  Y ~ normal(muY,sigYI);
+	//eta ~ multi_normal_cholesky(muEta, A0);
+    //Y ~ normal(muY,sigYI);
 }
 // last line blank

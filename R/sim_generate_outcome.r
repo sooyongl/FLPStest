@@ -19,8 +19,8 @@ genOutcome.default <- function(Data) {
   ydist  <- Data$ydist
 
   omega  <- round(runif(nfac, 0.1, 0.3),3) # Data$omega
-  tau0   <- round(runif(1, 0.1, 0.3),3)    # Data$tau0
-  tau1   <- round(runif(nfac, 0.1, 0.3),3) # Data$tau1
+  tau0   <- round(runif(1, 0.2, 0.4),3)    # Data$tau0
+  tau1   <- round(runif(nfac, -0.2, -0.1),3) # Data$tau1
 
   section <- Data$section
   studentM <- Data$studentM
@@ -51,19 +51,19 @@ genOutcome.default <- function(Data) {
     1*x1 +
     0.5*x2 +
     rnorm(N, 0, Y.res)
-  
+
   if(!linear) {
     Y <- Y + 0.5*x1sq
   }
 
-  
+
   if(ydist == "t") {
-    trunc_point <- quantile(Y, c(.1, .9)) 
-    
+    trunc_point <- quantile(Y, c(.1, .9))
+
     Y[Y < trunc_point[1]] <- trunc_point[1]
     Y[Y > trunc_point[2]] <- trunc_point[2]
   }
-  
+
   Data$omega <- omega
   Data$tau0  <- tau0
   Data$tau1  <- tau1
