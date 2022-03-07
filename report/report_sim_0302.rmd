@@ -56,28 +56,29 @@ fig_files <- str_subset(fig_name, "switched_1")
 ### parameter estimates
 
 ```{r}
-param_table
+param_table %>% kable() %>% 
+  kableExtra::kable_material()
 ```
 
-### diagnostics {.tabset}
+<!-- ### diagnostics {.tabset} -->
 
-#### Gew
+<!-- #### Gew -->
 
-```{r}
-gew
-```
+<!-- ```{r} -->
+<!-- gew -->
+<!-- ``` -->
 
-#### Hei
+<!-- #### Hei -->
 
-```{r}
-hei
-```
+<!-- ```{r} -->
+<!-- hei -->
+<!-- ``` -->
 
-#### Gel
+<!-- #### Gel -->
 
-```{r}
-gel
-```
+<!-- ```{r} -->
+<!-- gel -->
+<!-- ``` -->
 
 ### plots {.tabset}
 
@@ -117,28 +118,29 @@ fig_files <- str_subset(fig_name, "switched_2")
 ### parameter estimates
 
 ```{r}
-param_table
+param_table %>% kable() %>% 
+  kableExtra::kable_material()
 ```
 
-### diagnostics {.tabset}
+<!-- ### diagnostics {.tabset} -->
 
-#### Gew
+<!-- #### Gew -->
 
-```{r}
-gew
-```
+<!-- ```{r} -->
+<!-- gew -->
+<!-- ``` -->
 
-#### Hei
+<!-- #### Hei -->
 
-```{r}
-hei
-```
+<!-- ```{r} -->
+<!-- hei -->
+<!-- ``` -->
 
-#### Gel
+<!-- #### Gel -->
 
-```{r}
-gel
-```
+<!-- ```{r} -->
+<!-- gel -->
+<!-- ``` -->
 
 ### plots {.tabset}
 
@@ -178,28 +180,29 @@ fig_files <- str_subset(fig_name, "switched_3")
 ### parameter estimates
 
 ```{r}
-param_table
+param_table %>% kable() %>% 
+  kableExtra::kable_material()
 ```
 
-### diagnostics {.tabset}
+<!-- ### diagnostics {.tabset} -->
 
-#### Gew
+<!-- #### Gew -->
 
-```{r}
-gew
-```
+<!-- ```{r} -->
+<!-- gew -->
+<!-- ``` -->
 
-#### Hei
+<!-- #### Hei -->
 
-```{r}
-hei
-```
+<!-- ```{r} -->
+<!-- hei -->
+<!-- ``` -->
 
-#### Gel
+<!-- #### Gel -->
 
-```{r}
-gel
-```
+<!-- ```{r} -->
+<!-- gel -->
+<!-- ``` -->
 
 ### plots {.tabset}
 

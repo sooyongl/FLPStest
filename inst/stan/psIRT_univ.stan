@@ -30,7 +30,7 @@ parameters{
   vector[nstud] eta;
   real<lower=0> sigU;
 
-  matrix[nsec, nfac] lambda_free; // discrimination of nsec
+  matrix<lower=0>[nsec, nfac] lambda_free; // discrimination of nsec
   real tau[nsec];                 // difficulty of question nsec
 
   vector[ncov] betaU;
@@ -47,7 +47,7 @@ parameters{
 
 transformed parameters {
 
-  matrix[nsec, nfac] lambda;
+  matrix<lower=0>[nsec, nfac] lambda;
 
   // Factor loading constraints
   for(jjj in 1:nfac) {
@@ -93,6 +93,7 @@ model{
     for(i in 1:nsec) {
       for(j in 1:nfac) {
         lambda_free[i, j] ~ normal(lambda_prior[i, j], 1);
+		// lambda_free[i, j] ~ lognormal(0, 0.5)
 		
       };
     };

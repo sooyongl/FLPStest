@@ -1,3 +1,25 @@
+For user defined functions you can’t input a constrained type. Declare sigma as a matrix instead of a cov_matrix.
+
+Is there a reason why you’re writing your own? Your implementation above will be much slower than the inbuilt. Or even writing it in a more computationally efficient way. A few notes,
+
+we try to avoid explicitly calling inverse on a matrix
+the cholesky parameterization will be faster and more numerically stable
+there is a log_determinant function
+If you have a matrix X where the rows equal the number of observations then a more efficient version of the mvn using the cholesky parameterization in the functions block will look like
+
+ real mvn_cholesky_lpdf(matrix X, matrix mu, matrix L) {
+    int K = rows(L);
+    int N = rows(X);
+    real sqrt_det = -N * sum(log(diagonal(L)));
+    real norm_const =  -K * N * 0.5 * log(2 * pi());
+    real mahab = sum(columns_dot_self(mdivide_left_tri_low(L, (X' - mu))));
+    
+    return norm_const + sqrt_det - 0.5 * mahab;
+  }
+  
+  
+
+
 real binormal_cdf(real z1, real z2, real rho) {
   if (z1 != 0 || z2 != 0) {
     real denom = fabs(rho) < 1.0 ? sqrt((1 + rho) * (1 - rho)) 

@@ -3,33 +3,31 @@
 #' @description
 #' \code{\link{makeDat}} is a function for generating a data based on the given
 #' information.
+#'
 #' @param N a numeric indicating sample size.
 #' @param R2Y a numeric indicating predictive power of covariates.
-#' @param omega a numeric indicating the relationship between eta_T and Y_C.
-#' @param tau0 a numeric indicating the treatment eff when eta_T=0.
-#' @param tau1 a numeric indicating the relationship between eta_T and Y_T-Y_C;
-#' (for now, single level (not multilevel), linear, normal).
-#' @param lambda a numeric indicating the mean of Worked problems/person.
 #' @param R2eta a numeric indicating Predictive power of latent variable
+#' @param linear a logical
+#' @param ydist a character
+#' @param lambda a numeric indicating the mean of Worked problems/person.
 #'  (extent to which covariates predict eta).
 #' @param nsec a numeric indicating the number of maximum sections given to
 #'  students.
 #' @param nfac a numeric indicating the number of latent factors
 #' @param lvmodel a character specifying a type of latent variable model.
-#' @param lvinfo a list containing the information corresponding the latent model.
+#'
 #' @return a list containing all the data related to population values and running FLPS.
 #'
 #' @examples
 #' sdat <- makeDat(
 #'   N = 100,
 #'   R2Y = 0.2,
-#'   omega = 0.2,
-#'   tau0 = 0.4,
-#'   tau1 = -0.2,
-#'   lambda = .6,
 #'   R2eta = 0.5,
 #'   linear = T,
+#'   ydist = "n",
+#'   lambda = .6,
 #'   nsec = 10,
+#'   nfac = 1,
 #'   lvmodel = "2PL"
 #' )
 #'
@@ -44,16 +42,16 @@ makeDat <- function(N,R2Y,R2eta,linear,ydist,lambda,nsec,nfac,lvmodel){
   # sim_info <- structure(sim_condition, class = tolower(sim_condition$lvmodel))
 
   # Generate Latent Variable Model Information ------------------------------
-  sim_info <- genLVinfo(sim_info)
+  sim_info <- genLVinfo(sim_info = sim_info)
 
   # Generate True eta -------------------------------------------------------
-  sim_info <- genTrueEta(Data=sim_info)
+  sim_info <- genTrueEta(Data = sim_info)
 
   # Generate LV part --------------------------------------------------------
-  sim_info <- genLVM(sim_info)
+  sim_info <- genLVM(info = sim_info)
 
   # simulate Y --------------------------------------------------------------
-  sim_info <- genOutcome(sim_info)
+  sim_info <- genOutcome(Data = sim_info)
 
   return(sim_info)
 }

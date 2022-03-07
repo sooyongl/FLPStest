@@ -22,9 +22,9 @@ genLVinfo <- function(sim_info) {
   return(sim_info)
 }
 
-#' Generate SEM parameter
+#' Generate SEM parameters
 #'
-genSEMpar <- function(nitem=25, nfac=2, lvmodel) {
+genSEMpar <- function(nitem=25, nfac=1, lvmodel) {
 
   if(lvmodel %in% c("sem","cfa")) {
 
@@ -42,7 +42,7 @@ genSEMpar <- function(nitem=25, nfac=2, lvmodel) {
 
 #' Generate IRT parameters
 #'
-genIRTpar <- function(nitem=25, nfac=3, lvmodel, ncat = 4) {
+genIRTpar <- function(nitem=25, nfac=1, lvmodel, ncat = 4) {
 
   lvmodel <- tolower(lvmodel)
 
@@ -56,7 +56,7 @@ genIRTpar <- function(nitem=25, nfac=3, lvmodel, ncat = 4) {
   a <- a_list$a
   a_idx <- a_list$a_idx
 
-  if(lvmodel %in% c("grm","gpcm")) {
+  if(lvmodel %in% c("grm","gpcm","ggrm","pcm")) {
     # for the graded model, ensure that there is enough space between
     # the intercepts, otherwise closer categories will not be selected often
     # (minimum distance of 0.5 here)
@@ -66,8 +66,7 @@ genIRTpar <- function(nitem=25, nfac=3, lvmodel, ncat = 4) {
     colnames(d) <- paste0("d",1:ncol(d))
     ipar <- data.frame(a, d)
 
-  }
-  else if(lvmodel %in% c("rasch","1pl","2pl","3pl")) {
+  } else if(lvmodel %in% c("rasch","1pl","2pl","3pl")) {
 
     g <- 0
     d <- rnorm(nitem)
@@ -102,8 +101,7 @@ genLVM <- function(info) { # info = sim_info
   nworked <- rep(floor(nsec * lambda), N/2)
 
   studentM <- do.call("c", lapply(seq(N/2),function(n) rep(n,each=nworked[n])))
-  section <- do.call("c", lapply(seq(N/2),
-                                 function(n) {
+  section <- do.call("c", lapply(seq(N/2),function(n) {
                                    sort(sample(1:nsec, nworked[n],
                                                replace = FALSE))}))
   ss <- cbind(studentM, section)
@@ -268,105 +266,105 @@ simData.pcm <- function(a,d,theta) {
   return(res)
 }
 
-#' #' method for all dichotomous IRT model
-#' #'
-#' generateLV.dich <- function(info, D = 1){
-#'   # set up for data generation
-#'   theta <- info$theta; nitem <- info$nsec; lv_info <- info$lvinfo
-#'
-#'   nexaminee <- length(theta)
-#'   nitem <- nitem
-#'
-#'   ipar <- lv_info$ipar
-#'   a <- ipar$a
-#'   b <- ipar$b
-#'   g <- ipar$g
-#'
-#'   # data generation
-#'   pr <- matrix(NA, nexaminee, nitem)
-#'   for (j in 1:nexaminee){
-#'     pr[j,] <- g + (1 - g) / (1 + exp(-D * (a * (theta[j] - b))))
-#'   }
-#'   resp <- (matrix(runif(nexaminee*nitem), nexaminee, nitem) < pr) * 1
-#'
-#'   ipar <- data.frame(a = a, b = b, c = g)
-#'   return(list(resp = resp, lv.par = ipar))
-#' }
-#'
-#'
-#' #' method for Polytomous Response: GPCM
-#' #'
-#' generateLV.gpcm <- function(info){
-#'   ## Generate responses for multiple people to multiple items
-#'
-#'   ## Pr(X_{ij} = k | \theta_i)
-#'   ##    \propto \exp (  \sum_{l=0}^k (a_j \theta_i + b_{jl} ) )
-#'
-#'   ## 'ipar' Need to have labels, ("a", "b1", ... "bK", "K_j")
-#'
-#'   ## | Debug ---------------
-#'   # theta <- theta[i]; # i <- 6
-#'   # ipar = rbind(diff);
-#'   # ipar <- ipar[1:nitemtl,]
-#'   # ipar <- pool[iset,2:(maxitemsc+2)]
-#'   ## ------------------------|
-#'
-#'   # set up for data generation
-#'   theta <- info$theta; lv_info <- info$lvinfo;
-#'
-#'   ipar <- lv_info$ipar
-#'
-#'   # getResponse(theta[1], ipar[1,], model=model,  D = 1.7)
-#'
-#'   # data generation
-#'   # set.seed(seednum)
-#'   nitem <- dim(ipar)[1]
-#'   disc <- ipar[,"a"]
-#'   loc <- ipar[,grep("b", colnames(ipar))]
-#'   K_j <- ipar[,"K_j"]
-#'   maxK <- max(K_j)
-#'
-#'   resp <- matrix(NA, length(theta), nitem)
-#'
-#'   for (i in 1:length(theta)){# i<-1
-#'
-#'     ### Compute item response category functions
-#'     pr <- matrix(NA, nitem, maxK + 1) # each row: P(X=0), ... ,P(X=K_j)
-#'     for (j in 1:nitem) { # j <- 1
-#'       exps_k <- rep(0, K_j[j]+1) # Exponentials at k = 0, ... , K_j
-#'       exps_k[1] <- exp(0)
-#'       for (k in 1:K_j[j]){ # h <- 1
-#'         exps_k[k+1] <- exp( k * disc[j] * theta[i] + sum(loc[j, 1:k]) )
-#'       }
-#'       pr[j, 1:(K_j[j]+1)] <- exps_k / sum(exps_k)
-#'     } # end of j
-#'
-#'     cumpr <- matrix(NA, nitem, maxK+1)
-#'     for (j in 1:nitem){ # j <- 1
-#'       for (k in 1:(K_j[j]+1)){# h <- 1
-#'         cumpr[j, k] <- sum(pr[j, 1:k])
-#'       }
-#'     }
-#'
-#'     tmp <- 1 * (cumpr >= matrix(rep(runif(nitem), maxK+1), nrow=nitem, ncol=maxK+1))
-#'     for (j in 1:nitem){ # j <- 1
-#'       if (sum(tmp[j,], na.rm=T)==(K_j[j]+1)){ # if all cumprs (including cpr_0) are larger than u
-#'         resp[i, j] <- 0
-#'       } else {
-#'         resp[i, j] <- min(which(tmp[j,]==1, arr.ind=T)) - 1
-#'       }
-#'     }
-#'
-#'   }
-#'
-#'   return(list(resp = resp + 1, lv.par = ipar))
-#' }
-#'
-#' #' method for Polytomous Response: GRM
-#' #'
-#' generateLV.grm <- function(info) {
-#'   print("not yet")
-#' }
+# #' method for all dichotomous IRT model
+# #'
+# generateLV.dich <- function(info, D = 1){
+#   # set up for data generation
+#   theta <- info$theta; nitem <- info$nsec; lv_info <- info$lvinfo
+#
+#   nexaminee <- length(theta)
+#   nitem <- nitem
+#
+#   ipar <- lv_info$ipar
+#   a <- ipar$a
+#   b <- ipar$b
+#   g <- ipar$g
+#
+#   # data generation
+#   pr <- matrix(NA, nexaminee, nitem)
+#   for (j in 1:nexaminee){
+#     pr[j,] <- g + (1 - g) / (1 + exp(-D * (a * (theta[j] - b))))
+#   }
+#   resp <- (matrix(runif(nexaminee*nitem), nexaminee, nitem) < pr) * 1
+#
+#   ipar <- data.frame(a = a, b = b, c = g)
+#   return(list(resp = resp, lv.par = ipar))
+# }
+#
+#
+# #' method for Polytomous Response: GPCM
+# #'
+# generateLV.gpcm <- function(info){
+#   ## Generate responses for multiple people to multiple items
+#
+#   ## Pr(X_{ij} = k | \theta_i)
+#   ##    \propto \exp (  \sum_{l=0}^k (a_j \theta_i + b_{jl} ) )
+#
+#   ## 'ipar' Need to have labels, ("a", "b1", ... "bK", "K_j")
+#
+#   ## | Debug ---------------
+#   # theta <- theta[i]; # i <- 6
+#   # ipar = rbind(diff);
+#   # ipar <- ipar[1:nitemtl,]
+#   # ipar <- pool[iset,2:(maxitemsc+2)]
+#   ## ------------------------|
+#
+#   # set up for data generation
+#   theta <- info$theta; lv_info <- info$lvinfo;
+#
+#   ipar <- lv_info$ipar
+#
+#   # getResponse(theta[1], ipar[1,], model=model,  D = 1.7)
+#
+#   # data generation
+#   # set.seed(seednum)
+#   nitem <- dim(ipar)[1]
+#   disc <- ipar[,"a"]
+#   loc <- ipar[,grep("b", colnames(ipar))]
+#   K_j <- ipar[,"K_j"]
+#   maxK <- max(K_j)
+#
+#   resp <- matrix(NA, length(theta), nitem)
+#
+#   for (i in 1:length(theta)){# i<-1
+#
+#     ### Compute item response category functions
+#     pr <- matrix(NA, nitem, maxK + 1) # each row: P(X=0), ... ,P(X=K_j)
+#     for (j in 1:nitem) { # j <- 1
+#       exps_k <- rep(0, K_j[j]+1) # Exponentials at k = 0, ... , K_j
+#       exps_k[1] <- exp(0)
+#       for (k in 1:K_j[j]){ # h <- 1
+#         exps_k[k+1] <- exp( k * disc[j] * theta[i] + sum(loc[j, 1:k]) )
+#       }
+#       pr[j, 1:(K_j[j]+1)] <- exps_k / sum(exps_k)
+#     } # end of j
+#
+#     cumpr <- matrix(NA, nitem, maxK+1)
+#     for (j in 1:nitem){ # j <- 1
+#       for (k in 1:(K_j[j]+1)){# h <- 1
+#         cumpr[j, k] <- sum(pr[j, 1:k])
+#       }
+#     }
+#
+#     tmp <- 1 * (cumpr >= matrix(rep(runif(nitem), maxK+1), nrow=nitem, ncol=maxK+1))
+#     for (j in 1:nitem){ # j <- 1
+#       if (sum(tmp[j,], na.rm=T)==(K_j[j]+1)){ # if all cumprs (including cpr_0) are larger than u
+#         resp[i, j] <- 0
+#       } else {
+#         resp[i, j] <- min(which(tmp[j,]==1, arr.ind=T)) - 1
+#       }
+#     }
+#
+#   }
+#
+#   return(list(resp = resp + 1, lv.par = ipar))
+# }
+#
+# #' method for Polytomous Response: GRM
+# #'
+# generateLV.grm <- function(info) {
+#   print("not yet")
+# }
 
 #' method for Polytomous Response: NRM
 #'

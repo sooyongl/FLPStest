@@ -30,7 +30,7 @@ parameters{
   vector[nstud] eta;
   real<lower=0> sigU;
 
-  matrix[nsec, nfac] lambda_free;
+  matrix<lower=0>[nsec, nfac] lambda_free;
   vector[max_k-1] tau[nsec];
   
   vector[ncov] betaU;
@@ -47,7 +47,7 @@ parameters{
 
 transformed parameters{
 
-  matrix[nsec, nfac] lambda;
+  matrix<lower=0>[nsec, nfac] lambda;
 
 // Factor loading constraints
   for(jjj in 1:nfac) {
@@ -94,6 +94,7 @@ model{
     };
 	  for(j in 1:nfac) {
       lambda_free[i,j] ~ normal(lambda_prior[i,j], 1);
+	  // lambda_free[i, j] ~ lognormal(0, 0.5)
     };
   };
 

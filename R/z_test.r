@@ -1,11 +1,26 @@
 clean_temp <- function(fit, sdat) {
-  # N <- sdat$N
-  # stan_dt <- sdat$stan_dt
-  # nb <- max(sdat$grad) - min(sdat$grad)
-  # nfac <- sdat$nfac
+  N <- sdat$N
+  stan_dt <- sdat$stan_dt
+  nb <- max(sdat$grad) - min(sdat$grad)
+  nfac <- sdat$nfac
 
-  # iter = fit@sim$iter - fit@sim$warmup
-  # n.chain = fit@sim$chains
+  iter = fit@sim$iter - fit@sim$warmup
+  n.chain = fit@sim$chains
+
+
+  if(class(sdat) == "rasch") {
+   comb_lambda <- matrix(c(1,1, -99, -99, -99, -99, -99, -99, -99,-99,-99), nrow = 1)
+   colnames(comb_lambda) <- c("true_param","mean","se_mean","sd","2.5%","25%","50%","75%","97.5%","n_eff","Rhat")
+
+  } else {
+    est_lambda <- summary(fit, pars = c("lambda"))
+    comb_lambda <- cbind(true_param=sdat$lv.par[,1:nfac],est_lambda$summary)
+  }
+
+
+  est_tau <- summary(fit, pars = c("tau"))
+  # str(mea_param)
+  # mea_param$c_summary[1:100, 1, 1:2]
 
   # item param
   # df.fit <- as.data.frame(fit)
@@ -29,13 +44,20 @@ clean_temp <- function(fit, sdat) {
   # lambda <- summary(fit, pars = c("lambda"))$summary
   # tau    <- summary(fit, pars = c("tau"))$summary
   #
-  # comb_lambda <- cbind(sdat$lv.par[,1:nfac],lambda)
   # # comb_lambda <- apply(comb_lambda, 2, as.numeric)
-  # true_tau <- sdat$lv.par[,(nfac+1):ncol(sdat$lv.par)]
-  # true_tau <- true_tau[!grepl("g", names(true_tau))]
+  true_tau <- sdat$lv.par[,(nfac+1):ncol(sdat$lv.par)]
+  true_tau <- true_tau[!grepl("g", names(true_tau))]
   #
-  # comb_tau    <- cbind(true_tau, tau)
+  if(dim(true_tau)[2]>1)
+    true_tau <- unlist(true_tau)
+
+  comb_tau    <- cbind(true_param=true_tau, est_tau$summary)
+  keepnm <- colnames(comb_tau)
+  keepnm[1] <- "true_param"
+  colnames(comb_tau) <- keepnm
   # comb_tau    <- apply(comb_tau, 2, as.numeric)
+
+  est_eta <- summary(fit, pars = c("eta"))
 
   # eta <- df.fit %>%
   #   select(chain, matches("^eta")) %>%
@@ -45,7 +67,7 @@ clean_temp <- function(fit, sdat) {
   #   matrix(., ncol = n.chain, nrow = N, byrow = T)
   #
   #   eta <- summary(fit, pars = c("eta"))$summary
-  #   comb_eta <- cbind(true_theta=sdat$theta, eta)
+    comb_eta <- cbind(true_param=sdat$theta, est_eta$summary)
   # comb_eta <- apply(comb_eta, 2, as.numeric)
 
   # apply(comb_eta, 2, function(x) mean(unlist(x)))
@@ -114,12 +136,12 @@ clean_temp <- function(fit, sdat) {
   #   set_names(c("bu1","bu2", "by1", "by2","b00", "a1", "b0", "b1")) #%>%
   # flps_param <- bind_rows(true = true_param, est = est_param, .id = "type")
 
-  flps_param <- cbind(true_param, est_param)
+  flps_param <- cbind(true_param=true_param, est_param)
 
-  list(flps_param=flps_param#,
-       # comb_lambda=comb_lambda,
-       # comb_tau=comb_tau,
-       # comb_eta=comb_eta
+  list(flps_param=flps_param,
+       comb_lambda=comb_lambda,
+       comb_tau=comb_tau,
+       comb_eta=comb_eta
   )
 
 }
