@@ -18,16 +18,12 @@ pairs_stan <- function(chain, stan_model, pars) {
                   lower = list(continuous = GGally::wrap("points", alpha = 0.2)))
 }
 
-list.files("results")
-# res <- readRDS("results/compare_chol_univ.rds")
-# res <- readRDS("results/1000_50_rasch_TRUE_3.rds")
+rdslist<- list.files("results", full.names = T)
 
-rdsname <- "switched_3"
+rdsname <- "0310_1000_200_grm_TRUE_n_4.rds"
 
-# res <- readRDS("results/test_univ_switched_1.rds") # 6000 2000 2000 people
-# res <- readRDS("results/test_univ_switched_2.rds") # 6000 2000 1000 people
-res <- readRDS("results/test_univ_switched_3.rds") # 10000 3000 1000 people
-# fit <- res$fit_univ
+# res <- readRDS(rdslist[1])
+res <- readRDS("results/1000_200_grm_TRUE_n_4.rds")
 
 fit <- res$fit
 sdat <- res$sdat
@@ -46,10 +42,19 @@ ms_pars <- c("lambda[2,1]","lambda[3,1]","lambda[4,1]","lambda[5,1]")
 est_param <- cbind(true_param, rstan::summary(fit, pars = st_pars)$summary)
 param_table <- round(est_param, 3)
 
-ggs_fit <- ggs(fit)
 
+rstan::summary(fit, pars = "lambda")$summary
+
+
+
+ggs_fit <- ggs(fit)
 # strucparam_trace <- rstan::traceplot(object = fit, pars = st_pars)
 # measuparam_trace <- rstan::traceplot(object = fit, pars = ms_pars)
+
+bu_trace <- ggs_traceplot(ggs_fit, family = c("betaU"))
+ggsave(file.path("report/figure",paste0(rdsname, "_bu_trace.png")),
+       b0_trace)
+
 
 b0_trace <- ggs_traceplot(ggs_fit, family = c("b0"))
 ggsave(file.path("report/figure",paste0(rdsname, "_b0_trace.png")),
@@ -63,40 +68,40 @@ a1_trace <- ggs_traceplot(ggs_fit, family = c("a1"))
 ggsave(file.path("report/figure",paste0(rdsname, "_a1_trace.png")),
        a1_trace)
 
-b0_auto <- ggmcmc(ggs_fit, file=NULL, family = c("b0"),
-       plot="ggs_autocorrelation")
-ggsave(file.path("report/figure",paste0(rdsname, "_b0_auto.png")),
-       b0_auto)
-
-b1_auto <- ggmcmc(ggs_fit, file=NULL, family = "b1",
-       plot="ggs_autocorrelation")
-ggsave(file.path("report/figure",paste0(rdsname, "_b1_auto.png")),
-       b1_auto)
-
-a1_auto <- ggmcmc(ggs_fit, file=NULL, family = "a1",
-       plot="ggs_autocorrelation")
-ggsave(file.path("report/figure",paste0(rdsname, "_a1_auto.png")),
-       a1_auto)
-
-pair_plot_chain1 <- pairs_stan(1, fit, c("b00","a1","b0","b1"))
-ggsave(file.path("report/figure",
-                 paste0(rdsname, "_pair_plot_chain1.png")),
-       pair_plot_chain1)
-
-pair_plot_chain2 <- pairs_stan(2, fit, c("b00","a1","b0","b1"))
-ggsave(file.path("report/figure",
-                 paste0(rdsname, "_pair_plot_chain2.png")),
-       pair_plot_chain2)
-
-pair_plot_chain3 <- pairs_stan(3, fit, c("b00","a1","b0","b1"))
-ggsave(file.path("report/figure",
-                 paste0(rdsname, "_pair_plot_chain3.png")),
-       pair_plot_chain3)
-
-pair_plot_chain4 <- pairs_stan(4, fit, c("b00","a1","b0","b1"))
-ggsave(file.path("report/figure",
-                 paste0(rdsname, "_pair_plot_chain4.png")),
-       pair_plot_chain4)
+# b0_auto <- ggmcmc(ggs_fit, file=NULL, family = c("b0"),
+#        plot="ggs_autocorrelation")
+# ggsave(file.path("report/figure",paste0(rdsname, "_b0_auto.png")),
+#        b0_auto)
+#
+# b1_auto <- ggmcmc(ggs_fit, file=NULL, family = "b1",
+#        plot="ggs_autocorrelation")
+# ggsave(file.path("report/figure",paste0(rdsname, "_b1_auto.png")),
+#        b1_auto)
+#
+# a1_auto <- ggmcmc(ggs_fit, file=NULL, family = "a1",
+#        plot="ggs_autocorrelation")
+# ggsave(file.path("report/figure",paste0(rdsname, "_a1_auto.png")),
+#        a1_auto)
+#
+# pair_plot_chain1 <- pairs_stan(1, fit, c("b00","a1","b0","b1"))
+# ggsave(file.path("report/figure",
+#                  paste0(rdsname, "_pair_plot_chain1.png")),
+#        pair_plot_chain1)
+#
+# pair_plot_chain2 <- pairs_stan(2, fit, c("b00","a1","b0","b1"))
+# ggsave(file.path("report/figure",
+#                  paste0(rdsname, "_pair_plot_chain2.png")),
+#        pair_plot_chain2)
+#
+# pair_plot_chain3 <- pairs_stan(3, fit, c("b00","a1","b0","b1"))
+# ggsave(file.path("report/figure",
+#                  paste0(rdsname, "_pair_plot_chain3.png")),
+#        pair_plot_chain3)
+#
+# pair_plot_chain4 <- pairs_stan(4, fit, c("b00","a1","b0","b1"))
+# ggsave(file.path("report/figure",
+#                  paste0(rdsname, "_pair_plot_chain4.png")),
+#        pair_plot_chain4)
 
 
 mcmc_object <- As.mcmc.list(fit, pars = c("b00","a1","b0","b1"))
