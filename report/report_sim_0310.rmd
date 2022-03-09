@@ -129,6 +129,16 @@ include_graphics(file.path(report_path, "twofactor.png"))
 
 ## Results {.tabset}
 
+### Rhat
+
+
+```{r}
+a4 %>% mk_plot(1,"b11", type = "Rhat")
+
+a4 %>% mk_plot(1,"a1", type = "Rhat")
+
+```
+
 ### b0
 
 ```{r}
