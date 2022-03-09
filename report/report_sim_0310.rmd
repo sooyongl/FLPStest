@@ -4,14 +4,14 @@ author: ""
 date: '`r Sys.Date()`'
 output:
   html_document:
-  highlight: py
-css: "style.css"
-code_folding: show
-toc: true
-toc_depth: 2
-toc_float:
-  collapsed: false
-smooth_scroll: false
+    highlight: py
+    css: "style.css"
+    code_folding: show
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
 editor_options:
   chunk_output_type: console
 ---
@@ -115,7 +115,7 @@ bias_top_1_by_param <- a4 %>%
 
 ## FLPS model
 
-```{r echo=FALSE, fig.height=4}
+```{r echo=FALSE, fig.height=4, out.width = '60%'}
 include_graphics(file.path(report_path, "twofactor.png"))
 ```
 
