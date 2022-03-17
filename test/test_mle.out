@@ -21,7 +21,7 @@ INPUT INSTRUCTIONS
 
      [item1$1-item20$1];
 
-     F1 on X1, X2;
+     F1 on X1 X2;
      Y on Z X1 X2 F1;
 
      F1Z | F1 xwith Z;

@@ -15,8 +15,8 @@ sim_condition <- list(
   ydist   = 'n',
   lambda  = 0.6,
   nsec    = 20,
-  nfac    = 2,
-  lvmodel ="2pl"
+  nfac    = 1,
+  lvmodel ="grm"
 )
 
 sdat <- do.call("makeDat", sim_condition)

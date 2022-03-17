@@ -58,6 +58,9 @@ oo <- foreach(
     N       = nsample, # sample size
     R2Y     = 0.3, # 0.1 0.2 0.5
     R2eta   = 0.5, # 0.2 0.5 0.75
+    omega   = round(runif(1, 0.1, 0.3),3),
+    tau0    = round(runif(1, 0.2, 0.4),3),
+    tau1    = round(runif(1, -0.2, -0.1),3),
     linear  = linearity,
     ydist   = ydist,
     lambda  = 0.6,
