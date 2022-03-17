@@ -98,10 +98,14 @@ genLVM <- function(info) { # info = sim_info
   lv.par <- lv.gen.dt$lv.par
   lv.resp <- lv.gen.dt$resp
 
-  nworked <- rep(floor(nsec * lambda), N/2)
+  total_N <- N/2
 
-  studentM <- do.call("c", lapply(seq(N/2),function(n) rep(n,each=nworked[n])))
-  section <- do.call("c", lapply(seq(N/2),function(n) {
+  nworked <- rep(floor(nsec * lambda), total_N)
+
+  studentM <- do.call("c", lapply(seq(total_N),
+                                  function(n) rep(n,each=nworked[n])))
+  section <- do.call("c", lapply(seq(total_N),
+                                 function(n) {
                                    sort(sample(1:nsec, nworked[n],
                                                replace = FALSE))}))
   ss <- cbind(studentM, section)

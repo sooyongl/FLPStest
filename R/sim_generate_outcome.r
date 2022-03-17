@@ -18,9 +18,9 @@ genOutcome.default <- function(Data) {
   linear <- Data$linear
   ydist  <- Data$ydist
 
-  omega  <- round(runif(nfac, 0.1, 0.3),3)   # Data$omega
-  tau0   <- round(runif(1, 0.2, 0.4),3)      # Data$tau0
-  tau1   <- round(runif(nfac, -0.2, -0.1),3) # Data$tau1
+  omega  <- Data$omega # round(runif(nfac, 0.1, 0.3),3)
+  tau0   <- Data$tau0  # round(runif(1, 0.2, 0.4),3)
+  tau1   <- Data$tau1  # round(runif(nfac, -0.2, -0.1),3)
 
   section  <- Data$section
   studentM <- Data$studentM
@@ -36,14 +36,7 @@ genOutcome.default <- function(Data) {
   x2    <- xdata[,"x2"]
   Z     <- rep(c(1,0), each=N/2)
 
-  if(!is.null(dim(eta))) {
-    # omega <- rep(omega, dim(eta)[2])
-    # tau1 <- rep(tau1, dim(eta)[2])
-    n.eta <- ncol(eta)
-  } else {
-    n.eta <- 1
-  }
-
+  n.eta <- ifelse(!is.null(dim(eta)),  ncol(eta), 1)
 
   Y <-
     tau0*Z +
@@ -58,7 +51,6 @@ genOutcome.default <- function(Data) {
 
   unex_var <- Y.R2/(1 - Y.R2)*var(Y)
   Y <- Y + rnorm(N, 0, sqrt(unex_var))
-  # Y <- Y + rnorm(N, 0, Y.res)
 
   if(ydist == "t") {
     trunc_point <- quantile(Y, c(.1, .9))
@@ -71,30 +63,26 @@ genOutcome.default <- function(Data) {
     Y <- Y + rq(N, 3)
   }
 
-  Data$omega <- omega
-  Data$tau0  <- tau0
-  Data$tau1  <- tau1
-
   Data$stan_dt <- list(
     # data info
     nsecWorked = length(section),
-    nstud = N,
-    nsec = nsec,
-    nfac = nfac,
-    min_k = min(grad),
-    max_k = max(grad),
-    ncov = ncol(xdata),
+    nstud      = N,
+    nsec       = nsec,
+    nfac       = nfac,
+    min_k      = min(grad),
+    max_k      = max(grad),
+    ncov       = ncol(xdata),
     # index
-    studentM = studentM,
-    section = section,
+    studentM     = studentM,
+    section      = section,
     lambda_prior = obv_lambda(obs.v.partial = lv.resp[1:(N/2), ], a_idx),
-    factoridx  = a_idx,
-    firstitem = fi_idx,
+    factoridx    = a_idx,
+    firstitem    = fi_idx,
     # data
-    grad = grad,
-    X = xdata,
-    Z = Z,
-    Y = c(Y)
+    grad   = grad,
+    X      = xdata,
+    Z      = Z,
+    Y      = c(Y)
   )
 
   return(Data)

@@ -32,14 +32,14 @@
 #' )
 #'
 #' @export
-makeDat <- function(N,R2Y,R2eta,linear,ydist,lambda,nsec,nfac,lvmodel){
+makeDat <- function(N,R2Y,R2eta,omega,tau0,tau1,linear,ydist,lambda,nsec,nfac,lvmodel){
 
   mc <- match.call(expand.dots = TRUE)
   mc[[1L]] <- quote(list); # mc <- as.list(match.call()[-1])
 
   # set up S3 class ---------------------------------------------------------
   sim_info <- structure(eval(mc), class = tolower(lvmodel))
-  # sim_info <- structure(sim_condition, class = tolower(sim_condition$lvmodel))
+  # sim_info<-structure(sim_condition,class=tolower(sim_condition$lvmodel))
 
   # Generate Latent Variable Model Information ------------------------------
   sim_info <- genLVinfo(sim_info = sim_info)
