@@ -5,16 +5,18 @@ for(i in list.files("R", full.names = T, pattern = "r$")) source(i);
 # generate data ------------------------------------------
 sim_condition <- list(
   N       = 1000, # sample size
-  R2Y     = 0.2,
-  R2eta   = 0.5,
-  ydist   = "n",
+  R2Y     = 0.3, # 0.1 0.2 0.5
+  R2eta   = 0.5, # 0.2 0.5 0.75
+  omega   = round(runif(1, 0.1, 0.3),3),
+  tau0    = round(runif(1, 0.2, 0.4),3),
+  tau1    = round(runif(1, -0.2, -0.1),3),
   linear  = T,
+  ydist   = 'n',
   lambda  = 0.6,
   nsec    = 20,
   nfac    = 1,
-  lvmodel ="2pl"
+  lvmodel = 'gpcm'
 )
-
 sdat <- do.call("makeDat", sim_condition)
 
 sdat$omega

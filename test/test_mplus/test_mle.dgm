@@ -1,0 +1,69 @@
+VERSION 1.1.0
+INPUT
+DATA:
+ file is test_mle.csv;
+VARIABLE:
+ names are Y Z X1 X2 item1-item20;
+          usevariables are Y Z X1 X2 item1-item20;
+          categorical = item1-item20;
+          missing = all(-99);
+ANALYSIS:
+ TYPE = RANDOM;
+MODEL:
+   F1 by item1-item20@1;
+   [item1$1-item20$1];
+   F1 on X1, X2;
+   Y on Z X1 X2 F1;
+   F1Z | F1 xwith Z;
+   Y on F1Z;
+INPUT_END
+2
+0
+0
+0
+MLR
+1
+GENERAL
+0
+21
+2
+3
+item1 item2 item3 item4 item5 item6 item7 item8 item9 item10 item11 item12 item13 item14 item15 item16 item17 item18 item19 item20 y f1 f1z z x1 x2
+3
+-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 2 1 0 0 0 0
+0
+1
+f1
+item1 item2 item3 item4 item5 item6 item7 item8 item9 item10 item11 item12 item13 item14 item15 item16 item17 item18 item19 item20
+1 1 f1 item1    1.000    0.000
+1 1 f1 item2    1.000    0.000
+1 1 f1 item3    1.000    0.000
+1 1 f1 item4    1.000    0.000
+1 1 f1 item5    1.000    0.000
+1 1 f1 item6    1.000    0.000
+1 1 f1 item7    1.000    0.000
+1 1 f1 item8    1.000    0.000
+1 1 f1 item9    1.000    0.000
+1 1 f1 item10    1.000    0.000
+1 1 f1 item11    1.000    0.000
+1 1 f1 item12    1.000    0.000
+1 1 f1 item13    1.000    0.000
+1 1 f1 item14    1.000    0.000
+1 1 f1 item15    1.000    0.000
+1 1 f1 item16    1.000    0.000
+1 1 f1 item17    1.000    0.000
+1 1 f1 item18    1.000    0.000
+1 1 f1 item19    1.000    0.000
+1 1 f1 item20    1.000    0.000
+1 1 x1 f1   -0.908    0.073
+1 1 x2 f1    0.419    0.140
+1 1 z y    0.214    0.044
+1 1 x1 y    0.987    0.035
+1 1 x2 y    0.506    0.046
+1 1 f1 y    0.300    0.041
+1 1 f1z y   -0.165    0.040
+4 1 y    0.176    0.016
+4 1 f1    1.011    0.139
+2 1 z x1  999.000  999.000
+2 1 z x2  999.000  999.000
+2 1 x1 x2  999.000  999.000

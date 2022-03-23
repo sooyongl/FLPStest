@@ -1,7 +1,7 @@
 library(tidyverse)
 
 a1 <- fs::dir_ls("results/cleaned")
-a2 <- readRDS(a1)
+# a2 <- readRDS(a1[1])
 unique(a2$par_name)
 
 a3 <- a2 %>%

@@ -520,9 +520,8 @@ facet_matrix(vars(everything()), layer.diag = 2, layer.upper = 3,
 # # dev.off()
 
 
-
 res_struct <- readRDS("F:/FLPS/results/cleaned/res_struct.rds")
-res <- readRDS("F:/FLPS/results/cleaned/res_extracted_cleaned.rds")
+res <- readRDS("F:/FLPS/results/cleaned/res_extracted_cleaned_complete.rds")
 
 res <- res %>%
   mutate(rerr = err / true_param)
