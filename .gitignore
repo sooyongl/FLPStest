@@ -9,3 +9,8 @@ report/rds/res_combined_LCA_1129.rds
 report/rds/irtsem_1210.rds
 report/rds/sem_1210.rds
 docs
+report/rds/0317_res_extracted_135.rds
+report/rds/0317_res_extracted_50.rds
+report/rds/0317_res_extracted_70.rds
+report/rds/0317_res_extracted_80.rds
+*.log
