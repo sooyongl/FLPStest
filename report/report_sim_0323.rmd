@@ -19,8 +19,8 @@ editor_options:
 knitr::opts_chunk$set(
 	eval = T,
 	echo = F,
-	fig.height = 16,
-	fig.width = 24,
+	fig.height = 8,
+	fig.width = 18,
 	out.width = '150%',
 	warning = FALSE,
 	include = T

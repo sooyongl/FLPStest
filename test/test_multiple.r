@@ -11,7 +11,7 @@ expand.grid.df <- function(...) Reduce(function(...) merge(..., by=NULL), list(.
 
 # condition ---------------------------------------------------------------
 lvmodel <- c("rasch","2pl","gpcm","grm")
-nsample <- c(500, 1000)
+nsample <- c(500, 1000, 2000)
 nitem   <- c(100)
 fnitem  <- expand.grid(nsample=nsample, nitem=nitem, lvmodel=lvmodel)
 
@@ -22,11 +22,11 @@ cond_table <- rbind(fnitem,fnsize)
 
 cond_table <- expand.grid.df(cond_table,data.frame(linearity = c(T,F)))
 cond_table <- expand.grid.df(cond_table,data.frame(ydist = c("n","t","t3")))
-cond_table <- expand.grid.df(cond_table,data.frame(rep = 1:1))
+cond_table <- expand.grid.df(cond_table,data.frame(rep = 1:20))
 
 # core setting ------------------------------------------------------------
-# cl <- getMPIcluster()
-# doParallel::registerDoParallel(cl)
+cl <- getMPIcluster()
+doParallel::registerDoParallel(cl)
 
 # n_cores <- detectCores() - 2; print(n_cores)
 # cl <- parallel::makeCluster(n_cores)
@@ -35,7 +35,7 @@ cond_table <- expand.grid.df(cond_table,data.frame(rep = 1:1))
 # condition filter --------------------------------------------------------
 cond_table <-
   cond_table[
-    cond_table$lvmodel == "2pl" & cond_table$linearity == T & cond_table$ydist == "n",  ]
+    cond_table$lvmodel == "2pl" & cond_table$linearity == T & cond_table$ydist == "n" & cond_table$nitem == 100,  ]
 # nrow(cond_table)
 # loop --------------------------------------------------------------------
 oo <- foreach(
@@ -68,7 +68,9 @@ oo <- foreach(
     nfac    = 1,
     lvmodel = lvmodel
   )
-  sdat <- do.call("makeDat", sim_condition)
+
+  # sdat <- do.call("makeDat", sim_condition)
+  sdat <- do.call("test_makeDat", sim_condition)
 
   # run stan ----------------------------------------------------------------
   stanfilename <- paste0("inst/stan/ps", toupper(ifelse(lvmodel=="2pl", "irt",
@@ -78,8 +80,8 @@ oo <- foreach(
     data   = sdat$stan_dt,
     chain  = 1,
     cores  = 1,
-    iter   = 5000,
-    warmup = 2000
+    iter   = 10000,
+    warmup = 4000
   )
 
   o <- list(fit=fit, sdat=sdat)

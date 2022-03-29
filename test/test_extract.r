@@ -21,6 +21,7 @@ source_funs <- ls()
 # doSNOW::registerDoSNOW(cl)
 
 rds_name <- list.files("F:/FLPS/results", full.names = T)
+
 # rds_name <- list.files("results", full.names = T)
 res_list <- foreach(
   irds = 1:length(rds_name)#,
@@ -224,10 +225,12 @@ res_list <- foreach(
     struct_df = struct_df
   )
 
-  saveRDS(o, paste0("F:/FLPS/results/cleaned/0317_res_extracted_",irds ,".rds"))
+  saveRDS(o, paste0("F:/FLPS/results/cleaned/0330_extracted_",condition ,".rds"))
 
   gc(TRUE)
 }
+
+
 
 
 cleaned <- readRDS("results/cleaned/0310_res_cleaned.rds")
@@ -296,99 +299,103 @@ a4 %>% mk_plot(1,"by2")
 a4 %>% mk_plot(1,"bu11")
 a4 %>% mk_plot(1,"bu12")
 
-extracted <- list.files("F:/FLPS/results/cleaned", full.names = T)
 
-res_struct <- foreach(
-  irds = 1:length(extracted), .combine = 'rbind') %do% {
+# -------------------------------------------------------------------------
 
-    # irds <- 1
+# extracted <- list.files("F:/FLPS/results/cleaned", full.names = T)
+#
+# res_struct <- foreach(
+#   irds = 1:length(extracted), .combine = 'rbind') %do% {
+#
+#     # irds <- 1
+#
+#     res <- readRDS(extracted[irds])
+#
+#     res$struct_df %>%
+#       mutate(err = (est_mean - true_struc)) %>%
+#       select(par_name, err) %>%
+#       spread("par_name","err") %>%
+#       mutate(cond = res$condition)
+#   }
+# saveRDS(res_struct, "results/cleaned/0330_res_struct.rds")
+#
+# library(ggforce)
+# res_struct <- readRDS("results/cleaned/0330_res_struct.rds")
+#
+# res_struct %>%
+#   gather("par_name","value",-cond) %>%
+#   separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+#   mutate(
+#     samplesize = factor(samplesize, levels = c("500","1000")),
+#     nitem = factor(nitem, levels = c("50","100","200")),
+#     lvmodel = factor(lvmodel, levels = c("rasch","2pl","gpcm","grm"))
+#   ) %>%
+#   filter(!par_name %in% c("b0","b00")) %>%
+#   ggplot(aes(x = par_name, y = value)) +
+#   geom_violin(fill = "skyblue", alpha = 0.5, color = NA) +
+#   geom_sina() +
+#   geom_hline(yintercept = 0) +
+#   facet_grid(samplesize+nitem ~  lvmodel)
+#
+#
+# res_struct %>%
+#   separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+#   ggplot(aes(a11, bu11)) +
+#   geom_point() +
+#   geom_smooth(method = lm, se = FALSE) +
+#   facet_grid(samplesize+nitem ~  lvmodel)
+#
+# res_struct %>%
+#   separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+#   ggplot(aes(a11, bu12)) +
+#   geom_point() +
+#   geom_smooth(method = lm, se = FALSE) +
+#   facet_grid(samplesize+nitem ~  lvmodel)
+#
+# res_struct %>%
+#   separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+#   ggplot(aes(by1, by2)) +
+#   geom_point() +
+#   geom_smooth(method = lm, se = FALSE) +
+#   facet_grid(samplesize+nitem ~  lvmodel)
+#
+#
+# res_struct %>%
+#   separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+#   ggplot(aes(a11, b11)) +
+#   geom_point() +
+#   geom_smooth(method = lm, se = FALSE) +
+#   facet_grid(samplesize+nitem ~  lvmodel)
+#
+# res_struct %>%
+#   separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+#   ggplot(aes(a11, by1)) +
+#   geom_point() +
+#   geom_smooth(method = lm, se = FALSE) +
+#   facet_grid(samplesize+nitem ~  lvmodel)
+#
+# res_struct %>%
+#   separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+#   ggplot(aes(a11, by2)) +
+#   geom_point() +
+#   geom_smooth(method = lm, se = FALSE) +
+#   facet_grid(samplesize+nitem ~  lvmodel)
+#
+#
+# library(GGally)
+#
+# res_struct %>%
+#   separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+#   filter(lvmodel == "grm") %>%
+#   filter(samplesize == 1000 & nitem == 100) %>%
+#   sample_frac(size = 0.5) %>%
+#   ggpairs(., columns = 1:(ncol(res_struct)-1)
+#           #,ggplot2::aes(colour=as.character(chain), alpha = 0.4)
+#   )
 
-    res <- readRDS(extracted[irds])
 
-    res$struct_df %>%
-      mutate(err = (est_mean - true_struc)) %>%
-      select(par_name, err) %>%
-      spread("par_name","err") %>%
-      mutate(cond = res$condition)
-  }
-# saveRDS(res_struct, "F:/FLPS/results/cleaned/res_struct.rds")
-
-library(ggforce)
-res_struct <- readRDS("F:/FLPS/results/cleaned/res_struct.rds")
-
-res_struct %>%
-  gather("par_name","value",-cond) %>%
-  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
-  mutate(
-    samplesize = factor(samplesize, levels = c("500","1000")),
-    nitem = factor(nitem, levels = c("50","100","200")),
-    lvmodel = factor(lvmodel, levels = c("rasch","2pl","gpcm","grm"))
-  ) %>%
-  filter(!par_name %in% c("b0","b00")) %>%
-  ggplot(aes(x = par_name, y = value)) +
-  geom_violin(fill = "skyblue", alpha = 0.5, color = NA) +
-  geom_sina() +
-  geom_hline(yintercept = 0) +
-  facet_grid(samplesize+nitem ~  lvmodel)
-
-
-res_struct %>%
-  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
-  ggplot(aes(a11, bu11)) +
-  geom_point() +
-  geom_smooth(method = lm, se = FALSE) +
-  facet_grid(samplesize+nitem ~  lvmodel)
-
-res_struct %>%
-  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
-  ggplot(aes(a11, bu12)) +
-  geom_point() +
-  geom_smooth(method = lm, se = FALSE) +
-  facet_grid(samplesize+nitem ~  lvmodel)
-
-res_struct %>%
-  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
-  ggplot(aes(by1, by2)) +
-  geom_point() +
-  geom_smooth(method = lm, se = FALSE) +
-  facet_grid(samplesize+nitem ~  lvmodel)
-
-
-res_struct %>%
-  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
-  ggplot(aes(a11, b11)) +
-  geom_point() +
-  geom_smooth(method = lm, se = FALSE) +
-  facet_grid(samplesize+nitem ~  lvmodel)
-
-res_struct %>%
-  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
-  ggplot(aes(a11, by1)) +
-  geom_point() +
-  geom_smooth(method = lm, se = FALSE) +
-  facet_grid(samplesize+nitem ~  lvmodel)
-
-res_struct %>%
-  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
-  ggplot(aes(a11, by2)) +
-  geom_point() +
-  geom_smooth(method = lm, se = FALSE) +
-  facet_grid(samplesize+nitem ~  lvmodel)
-
-
-library(GGally)
-
-res_struct %>%
-  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
-  filter(lvmodel == "grm") %>%
-  filter(samplesize == 1000 & nitem == 100) %>%
-  sample_frac(size = 0.5) %>%
-  ggpairs(., columns = 1:(ncol(res_struct)-1)
-          #,ggplot2::aes(colour=as.character(chain), alpha = 0.4)
-  )
-
-
-extracted <- list.files("F:/FLPS/results/cleaned", full.names = T, pattern = "0317_res_extracted")
+extracted <- list.files("F:/FLPS/results/cleaned",
+                        full.names = T, pattern = "extracted")
 
 res <- foreach(
   irds = 1:length(extracted), .combine = 'rbind') %do% {
@@ -408,9 +415,9 @@ res <- foreach(
       mutate(err = (est_mean - true_param)) %>%
       mutate(cond = res$condition)
   }
-# saveRDS(res, "F:/FLPS/results/cleaned/res_extracted_cleaned.rds")
+saveRDS(res, "results/cleaned/0330_res_extracted_cleaned.rds")
 
-res <- readRDS("F:/FLPS/results/cleaned/res_extracted_cleaned.rds")
+res <- readRDS("results/cleaned/0330_res_extracted_cleaned.rds")
 
 res %>%
   filter(str_detect(par_name, "eta")) %>%

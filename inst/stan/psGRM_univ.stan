@@ -92,8 +92,8 @@ model{
 	//    tau[i , ii] ~ uniform(-5, 5);
     //};
 	  for(j in 1:nfac) {
-      lambda_free[i,j] ~ normal(lambda_prior[i,j], 1);
-	  // lambda_free[i, j] ~ lognormal(0, 0.5)
+      //lambda_free[i,j] ~ normal(lambda_prior[i,j], 1);
+	  lambda_free[i, j] ~ lognormal(0, 0.5);
     };
   };
 

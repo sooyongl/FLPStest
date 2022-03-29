@@ -56,6 +56,31 @@ makeDat <- function(N,R2Y,R2eta,omega,tau0,tau1,linear,ydist,lambda,nsec,nfac,lv
   return(sim_info)
 }
 
+
+test_makeDat <- function(N,R2Y,R2eta,omega,tau0,tau1,linear,ydist,lambda,nsec,nfac,lvmodel){
+
+  mc <- match.call(expand.dots = TRUE)
+  mc[[1L]] <- quote(list); # mc <- as.list(match.call()[-1])
+
+  # set up S3 class ---------------------------------------------------------
+  sim_info <- structure(eval(mc), class = tolower(lvmodel))
+  # sim_info<-structure(sim_condition,class=tolower(sim_condition$lvmodel))
+
+  # Generate Latent Variable Model Information ------------------------------
+  sim_info <- genLVinfo(sim_info = sim_info)
+
+  # Generate True eta -------------------------------------------------------
+  sim_info <- test_genTrueEta(Data = sim_info)
+
+  # Generate LV part --------------------------------------------------------
+  sim_info <- genLVM(info = sim_info)
+
+  # simulate Y --------------------------------------------------------------
+  sim_info <- test_genOutcome(Data = sim_info)
+
+  return(sim_info)
+}
+
 #' Generate a matrix style data for simulation
 #'
 #' @description

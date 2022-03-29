@@ -1,11 +1,11 @@
 plotting <- function(data){
-  theme_set(theme_bw(base_size = 24))
+  theme_set(theme_bw(base_size = 36))
   data %>%
     ggplot(aes(x = par_name, y = err)) +
     geom_violin(
       trim=F,
       fill = "skyblue", alpha = 0.5, color = NA) +
-    ggforce::geom_sina() +
+    ggforce::geom_sina(size = 3) +
     geom_hline(yintercept = 0) +
     stat_summary(
       geom = "point",
@@ -13,7 +13,7 @@ plotting <- function(data){
       col = "black",
       size = 3,
       shape = 24,
-      alpha = 0.6,
+      alpha = 0.8,
       fill = "red"
     )
 }
@@ -38,8 +38,10 @@ extract_pars <- function(fit, sdat) {
   # true_param <- c(-1, 0.5, 1.0, 0.5, 0, a11, b0, b11)
   # names(true_param) <- c("bu11","bu12","by1","by2","b00","a11", "b0", "b11")
 
-  true_param <- c(-1, 0.5)
-  names(true_param) <- c("bu11","bu12")
+  # true_param <- c(-1, 0.5)
+  # names(true_param) <- c("bu11","bu12")
+  true_param <- c(-1, 0.5, 1.0, -0.5)
+  names(true_param) <- c("bu11","bu12","bu13","bu14")
 
   true_ipar <- sdat$lv.par
   true_lam <- true_ipar[,(1:nfac)]
