@@ -23,6 +23,7 @@ knitr::opts_chunk$set(
 	fig.width = 24,
 	out.width = '100%',
 	warning = FALSE,
+	message = F,
 	include = T
 )
 library(rstan); library(tidyverse); library(knitr);library(ggforce)
@@ -157,6 +158,15 @@ plot_pars(res_all, struc_model = T, fixed_nitem = T)
 plot_pars(res_all, struc_model = F, fixed_nitem = T)
 ```
 
+### SD of error
+
+```{r}
+res_all %>% 
+  group_by(samplesize, lvmodel) %>% 
+  summarise(sd(value)) %>% 
+  spread("lvmodel", "sd(value)") %>% 
+  kable()
+```
 
 
 ## Compare lognormal prior with normal prior
