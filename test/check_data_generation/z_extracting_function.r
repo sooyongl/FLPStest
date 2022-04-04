@@ -18,7 +18,7 @@ plotting <- function(data){
     )
 }
 
-extract_pars <- function(fit, sdat) {
+extract_pars <- function(fit, sdat, two) {
   N <- sdat$N
   stan_dt <- sdat$stan_dt
   nb <- max(sdat$grad) - min(sdat$grad)
@@ -40,9 +40,15 @@ extract_pars <- function(fit, sdat) {
 
   # true_param <- c(-1, 0.5)
   # names(true_param) <- c("bu11","bu12")
-  true_param <- c(-1, 0.5, 1.0, -0.5)
-  names(true_param) <- c("bu11","bu12","bu13","bu14")
 
+
+  if(two) {
+    true_param <- c(-1, 0.5)
+    names(true_param) <- c("bu11","bu12")
+  } else {
+    true_param <- c(-1, 0.5, 1.0, -0.5)
+    names(true_param) <- c("bu11","bu12","bu13","bu14")
+  }
   true_ipar <- sdat$lv.par
   true_lam <- true_ipar[,(1:nfac)]
 
