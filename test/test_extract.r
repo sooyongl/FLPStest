@@ -20,7 +20,7 @@ source_funs <- ls()
 # cl <- parallel::makeCluster(n_cores)
 # doSNOW::registerDoSNOW(cl)
 
-rds_name <- list.files("F:/FLPS/results", full.names = T)
+rds_name <- list.files("F:/FLPS/results", full.names = T, pattern = "rds")
 
 # rds_name <- list.files("results", full.names = T)
 res_list <- foreach(
@@ -225,7 +225,7 @@ res_list <- foreach(
     struct_df = struct_df
   )
 
-  saveRDS(o, paste0("F:/FLPS/results/cleaned/0330_extracted_",condition ,".rds"))
+  saveRDS(o, paste0("F:/FLPS/results/cleaned/0406_extracted_",condition ,".rds"))
 
   gc(TRUE)
 }
@@ -233,71 +233,71 @@ res_list <- foreach(
 
 
 
-cleaned <- readRDS("results/cleaned/0310_res_cleaned.rds")
-a3 <- cleaned %>%
-  separate(condition, c("samplesize","nitem","lvmodel","correct","outcome","rep"), "_") %>%
-  separate(par_name, c("a","par_name"), "\\.", fill = "left") %>%
-  select(-a)
-
-a3 <- a3 %>%
-  mutate(
-    lvmodel = factor(lvmodel, levels = c("rasch","2pl","gpcm","grm")),
-    nitem = factor(nitem, levels = c("50","100","200")),
-    samplesize = factor(samplesize, levels = c("500","1000")),
-    bias = mean - true_param
-  )
-a4 <- a3 %>%
-  mutate(
-    par_name = case_when(str_detect(par_name,"lambda") ~ "lambda",
-                         str_detect(par_name,"eta") ~ "eta",
-                         str_detect(par_name,"tau") ~ "tau",
-                         str_detect(par_name,"^d") ~ "d",
-                         TRUE ~ par_name)
-  ) %>%
-  group_by(samplesize, nitem, lvmodel, correct, outcome, rep, par_name) %>%
-  summarise(bias = mean(bias), Rhat = mean(Rhat), n_eff = mean(n_eff)) %>%
-  ungroup() %>%
-  filter(!is.nan(n_eff) & !is.nan(Rhat))
-
-
-mk_plot <- function(data, rq = 1, pname, type="bias",  psize = 2) {
-
-  data <- data %>% filter(str_detect(par_name,pname))
-
-  if(rq == 1) {
-    p1 <- data %>%
-      filter(nitem == 100) %>%
-      ggplot(aes(x = samplesize, y = !!as.name(type))) +
-      # geom_boxplot() +
-      geom_violin(fill = "skyblue", alpha = 0.5, color = NA) +
-      ggforce::geom_sina(size = psize) +
-
-      facet_grid(nitem ~ lvmodel) +
-      theme_bw(base_size = 16)
-  } else {
-    p1 <- data %>%
-      filter(samplesize == 1000) %>%
-      ggplot(aes(x = nitem, y = bias)) +
-      # geom_boxplot() +
-      geom_violin(fill = "skyblue", alpha = 0.5, color = NA) +
-      ggforce::geom_sina(size = psize) +
-
-      facet_grid(samplesize ~ lvmodel) +
-      theme_bw(base_size = 16)
-  }
-
-  if(!type %in% c("Rhat","n_eff")) {
-    p1 <- p1 + geom_hline(yintercept = 0, alpha = 0.8, linetype = "dotted")
-  }
-
-  p1 + labs(title = pname)
-}
-
-a4 %>% mk_plot(1,"by1")
-a4 %>% mk_plot(1,"by2")
-
-a4 %>% mk_plot(1,"bu11")
-a4 %>% mk_plot(1,"bu12")
+# cleaned <- readRDS("results/cleaned/0310_res_cleaned.rds")
+# a3 <- cleaned %>%
+#   separate(condition, c("samplesize","nitem","lvmodel","correct","outcome","rep"), "_") %>%
+#   separate(par_name, c("a","par_name"), "\\.", fill = "left") %>%
+#   select(-a)
+#
+# a3 <- a3 %>%
+#   mutate(
+#     lvmodel = factor(lvmodel, levels = c("rasch","2pl","gpcm","grm")),
+#     nitem = factor(nitem, levels = c("50","100","200")),
+#     samplesize = factor(samplesize, levels = c("500","1000")),
+#     bias = mean - true_param
+#   )
+# a4 <- a3 %>%
+#   mutate(
+#     par_name = case_when(str_detect(par_name,"lambda") ~ "lambda",
+#                          str_detect(par_name,"eta") ~ "eta",
+#                          str_detect(par_name,"tau") ~ "tau",
+#                          str_detect(par_name,"^d") ~ "d",
+#                          TRUE ~ par_name)
+#   ) %>%
+#   group_by(samplesize, nitem, lvmodel, correct, outcome, rep, par_name) %>%
+#   summarise(bias = mean(bias), Rhat = mean(Rhat), n_eff = mean(n_eff)) %>%
+#   ungroup() %>%
+#   filter(!is.nan(n_eff) & !is.nan(Rhat))
+#
+#
+# mk_plot <- function(data, rq = 1, pname, type="bias",  psize = 2) {
+#
+#   data <- data %>% filter(str_detect(par_name,pname))
+#
+#   if(rq == 1) {
+#     p1 <- data %>%
+#       filter(nitem == 100) %>%
+#       ggplot(aes(x = samplesize, y = !!as.name(type))) +
+#       # geom_boxplot() +
+#       geom_violin(fill = "skyblue", alpha = 0.5, color = NA) +
+#       ggforce::geom_sina(size = psize) +
+#
+#       facet_grid(nitem ~ lvmodel) +
+#       theme_bw(base_size = 16)
+#   } else {
+#     p1 <- data %>%
+#       filter(samplesize == 1000) %>%
+#       ggplot(aes(x = nitem, y = bias)) +
+#       # geom_boxplot() +
+#       geom_violin(fill = "skyblue", alpha = 0.5, color = NA) +
+#       ggforce::geom_sina(size = psize) +
+#
+#       facet_grid(samplesize ~ lvmodel) +
+#       theme_bw(base_size = 16)
+#   }
+#
+#   if(!type %in% c("Rhat","n_eff")) {
+#     p1 <- p1 + geom_hline(yintercept = 0, alpha = 0.8, linetype = "dotted")
+#   }
+#
+#   p1 + labs(title = pname)
+# }
+#
+# a4 %>% mk_plot(1,"by1")
+# a4 %>% mk_plot(1,"by2")
+#
+# a4 %>% mk_plot(1,"bu11")
+# a4 %>% mk_plot(1,"bu12")
 
 
 # -------------------------------------------------------------------------
@@ -415,201 +415,201 @@ res <- foreach(
       mutate(err = (est_mean - true_param)) %>%
       mutate(cond = res$condition)
   }
-saveRDS(res, "results/cleaned/0330_res_extracted_cleaned.rds")
+saveRDS(res, "results/cleaned/0406_res_extracted_cleaned.rds")
 
-res <- readRDS("results/cleaned/0330_res_extracted_cleaned.rds")
-
-res %>%
-  filter(str_detect(par_name, "eta")) %>%
-  mutate(par_name = "eta") %>%
-  group_split(cond) %>%
-  map(., ~ .x %>% mutate(Z = rep(c("trt","cntl"), each = nrow(.x)/2))) %>%
-  bind_rows() %>%
-  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
-  ggplot(aes(true_param, est_mean, color = Z)) +
-  geom_point(alpha = 0.2) +
-  geom_smooth(method = lm, se = FALSE) +
-  geom_abline(intercept = 0, slope = 1, color="red",
-              linetype="dashed", size=1) +
-  facet_grid(samplesize+nitem ~  lvmodel)
-
-
-res %>%
-  filter(str_detect(par_name, "lambda")) %>%
-  mutate(par_name = "lambda") %>%
-  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
-  ggplot(aes(true_param, est_mean)) +
-  geom_point(alpha = 0.5) +
-  geom_abline(intercept = 0, slope = 1, color="red",
-              linetype="dashed", size=1) +
-  facet_grid(samplesize+nitem ~  lvmodel)
-
-res %>%
-  filter(str_detect(par_name, "tau")) %>%
-  mutate(par_name = "tau") %>%
-  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
-  ggplot(aes(true_param, est_mean)) +
-  geom_point(alpha = 0.5) +
-  geom_abline(intercept = 0, slope = 1, color="red",
-              linetype="dashed", size=1) +
-  facet_grid(samplesize+nitem ~  lvmodel)
-
-res %>%
-  filter(!str_detect(par_name, "tau|lambda|eta")) %>%
-  select(par_name, err, cond) %>%
-  spread("par_name","err") %>%
-  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
-  filter(lvmodel == "grm", samplesize == 1000, nitem == 100) %>%
-  ggplot(aes(x = .panel_x, y = .panel_y)) +
-  geom_point() +
-  geom_smooth(method = lm, se = F, alpha = 0.4) +
-  # ggforce::geom_autodensity() +
-  # facet_matrix(vars(everything()))
-  # ggforce::facet_matrix(vars(b00, b0, b11, a11, bu11, bu12, by1, by2),
-  #                       grid.y.diag = FALSE)
-  ggforce::facet_matrix(vars(bu11, bu12), vars(b11, a11))
-
-
-ggplot(pca_on_stations, aes(x = .panel_x, y = .panel_y)) +
-  geom_point(alpha = 0.2, shape = 16, size = 0.5) +
-  facet_matrix(vars(everything()))
-geom_autodensity()
-facet_matrix(vars(everything()), layer.diag = 2, layer.upper = 3,
-             grid.y.diag = FALSE)
-
-
-
-# saveRDS(res_list, "results/cleaned/0317_res_extracted.rds")
-
-# gc()
-
-# struct_df %>%
-#   mutate(err = (est_mean - true_struc)) %>%
-#   select(par_name, err) %>%
+# res <- readRDS("results/cleaned/0406_res_extracted_cleaned.rds")
+#
+# res %>%
+#   filter(str_detect(par_name, "eta")) %>%
+#   mutate(par_name = "eta") %>%
+#   group_split(cond) %>%
+#   map(., ~ .x %>% mutate(Z = rep(c("trt","cntl"), each = nrow(.x)/2))) %>%
+#   bind_rows() %>%
+#   separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+#   ggplot(aes(true_param, est_mean, color = Z)) +
+#   geom_point(alpha = 0.2) +
+#   geom_smooth(method = lm, se = FALSE) +
+#   geom_abline(intercept = 0, slope = 1, color="red",
+#               linetype="dashed", size=1) +
+#   facet_grid(samplesize+nitem ~  lvmodel)
+#
+#
+# res %>%
+#   filter(str_detect(par_name, "lambda")) %>%
+#   mutate(par_name = "lambda") %>%
+#   separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+#   ggplot(aes(true_param, est_mean)) +
+#   geom_point(alpha = 0.5) +
+#   geom_abline(intercept = 0, slope = 1, color="red",
+#               linetype="dashed", size=1) +
+#   facet_grid(samplesize+nitem ~  lvmodel)
+#
+# res %>%
+#   filter(str_detect(par_name, "tau")) %>%
+#   mutate(par_name = "tau") %>%
+#   separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+#   ggplot(aes(true_param, est_mean)) +
+#   geom_point(alpha = 0.5) +
+#   geom_abline(intercept = 0, slope = 1, color="red",
+#               linetype="dashed", size=1) +
+#   facet_grid(samplesize+nitem ~  lvmodel)
+#
+# res %>%
+#   filter(!str_detect(par_name, "tau|lambda|eta")) %>%
+#   select(par_name, err, cond) %>%
 #   spread("par_name","err") %>%
-#   mutate(cond = condition)
+#   separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+#   filter(lvmodel == "grm", samplesize == 1000, nitem == 100) %>%
+#   ggplot(aes(x = .panel_x, y = .panel_y)) +
+#   geom_point() +
+#   geom_smooth(method = lm, se = F, alpha = 0.4) +
+#   # ggforce::geom_autodensity() +
+#   # facet_matrix(vars(everything()))
+#   # ggforce::facet_matrix(vars(b00, b0, b11, a11, bu11, bu12, by1, by2),
+#   #                       grid.y.diag = FALSE)
+#   ggforce::facet_matrix(vars(bu11, bu12), vars(b11, a11))
 #
 #
-# # plotting ----------------------------------------------------------------
-# theme_set(theme_bw(base_size = 16))
-#
-# eta_df %>%
-#   mutate(Z = rep(c("trt","cntl"), each = nrow(eta_df)/2)) %>%
-#   ggplot() +
-#   geom_point(aes(x = true_eta, y = est_mean, color = Z)) +
-#   geom_smooth(aes(x = true_eta, y = est_mean, color = Z),
-#               method = lm, se = FALSE) +
-#   geom_abline(intercept = 0, slope = 1, color="red",
-#               linetype="dashed", size=1)
-#
-# lambda_df %>%
-#   ggplot() +
-#   geom_point(aes(x = true_lam, y = est_mean)) +
-#   geom_abline(intercept = 0, slope = 1, color="red",
-#               linetype="dashed", size=1)
-#
-# tau_df %>%
-#   ggplot() +
-#   geom_point(aes(x = true_tau, y = est_mean)) +
-#   geom_abline(intercept = 0, slope = 1, color="red",
-#               linetype="dashed", size=1)
+# ggplot(pca_on_stations, aes(x = .panel_x, y = .panel_y)) +
+#   geom_point(alpha = 0.2, shape = 16, size = 0.5) +
+#   facet_matrix(vars(everything()))
+# geom_autodensity()
+# facet_matrix(vars(everything()), layer.diag = 2, layer.upper = 3,
+#              grid.y.diag = FALSE)
 #
 #
-# library(GGally)
-# g <-
-#   struct_raw %>%
-#   sample_frac(size = 0.5) %>%
-#   ggpairs(., columns = 2:ncol(struct_raw),
-#         ggplot2::aes(colour=as.character(chain), alpha = 0.4))
 #
-# # svg("myPlotMatrix.svg", height = 7, width = 7)
-# # print(g)
-# # dev.off()
-
-
-res_struct <- readRDS("F:/FLPS/results/cleaned/res_struct.rds")
-res <- readRDS("F:/FLPS/results/cleaned/res_extracted_cleaned_complete.rds")
-
-res <- res %>%
-  mutate(rerr = err / true_param)
-
-res_struct <- res %>%
-  filter(str_detect(par_name, "^a|^b")) %>%
-  select(par_name, err, cond) %>%
-  spread("par_name","err")
-
+# # saveRDS(res_list, "results/cleaned/0317_res_extracted.rds")
+#
+# # gc()
+#
+# # struct_df %>%
+# #   mutate(err = (est_mean - true_struc)) %>%
+# #   select(par_name, err) %>%
+# #   spread("par_name","err") %>%
+# #   mutate(cond = condition)
+# #
+# #
+# # # plotting ----------------------------------------------------------------
+# # theme_set(theme_bw(base_size = 16))
+# #
+# # eta_df %>%
+# #   mutate(Z = rep(c("trt","cntl"), each = nrow(eta_df)/2)) %>%
+# #   ggplot() +
+# #   geom_point(aes(x = true_eta, y = est_mean, color = Z)) +
+# #   geom_smooth(aes(x = true_eta, y = est_mean, color = Z),
+# #               method = lm, se = FALSE) +
+# #   geom_abline(intercept = 0, slope = 1, color="red",
+# #               linetype="dashed", size=1)
+# #
+# # lambda_df %>%
+# #   ggplot() +
+# #   geom_point(aes(x = true_lam, y = est_mean)) +
+# #   geom_abline(intercept = 0, slope = 1, color="red",
+# #               linetype="dashed", size=1)
+# #
+# # tau_df %>%
+# #   ggplot() +
+# #   geom_point(aes(x = true_tau, y = est_mean)) +
+# #   geom_abline(intercept = 0, slope = 1, color="red",
+# #               linetype="dashed", size=1)
+# #
+# #
+# # library(GGally)
+# # g <-
+# #   struct_raw %>%
+# #   sample_frac(size = 0.5) %>%
+# #   ggpairs(., columns = 2:ncol(struct_raw),
+# #         ggplot2::aes(colour=as.character(chain), alpha = 0.4))
+# #
+# # # svg("myPlotMatrix.svg", height = 7, width = 7)
+# # # print(g)
+# # # dev.off()
+#
+#
+# res_struct <- readRDS("F:/FLPS/results/cleaned/res_struct.rds")
+# res <- readRDS("F:/FLPS/results/cleaned/res_extracted_cleaned_complete.rds")
+#
+# res <- res %>%
+#   mutate(rerr = err / true_param)
+#
 # res_struct <- res %>%
 #   filter(str_detect(par_name, "^a|^b")) %>%
-#   select(par_name, rerr, cond) %>%
-#   spread("par_name","rerr")
-
-eta <- res %>%
-  filter(str_detect(par_name, "eta")) %>%
-  mutate(par_name = "eta") %>%
-  group_by(cond) %>%
-  summarise(eta = mean(err), reta = mean(rerr))
-
-# eta %>% filter(str_detect(cond, "rasch"))
-
-lambda <- res %>%
-  filter(str_detect(par_name, "lambda")) %>%
-  mutate(par_name = "lambda") %>%
-  group_by(cond) %>%
-  summarise(lambda = mean(err), rlambda = mean(rerr))
-
-lambda[str_detect(lambda$cond, "rasch"), "lambda"] <- runif(sum(str_detect(lambda$cond, "rasch")), -0.05, 0.05)
-lambda[str_detect(lambda$cond, "rasch"), "rlambda"] <- runif(sum(str_detect(lambda$cond, "rasch")), -0.05, 0.05)
-
-# lambda %>% filter(str_detect(cond, "rasch"))
-
-tau <- res %>%
-  filter(str_detect(par_name, "tau")) %>%
-  mutate(par_name = "tau")  %>%
-  group_by(cond) %>%
-  summarise(tau = mean(err), rtau = mean(rerr))
-
-# tau %>% filter(str_detect(cond, "rasch"))
-
-res_struct %>%
-  left_join(eta %>% select(cond, eta), by = "cond") %>%
-  left_join(lambda %>% select(cond, eta), by = "cond") %>%
-  left_join(tau %>% select(cond, eta), by = "cond") %>%
-  gather("par_name","value",-cond) %>%
-  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
-  mutate(
-    samplesize = factor(samplesize, levels = c("500","1000")),
-    nitem = factor(nitem, levels = c("50","100","200")),
-    lvmodel = factor(lvmodel, levels = c("rasch","2pl","gpcm","grm"))
-  ) %>%
-  filter(!par_name %in% c("b0","b00", "by1","by2")) %>%
-  # filter(!str_detect(par_name,"lambda|tau|eta")) %>%
-  filter(!lvmodel %in% c("rasch")) %>%
-  filter(samplesize %in% c("1000")) %>%
-  ggplot(aes(x = par_name, y = value)) +
-  geom_violin(fill = "skyblue", alpha = 0.5, color = NA) +
-  geom_sina() +
-  geom_hline(yintercept = 0) +
-  facet_grid(nitem ~  lvmodel)
-
-
-res_struct %>%
-  left_join(eta, by = "cond") %>%
-  left_join(lambda, by = "cond") %>%
-  left_join(tau, by = "cond") %>%
-  gather("par_name","value",-cond) %>%
-  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
-  mutate(
-    samplesize = factor(samplesize, levels = c("500","1000")),
-    nitem = factor(nitem, levels = c("50","100","200")),
-    lvmodel = factor(lvmodel, levels = c("rasch","2pl","gpcm","grm"))
-  ) %>%
-  filter(!par_name %in% c("b0","b00", "by1","by2","tau")) %>%
-  filter(!lvmodel %in% c("rasch")) %>%
-  filter(nitem %in% c("100")) %>%
-  ggplot(aes(x = par_name, y = value)) +
-  geom_violin(fill = "skyblue", alpha = 0.5, color = NA) +
-  geom_sina() +
-  geom_hline(yintercept = 0) +
-  facet_grid(samplesize ~  lvmodel)
-
-
+#   select(par_name, err, cond) %>%
+#   spread("par_name","err")
+#
+# # res_struct <- res %>%
+# #   filter(str_detect(par_name, "^a|^b")) %>%
+# #   select(par_name, rerr, cond) %>%
+# #   spread("par_name","rerr")
+#
+# eta <- res %>%
+#   filter(str_detect(par_name, "eta")) %>%
+#   mutate(par_name = "eta") %>%
+#   group_by(cond) %>%
+#   summarise(eta = mean(err), reta = mean(rerr))
+#
+# # eta %>% filter(str_detect(cond, "rasch"))
+#
+# lambda <- res %>%
+#   filter(str_detect(par_name, "lambda")) %>%
+#   mutate(par_name = "lambda") %>%
+#   group_by(cond) %>%
+#   summarise(lambda = mean(err), rlambda = mean(rerr))
+#
+# lambda[str_detect(lambda$cond, "rasch"), "lambda"] <- runif(sum(str_detect(lambda$cond, "rasch")), -0.05, 0.05)
+# lambda[str_detect(lambda$cond, "rasch"), "rlambda"] <- runif(sum(str_detect(lambda$cond, "rasch")), -0.05, 0.05)
+#
+# # lambda %>% filter(str_detect(cond, "rasch"))
+#
+# tau <- res %>%
+#   filter(str_detect(par_name, "tau")) %>%
+#   mutate(par_name = "tau")  %>%
+#   group_by(cond) %>%
+#   summarise(tau = mean(err), rtau = mean(rerr))
+#
+# # tau %>% filter(str_detect(cond, "rasch"))
+#
+# res_struct %>%
+#   left_join(eta %>% select(cond, eta), by = "cond") %>%
+#   left_join(lambda %>% select(cond, eta), by = "cond") %>%
+#   left_join(tau %>% select(cond, eta), by = "cond") %>%
+#   gather("par_name","value",-cond) %>%
+#   separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+#   mutate(
+#     samplesize = factor(samplesize, levels = c("500","1000")),
+#     nitem = factor(nitem, levels = c("50","100","200")),
+#     lvmodel = factor(lvmodel, levels = c("rasch","2pl","gpcm","grm"))
+#   ) %>%
+#   filter(!par_name %in% c("b0","b00", "by1","by2")) %>%
+#   # filter(!str_detect(par_name,"lambda|tau|eta")) %>%
+#   filter(!lvmodel %in% c("rasch")) %>%
+#   filter(samplesize %in% c("1000")) %>%
+#   ggplot(aes(x = par_name, y = value)) +
+#   geom_violin(fill = "skyblue", alpha = 0.5, color = NA) +
+#   geom_sina() +
+#   geom_hline(yintercept = 0) +
+#   facet_grid(nitem ~  lvmodel)
+#
+#
+# res_struct %>%
+#   left_join(eta, by = "cond") %>%
+#   left_join(lambda, by = "cond") %>%
+#   left_join(tau, by = "cond") %>%
+#   gather("par_name","value",-cond) %>%
+#   separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+#   mutate(
+#     samplesize = factor(samplesize, levels = c("500","1000")),
+#     nitem = factor(nitem, levels = c("50","100","200")),
+#     lvmodel = factor(lvmodel, levels = c("rasch","2pl","gpcm","grm"))
+#   ) %>%
+#   filter(!par_name %in% c("b0","b00", "by1","by2","tau")) %>%
+#   filter(!lvmodel %in% c("rasch")) %>%
+#   filter(nitem %in% c("100")) %>%
+#   ggplot(aes(x = par_name, y = value)) +
+#   geom_violin(fill = "skyblue", alpha = 0.5, color = NA) +
+#   geom_sina() +
+#   geom_hline(yintercept = 0) +
+#   facet_grid(samplesize ~  lvmodel)
+#
+#

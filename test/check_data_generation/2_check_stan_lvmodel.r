@@ -4,6 +4,9 @@ library(foreach)
 library(tidyverse)
 library(doParallel)
 # library(Rmpi)
+
+setwd("C:/Users/lee/Box/git/FLPS")
+
 source("test/check_data_generation/z_extracting_function.r")
 for(i in fs::dir_ls("R", regexp = "r$")) source(i);rm(i)
 source_funs <- ls()
@@ -13,7 +16,8 @@ stancode <- list.files("test/check_data_generation/test_stancode", full.names = 
 lv_stan_filename <- stancode[-grep("univ", stancode)]
 
 # 2PL ---------------------------------------------------------------------
-for(i in 11:20) {
+for(i in 1:10) {
+  print(i)
   sim_condition <- list(
     N       = 1000, # sample size
     R2Y     = 0.3,   # 0.1 0.2 0.5
@@ -29,10 +33,12 @@ for(i in 11:20) {
     lvmodel = "2pl"
   )
 
-  sdat <- do.call("test_makeDat", sim_condition)
+  sdat <- do.call("makeDat", sim_condition)
+
+  IRT_code <- lv_stan_filename[grep("IRT", lv_stan_filename)]
 
   fit <- rstan::stan(
-    file   = lv_stan_filename[grep("IRT", lv_stan_filename)],
+    file   = IRT_code[grep("unif", IRT_code)],
     data   = sdat$stan_dt,
     chain  = 1,
     cores  = 1,
@@ -41,8 +47,35 @@ for(i in 11:20) {
   )
 
   o <- list(fit=fit, sdat=sdat)
+  saveRDS(o, file.path("test/check_data_generation/results",paste0("unifztwo_2pl_", i, ".rds")))
 
-  saveRDS(o, file.path("test/check_data_generation/results",paste0("logn_2pl_", i, ".rds")))
+  rm(fit)
+  #
+  # fit <- rstan::stan(
+  #   file   = IRT_code[grep("normal", IRT_code)],
+  #   data   = sdat$stan_dt,
+  #   chain  = 1,
+  #   cores  = 1,
+  #   iter   = 5000,
+  #   warmup = 2000
+  # )
+  # o <- list(fit=fit, sdat=sdat)
+  # saveRDS(o, file.path("test/check_data_generation/results",paste0("normalztwo_2pl_", i, ".rds")))
+  # rm(fit)
+
+  # fit <- rstan::stan(
+  #   file   = IRT_code[grep("logn", IRT_code)],
+  #   data   = sdat$stan_dt,
+  #   chain  = 1,
+  #   cores  = 1,
+  #   iter   = 5000,
+  #   warmup = 2000
+  # )
+  # o <- list(fit=fit, sdat=sdat)
+  # saveRDS(o, file.path("test/check_data_generation/results",paste0("lognztwo_2pl_", i, ".rds")))
+  #
+  # rm(fit)
+
   gc()
 }
 
@@ -62,30 +95,37 @@ source("test/check_data_generation/z_extracting_function.r")
 
 files <- fs::dir_ls("test/check_data_generation/results")
 
+# files <- str_subset(files, "comple")
 # files <- files[grep("_2[0-9]|_3[0-9]|_4[0-9]\\.", files)]
 
 results <- lapply(1:length(files), function(x) {
 
-  xx <- str_split(files[x], "/", simplify = T)[1,4]
-  xx <- str_split(xx, "_", simplify = T)[1,1]
+  aaa <- str_split(files[x], "/", simplify = T)[,4]
+  aaa <- str_split(aaa, ".rds", simplify = T)[,1]
 
   a1 <- readRDS(files[x])
-  a2 <- extract_pars(fit = a1$fit, sdat = a1$sdat)
-  a2$condition <- xx
-  a2
-}
-)
+  a1 <- extract_pars(fit = a1$fit, sdat = a1$sdat, str_detect(files[x], "two"))
+
+  a1 <- append(aaa, a1)
+  a1
+})
 saveRDS(results, "test/check_data_generation/results.rds")
 
-condition <- map_chr(results,  ~ .x$condition, .id = "rep")
+results <- readRDS("test/check_data_generation/results.rds")
+results00 <- readRDS("test/check_data_generation/results000000.rds")
+
+saveRDS(c(results, results00), "test/check_data_generation/results1.rds")
+
+
+cond_df <- map_chr(results,  ~ .x[[1]]) %>% tibble(.) %>%
+  mutate(rep = row_number()) %>%
+  mutate(rep = as.character(rep)) %>%
+  set_names(c("condition", "rep"))
 
 eta_df <- map_df(results,  ~ .x$eta_df, .id = "rep")
-
 sum_eta <- eta_df %>%
-
-  mutate(condition = rep(c("logn","normal"), each = nrow(eta_df)/2) ) %>%
-
-  group_by(rep, condition) %>%
+  left_join(cond_df, by ="rep") %>%
+  group_by(condition) %>%
   summarise(
     true_mean = mean(true_eta), est_mean = mean(est_mean), err = est_mean - true_mean) %>%
   mutate(par_name = "eta")
@@ -101,35 +141,51 @@ sum_eta <- eta_df %>%
 
 lambda_df <- map_df(results,  ~ .x$lambda_df, .id = "rep")
 sum_lam <- lambda_df %>%
-
-  mutate(condition = rep(c("logn","normal"), each = nrow(lambda_df)/2) ) %>%
-
-  group_by(rep, condition) %>%
+  left_join(cond_df, by ="rep") %>%
+  group_by(condition) %>%
   summarise(
     true_mean = mean(true_lam), est_mean = mean(est_mean), err = est_mean - true_mean) %>%
   mutate(par_name = "lambda")
 
 tau_df <- map_df(results,  ~ .x$tau_df, .id = "rep")
 sum_tau <- tau_df %>%
-  mutate(condition = rep(c("logn","normal"), each = nrow(tau_df)/2) ) %>%
-  group_by(rep, condition) %>%
+  left_join(cond_df, by ="rep") %>%
+  group_by(condition) %>%
   summarise(
     true_mean = mean(true_tau), est_mean = mean(est_mean), err = est_mean - true_mean) %>%
   mutate(par_name = "tau")
 
 struct_df <- map_df(results,  ~ .x$struct_df, .id = "rep")
-struct_df <- struct_df %>%
-  mutate(condition = rep(c("logn","normal"), each = nrow(struct_df)/2) ) %>%
-  mutate(err = est_mean - true_struc) %>%
-  select(rep, true_mean = true_struc, est_mean, err, par_name, condition) %>%
-  bind_rows(sum_eta, sum_lam, sum_tau)
-saveRDS(struct_df, "report/rds/0330_simple_IRT.rds")
 
 struct_df %>%
-  plotting(.) +
-  facet_grid(.~condition) +
-  scale_y_continuous(limits = c(-0.5, 0.5), n.breaks = 20) +
-  theme_bw(base_size = 16)
+  left_join(., cond_df, by = c("rep")) %>%
+  mutate(err = est_mean - true_struc) %>%
+  select(condition, true_mean = true_struc, est_mean, err, par_name) %>%
+  bind_rows(sum_eta, sum_lam, sum_tau) %>%
+
+  separate(condition, c("condition", "a"), sep = "_2pl_") %>%
+  select(-a, -rep) %>%
+
+  mutate() %>%
+
+  # plotting(.) +
+  ggplot(aes(x = par_name, y = err)) +
+  geom_violin(
+    trim=F,
+    fill = "skyblue", alpha = 0.5, color = NA) +
+  ggforce::geom_sina(size = 2) +
+  geom_hline(yintercept = 0) +
+  stat_summary(
+    geom = "point",
+    fun = "mean",
+    col = "black",
+    size = 3,
+    shape = 24,
+    alpha = 0.8,
+    fill = "red"
+  ) +
+  facet_wrap(. ~ condition) +
+  scale_y_continuous(limits = c(-1, 1), n.breaks = 10)
 
 
 
