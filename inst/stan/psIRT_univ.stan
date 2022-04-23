@@ -94,7 +94,7 @@ model{
       for(j in 1:nfac) {
         // lambda_free[i, j] ~ normal(lambda_prior[i, j], 1);
 		// matched prior
-		lambda_free[i, j] ~ lognormal(0.1, 0.3);
+		lambda_free[i, j] ~ lognormal(0, 1);
         // difuse prior		
 		// lambda_free[i, j] ~ uniform(0, 10);
       };
