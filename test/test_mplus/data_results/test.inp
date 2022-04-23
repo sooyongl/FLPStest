@@ -1,22 +1,55 @@
 data: file is test_data.csv;
 variable:
-  names are Y Z X1 X2 X3 X4 item1-item20;
-  usevariable are X1 X2 X3 X4 item1-item20;
-  categorical = item1-item20;
+  names are Y Z X1 X2 item1-item30;
+  usevariable are X1 X2 Z Y item1-item30;
+  categorical = item1-item30;
 
   missing = all (-99);
 
-analysis: !type = random;
-   estimator = ML;
+analysis:
+   type = random;
+   !estimator = ML;
 
 model:
 
-   F1 by item1-item20;
+   F1 by item1-item30 (aa1-aa30);
 
-   [item1$1-item20$1];
+   [item1$1-item30$1] (bb1-bb30);
 
-   F1 on X1 X2 X3 X4;
-   !Y on Z X1 X2 F1;
-   !F1Z | F1 xwith Z;
-   !Y on F1Z;
+   F1 on X1 X2;
+   Y on Z X1 X2 F1;
+   F1Z | F1 xwith Z;
+   Y on F1Z;
 
+MODEL CONSTRAINT:
+  aa2 < 5;
+  aa3 < 5;
+  aa4 < 5;
+  aa5 < 5;
+  aa6 < 5;
+  aa7 < 5;
+  aa8 < 5;
+  aa9 < 5;
+  aa10 < 5;
+  aa11 < 5;
+  aa12 < 5;
+  aa13 < 5;
+  aa14 < 5;
+  aa15 < 5;
+  aa16 < 5;
+  aa17 < 5;
+  aa18 < 5;
+  aa19 < 5;
+  aa20 < 5;
+  aa21 < 5;
+  aa22 < 5;
+  aa23 < 5;
+  aa24 < 5;
+  aa25 < 5;
+  aa26 < 5;
+  aa27 < 5;
+  aa28 < 5;
+  aa29 < 5;
+  aa30 < 5;
+ 
+  

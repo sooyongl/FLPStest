@@ -44,13 +44,14 @@ for(x in 1:length(files)) {
 data: file is test_data.csv;
 variable:
   names are Y Z {xname} item1-item20;
-  usevariable are {xname} item1-item20;
+  usevariable are {xname} Z Y item1-item20;
   categorical = item1-item20;
 
   missing = all (-99);
 
-analysis: !type = random;
-   estimator = ML;
+analysis:
+   type = random;
+   !estimator = ML;
 
 model:
 
@@ -59,9 +60,9 @@ model:
    [item1$1-item20$1];
 
    F1 on {xname};
-   !Y on Z X1 X2 F1;
-   !F1Z | F1 xwith Z;
-   !Y on F1Z;
+   Y on Z {xname} F1;
+   F1Z | F1 xwith Z;
+   Y on F1Z;
 
 ")
 
@@ -73,6 +74,12 @@ model:
 
 }
 
+###################
+###################
+###################
+###################
+###################
+###################
 outfiles <- fs::dir_ls("test/test_mplus/data_results", regexp = "out$")
 
 res <- vector("list", length(outfiles))
@@ -108,12 +115,18 @@ for(x in 1:length(outfiles)) {
   X <- sdat$stan_dt$X
   ncov <- ncol(X)
 
+  b0  = sdat$tau0
+  b11 = sdat$tau1
+  a11 = sdat$omega
+
   if(ncov==2) {
-    true_param <- c(-1, 0.5)
-    names(true_param) <- c("bu11","bu12")
+
+    true_param <- c(-1, 0.5, a11, b11, b0, 1, 0.5)
+    names(true_param) <- c("bu11","bu12","a11", "b11", "b0", "by1", "by2")
   } else {
-    true_param <- c(-1, 0.5, 1.0, -0.5)
-    names(true_param) <- c("bu11","bu12","bu13","bu14")
+    true_param <- c(-1, 0.5, 1.0, -0.5, a11, b11, b0, 1, 0.5, -1,-0.5)
+    names(true_param) <- c("bu11","bu12","bu13","bu14",
+                           'a11', "b11", "b0", "by1", "by2", "by3", "by4")
   }
 
   coeffs <- coeffs %>% mutate(true_param=true_param)
@@ -135,14 +148,20 @@ for(x in 1:length(outfiles)) {
 }
 
 res <- bind_rows(res)
-saveRDS(res, "test/test_mplus/mplus_res.rds")
+saveRDS(res, "test/test_mplus/0413_mplus_res.rds")
 
 
-res <- readRDS("test/test_mplus/mplus_res.rds")
+
+####################################################################
+res <- readRDS("test/test_mplus/0413_mplus_res.rds")
 
 res %>%
-  filter(str_detect(condition, "comp")) %>%
+  # filter(str_detect(condition, "logn")) %>%
   mutate(
+    condition_1 = case_when(
+      str_detect(condition, "compl") ~ "complete",
+      TRUE ~ "missing"
+    ),
     paramHeader = case_when(
       str_detect(paramHeader, "F1.BY") ~ "lambda",
       str_detect(paramHeader, "Thresholds") ~ "tau",
@@ -152,7 +171,8 @@ res %>%
       case_when(
         str_detect(param, "ITEM[1-9]$|ITEM[10-20]") ~ paramHeader,
         str_detect(param, "ITEM[1-9]\\$1|ITEM[10-20]\\$1") ~ paramHeader,
-        TRUE ~ param
+
+        TRUE ~ paste0(paramHeader,param)
       )
 
 
@@ -160,6 +180,8 @@ res %>%
 
   separate(condition, c("condition", "a"), sep = "_2pl_") %>%
   select(-a) %>%
+
+  filter(!str_detect(param, "Y\\.ONX")) %>%
 
   rename("par_name" = "param") %>%
 
@@ -169,7 +191,10 @@ res %>%
   geom_violin(
     trim=F,
     fill = "skyblue", alpha = 0.5, color = NA) +
-  ggforce::geom_sina(size = 2, aes(alpha = par_name)) +
+  ggforce::geom_sina(size = 2,
+                     # alpha = 0.5,
+                     aes(alpha = par_name)
+                     ) +
   geom_hline(yintercept = 0) +
   stat_summary(
     geom = "point",
@@ -180,7 +205,9 @@ res %>%
     alpha = 0.8,
     fill = "red"
   ) +
-  facet_wrap(. ~ condition) +
+  facet_wrap(. ~ condition_1) +
   scale_y_continuous(n.breaks = 10) +
-  scale_alpha_manual(values = c(0.1, 0.1, 1, 1,1, 1))
+  scale_alpha_manual(values = c(.1, .1, .1, .1, .01, .01,
+                                .1, .1, .1, .1, .1, .1, .1))
+
 

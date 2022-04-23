@@ -1,0 +1,27 @@
+data: file is test_data.csv;
+variable:
+  names are Y Z X1 X2 X3 X4 item1-item20;
+  usevariable are X1 X2 X3 X4 item1-item20;
+  categorical = item1-item20;
+
+  missing = all (-99);
+
+analysis: 
+  !type = random;
+   estimator = BAYES;
+   process = 2;
+   fbiter = 5000;
+
+model:
+
+   F1 by item1-item20 (a1-a20);
+
+   [item1$1-item20$1];
+
+   F1 on X1 X2 X3 X4;
+   !Y on Z X1 X2 F1;
+   !F1Z | F1 xwith Z;
+   !Y on F1Z;
+
+model priors:
+   a2-a20 ~ N(0, 1);

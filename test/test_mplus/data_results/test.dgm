@@ -1,0 +1,108 @@
+VERSION 1.1.0
+INPUT
+DATA:
+ file is test_data.csv;
+VARIABLE:
+  names are Y Z X1 X2 item1-item30;
+  usevariable are X1 X2 Z Y item1-item30;
+  categorical = item1-item30;
+  missing = all (-99);
+ANALYSIS:
+   type = random;
+MODEL:
+   F1 by item1-item30 (aa1-aa30);
+   [item1$1-item30$1] (bb1-bb30);
+   F1 on X1 X2;
+   Y on Z X1 X2 F1;
+   F1Z | F1 xwith Z;
+   Y on F1Z;
+INPUT_END
+2
+0
+0
+0
+MLR
+1
+GENERAL
+0
+31
+2
+3
+item1 item2 item3 item4 item5 item6 item7 item8 item9 item10 item11 item12 item13 item14 item15 item16 item17 item18 item19 item20 item21 item22 item23 item24 item25 item26 item27 item28 item29 item30 y f1 f1z x1 x2 z
+3
+-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 2 1 0 0 0 0
+0
+1
+f1
+item1 item2 item3 item4 item5 item6 item7 item8 item9 item10 item11 item12 item13 item14 item15 item16 item17 item18 item19 item20 item21 item22 item23 item24 item25 item26 item27 item28 item29 item30
+1 1 f1 item1        1.000        0.000
+1 1 f1 item2        2.444        1.882
+91 1 f1 item2 aa2
+1 1 f1 item3        1.881        1.189
+91 1 f1 item3 aa3
+1 1 f1 item4        2.711        1.360
+91 1 f1 item4 aa4
+1 1 f1 item5        5.000        0.000
+91 1 f1 item5 aa5
+1 1 f1 item6        3.154        1.846
+91 1 f1 item6 aa6
+1 1 f1 item7        1.082        0.617
+91 1 f1 item7 aa7
+1 1 f1 item8        5.000        0.000
+91 1 f1 item8 aa8
+1 1 f1 item9        2.398        1.604
+91 1 f1 item9 aa9
+1 1 f1 item10        1.726        1.159
+91 1 f1 item10 aa10
+1 1 f1 item11        1.899        1.533
+91 1 f1 item11 aa11
+1 1 f1 item12        2.117        1.356
+91 1 f1 item12 aa12
+1 1 f1 item13        0.632        0.572
+91 1 f1 item13 aa13
+1 1 f1 item14        1.075        0.706
+91 1 f1 item14 aa14
+1 1 f1 item15        5.000        0.000
+91 1 f1 item15 aa15
+1 1 f1 item16        1.637        1.022
+91 1 f1 item16 aa16
+1 1 f1 item17        5.000        0.000
+91 1 f1 item17 aa17
+1 1 f1 item18        1.790        0.817
+91 1 f1 item18 aa18
+1 1 f1 item19        4.991        0.000
+91 1 f1 item19 aa19
+1 1 f1 item20        3.048        2.646
+91 1 f1 item20 aa20
+1 1 f1 item21        4.972        0.000
+91 1 f1 item21 aa21
+1 1 f1 item22        4.991        0.000
+91 1 f1 item22 aa22
+1 1 f1 item23        1.874        0.919
+91 1 f1 item23 aa23
+1 1 f1 item24        5.000        0.000
+91 1 f1 item24 aa24
+1 1 f1 item25        1.769        0.730
+91 1 f1 item25 aa25
+1 1 f1 item26        2.731        1.207
+91 1 f1 item26 aa26
+1 1 f1 item27        5.000        0.000
+91 1 f1 item27 aa27
+1 1 f1 item28        2.967        1.736
+91 1 f1 item28 aa28
+1 1 f1 item29        2.352        1.080
+91 1 f1 item29 aa29
+1 1 f1 item30        5.000        0.000
+91 1 f1 item30 aa30
+1 1 x1 f1       -0.545        0.197
+1 1 x2 f1        0.319        0.123
+1 1 z y        0.137        0.139
+1 1 x1 y        1.094        0.115
+1 1 x2 y        0.630        0.076
+1 1 f1 y        0.386        0.227
+1 1 f1z y       -0.312        0.257
+4 1 y        0.426        0.064
+4 1 f1        0.420        0.306
+2 1 x1 x2      999.000      999.000
+2 1 x1 z      999.000      999.000
+2 1 x2 z      999.000      999.000
