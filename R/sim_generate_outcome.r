@@ -36,6 +36,12 @@ genOutcome.default <- function(Data) {
   x2    <- xdata[,"x2"]
   Z     <- rep(c(1,0), each=N/2)
 
+  sdy = sqrt(2)
+
+  omega = omega* (sdy / sd(eta))
+  tau0 = tau0* (sdy / sd(Z))
+  tau1 = tau1* (sdy / sd(Z*eta))
+
   n.eta <- ifelse(!is.null(dim(eta)),  ncol(eta), 1)
 
   Y <-
@@ -49,7 +55,8 @@ genOutcome.default <- function(Data) {
     Y <- Y + 0.5*x1sq
   }
 
-  unex_var <- Y.R2/(1 - Y.R2)*var(Y)
+  # unex_var <- Y.R2/(1 - Y.R2)*var(Y)
+  unex_var <- Y.R2/(1 - Y.R2)*2
   Y <- Y + rnorm(N, 0, sqrt(unex_var))
 
   if(ydist == "t") {
@@ -62,6 +69,10 @@ genOutcome.default <- function(Data) {
 
     Y <- Y + rq(N, 3)
   }
+
+  Data$omega <- omega
+  Data$tau0 <- tau0
+  Data$tau1 <- tau1
 
   Data$stan_dt <- list(
     # data info
