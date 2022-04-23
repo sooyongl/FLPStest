@@ -22,6 +22,7 @@ source_funs <- ls()
 
 rds_name <- list.files("F:/FLPS/results", full.names = T, pattern = "rds")
 
+rds_name <- str_subset(rds_name, "normaltight")
 # rds_name <- list.files("results", full.names = T)
 res_list <- foreach(
   irds = 1:length(rds_name)#,
@@ -397,6 +398,8 @@ res_list <- foreach(
 extracted <- list.files("F:/FLPS/results/cleaned",
                         full.names = T, pattern = "extracted")
 
+extracted <- str_subset(extracted, "normaltight")
+
 res <- foreach(
   irds = 1:length(extracted), .combine = 'rbind') %do% {
 
@@ -415,7 +418,13 @@ res <- foreach(
       mutate(err = (est_mean - true_param)) %>%
       mutate(cond = res$condition)
   }
-saveRDS(res, "results/cleaned/0406_res_extracted_cleaned.rds")
+# saveRDS(res, "results/cleaned/0420_res_extracted_cleaned.rds")
+
+res0 <- readRDS("results/cleaned/0420_res_extracted_cleaned.rds")
+#
+saveRDS(bind_rows(res0, res), "results/cleaned/0420_res_extracted_cleaned.rds")
+
+
 
 # res <- readRDS("results/cleaned/0406_res_extracted_cleaned.rds")
 #
