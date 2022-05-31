@@ -1,0 +1,173 @@
+---
+title: "simulation"
+author: ""
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    highlight: py
+    css: "style.css"
+    code_folding: show
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+editor_options:
+  chunk_output_type: console
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  eval = T,
+  echo = F,
+  fig.height = 12,
+  fig.width = 24,
+  out.width = '150%',
+  warning = FALSE,
+  message = F,
+  include = T
+)
+library(rstan); library(tidyverse); library(knitr);library(ggforce)
+
+base_path <- rprojroot::find_rstudio_root_file()
+
+theme_set(theme_bw(base_size = 24))
+
+library(tidyverse)
+library(rstan)
+data_idx <- "0529"
+
+# res_all <- readRDS(paste0(base_path,"/","test/shinydata/", data_idx, "_data.rds"))
+mpart <- readRDS(paste0(base_path,"/","test/shinydata/", data_idx, "_mpart.rds"))
+
+
+a1 <- mpart %>%
+  filter(str_detect(par_name,"lambda") ) %>%
+  # filter(lvmodel != "rasch") %>%
+  separate(cond,
+           c("lvmodel","samplesize","nitem","r2y","r2eta","linearity","outdist","rep"), "_") %>%
+  mutate(
+    overest = err > 0,
+    underest = err < 0,
+    evenest  = err == 0
+  )
+
+mk_hist <- function(p.lvmodel = "2pl", base_size = 24) {
+  a1 %>%
+    filter(err != 0) %>%
+    filter(lvmodel == p.lvmodel) %>%
+    ggplot() +
+    geom_histogram(aes(x = err), fill = "white", color = "black") +
+    geom_vline(xintercept = 0, color = "blue", size = 1.2) +
+    facet_wrap(samplesize ~ nitem, scales = "free") +
+    labs(title = toupper(p.lvmodel)) +
+    theme_bw(base_size = base_size)
+}
+
+mk_density <- function(p.lvmodel = "2pl", base_size = 24) {
+  a1 %>%
+    group_by(lvmodel, samplesize, nitem, rep) %>%
+    summarise(
+      prop_overest = mean(overest),
+      prop_underest = mean(underest)
+    ) %>%
+    filter(lvmodel == "2pl"
+           # samplesize == "1000",
+           # nitem == "100"
+    ) %>%
+    # gather("est", "value", -lvmodel, -samplesize, -nitem, -rep) %>%
+    ggplot(aes(prop_overest)) +
+    # geom_bar(aes(rep, value, fill = "est"), position="stack", stat = "identity")
+    geom_histogram(
+      # binwidth = 30,
+      alpha = 0.5, fill = "blue", color = "black") +
+    geom_density(aes(y=..density.. * 20)) +
+    labs(title = toupper(p.lvmodel), y = "count") +
+    theme_bw(base_size = base_size)
+}
+```
+
+
+
+## Results 1
+
+- Distribution of errors of factor loadings across IRT models
+
+
+### 2PL
+```{r}
+mk_hist("2pl")
+
+```
+
+### GRM
+
+```{r}
+mk_hist("grm")
+```
+
+### GPCM
+```{r}
+mk_hist("gpcm")
+```
+
+
+## Results 2
+
+- Proportions of overestimated factor loadings (Otherwise, underestimated)
+- Proportions were estimated by replications across the conditios.
+- The histogram means the counts across the estimated proportions and IRT models over other simulation conditions.
+
+### 2PL
+```{r}
+mk_density("2pl")
+
+```
+
+### GRM
+
+```{r}
+mk_density("grm")
+```
+
+### GPCM
+```{r}
+mk_density("gpcm")
+```
+
+## Different Priors
+```{r}
+logn_moments <- function(meanlog, sdlog) {
+  m <- exp(meanlog + (1/2)*sdlog^2)
+  s <- exp(meanlog + (1/2)*sdlog^2)*sqrt(exp(sdlog^2) - 1)
+  return(list(mean = m, sd = s))
+}
+
+normm <- hpa::truncatedNormalMoment(1, 0, Inf, 0, 0.5)
+lognm <- logn_moments(0, 5)$mean
+
+# exp(0 + (1/2)*5^2)
+aa <- rlnorm(10000000, 0, 5)
+aa1 <- mean(aa[aa < 20])
+
+lognm1 <- logn_moments(0.1, 0.3)$mean
+```
+
+Distribution of errors of factor loadings across three priors:
+
+- Population mean of factor loading : `r round(lognm1, 3)` from logn(0.1, 0.3)
+
+- Uniform (0, 10)   : mean = 5; (The prior mean is over)
+- Std Normal (0, 1) : mean = `r round(normm,3)`; (The prior mean is under)
+- lognoraml (0, 5)  : mean = `r round(lognm,3)` (with restriction at 20, `r round(aa1,3)`); (The prior mean is over)
+
+```{r}
+a1 %>%
+  filter(err != 0) %>%
+  filter(lvmodel %in% c("2plunif","2plnormal","2pllogn")) %>%
+  mutate(lvmodel = factor(lvmodel, levels = c("2plunif","2plnormal","2pllogn"))) %>% 
+  ggplot() +
+  geom_histogram(aes(x = err), fill = "white", color = "black") +
+  geom_vline(xintercept = 0, color = "blue", size = 1.2) +
+  facet_wrap(. ~ lvmodel, scales = "free")
+```
+
