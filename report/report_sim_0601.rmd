@@ -63,25 +63,31 @@ mk_hist <- function(p.lvmodel = "2pl", base_size = 24) {
     theme_bw(base_size = base_size)
 }
 
-mk_density <- function(p.lvmodel = "2pl", base_size = 24) {
+mk_density <- function(p.lvmodel = "2pl", den = 20, base_size = 24) {
   a1 %>%
     group_by(lvmodel, samplesize, nitem, rep) %>%
     summarise(
       prop_overest = mean(overest),
       prop_underest = mean(underest)
     ) %>%
-    filter(lvmodel == "2pl"
+    filter(lvmodel == p.lvmodel
            # samplesize == "1000",
            # nitem == "100"
     ) %>%
     # gather("est", "value", -lvmodel, -samplesize, -nitem, -rep) %>%
     ggplot(aes(prop_overest)) +
     # geom_bar(aes(rep, value, fill = "est"), position="stack", stat = "identity")
+    # geom_histogram(
+    #   # binwidth = 30,
+    #   alpha = 0.5, fill = "blue", color = "black") +
+    # geom_density(aes(y=..density.. * den)) +
     geom_histogram(
+      aes(y=..count../sum(..count..) * 10),
       # binwidth = 30,
       alpha = 0.5, fill = "blue", color = "black") +
-    geom_density(aes(y=..density.. * 20)) +
-    labs(title = toupper(p.lvmodel), y = "count") +
+    geom_density(aes(y=..scaled..)) +
+    
+    labs(title = toupper(p.lvmodel), y = "prop") +
     theme_bw(base_size = base_size)
 }
 ```
@@ -169,5 +175,31 @@ a1 %>%
   geom_histogram(aes(x = err), fill = "white", color = "black") +
   geom_vline(xintercept = 0, color = "blue", size = 1.2) +
   facet_wrap(. ~ lvmodel, scales = "free")
+```
+
+
+```{r}
+a1 %>%
+  filter(err != 0) %>%
+  filter(lvmodel %in% c("2plunif","2plnormal","2pllogn")) %>%
+  mutate(lvmodel = factor(lvmodel, levels = c("2plunif","2plnormal","2pllogn"))) %>% 
+  group_by(lvmodel, samplesize, nitem, rep) %>%
+  summarise(
+    prop_overest = mean(overest),
+    prop_underest = mean(underest)
+  ) %>%
+  ggplot(aes(prop_overest)) +
+  
+  geom_histogram(
+    aes(y=..count../sum(..count..) * 3),
+    # binwidth = 30,
+    alpha = 0.5, fill = "blue", color = "black") +
+  geom_density(aes(y=..scaled..)) +
+  
+  labs(y = "prop") +
+  facet_wrap(. ~ lvmodel) + 
+  theme_bw(base_size = 16)
+
+
 ```
 
