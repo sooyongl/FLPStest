@@ -64,31 +64,50 @@ mk_hist <- function(p.lvmodel = "2pl", base_size = 24) {
 }
 
 mk_density <- function(p.lvmodel = "2pl", den = 20, base_size = 24) {
+  # a1 %>%
+  #   group_by(lvmodel, samplesize, nitem, rep) %>%
+  #   summarise(
+  #     prop_overest = mean(overest),
+  #     prop_underest = mean(underest)
+  #   ) %>%
+  #   filter(lvmodel == p.lvmodel
+  #          # samplesize == "1000",
+  #          # nitem == "100"
+  #   ) %>%
+  #   # gather("est", "value", -lvmodel, -samplesize, -nitem, -rep) %>%
+  #   ggplot(aes(prop_overest)) +
+  #   # geom_bar(aes(rep, value, fill = "est"), position="stack", stat = "identity")
+  #   # geom_histogram(
+  #   #   # binwidth = 30,
+  #   #   alpha = 0.5, fill = "blue", color = "black") +
+  #   # geom_density(aes(y=..density.. * den)) +
+  #   geom_histogram(
+  #     aes(y=..count../sum(..count..) * 10),
+  #     # binwidth = 30,
+  #     alpha = 0.5, fill = "blue", color = "black") +
+  #   geom_density(aes(y=..scaled..)) +
+  #   
+  #   labs(title = toupper(p.lvmodel), y = "prop") +
+  #   theme_bw(base_size = base_size)
+  
   a1 %>%
-    group_by(lvmodel, samplesize, nitem, rep) %>%
-    summarise(
-      prop_overest = mean(overest),
-      prop_underest = mean(underest)
-    ) %>%
-    filter(lvmodel == p.lvmodel
-           # samplesize == "1000",
-           # nitem == "100"
-    ) %>%
-    # gather("est", "value", -lvmodel, -samplesize, -nitem, -rep) %>%
-    ggplot(aes(prop_overest)) +
-    # geom_bar(aes(rep, value, fill = "est"), position="stack", stat = "identity")
-    # geom_histogram(
-    #   # binwidth = 30,
-    #   alpha = 0.5, fill = "blue", color = "black") +
-    # geom_density(aes(y=..density.. * den)) +
-    geom_histogram(
-      aes(y=..count../sum(..count..) * 10),
-      # binwidth = 30,
-      alpha = 0.5, fill = "blue", color = "black") +
-    geom_density(aes(y=..scaled..)) +
-    
-    labs(title = toupper(p.lvmodel), y = "prop") +
-    theme_bw(base_size = base_size)
+  group_by(lvmodel, samplesize, nitem, rep) %>%
+  summarise(
+    overestimated = mean(err * overest),
+    underestimated = mean(err * underest),
+    prop_overest = mean(overest),
+    prop_underest = mean(underest)
+  ) %>%
+  filter(lvmodel == p.lvmodel) %>%
+  # gather("est", "value", -lvmodel, -samplesize, -nitem, -rep) %>%
+  ggplot(aes(prop_overest)) +
+  geom_histogram(
+    aes(y=..count..),
+    binwidth = 0.05,
+    alpha = 0.5, fill = "blue", color = "black") +
+  labs(title = toupper(p.lvmodel)) +
+  scale_x_continuous(n.breaks = 10) +
+  theme_bw(base_size = base_size)
 }
 ```
 
@@ -191,13 +210,13 @@ a1 %>%
   ggplot(aes(prop_overest)) +
   
   geom_histogram(
-    aes(y=..count../sum(..count..) * 3),
-    # binwidth = 30,
+    aes(y=..count..),
+    binwidth = 0.01,
     alpha = 0.5, fill = "blue", color = "black") +
-  geom_density(aes(y=..scaled..)) +
+  # geom_density(aes(y=..scaled..)) +
   
-  labs(y = "prop") +
-  facet_wrap(. ~ lvmodel) + 
+  # labs(y = "prop") +
+  facet_wrap(. ~ lvmodel, scales = "free_y") + 
   theme_bw(base_size = 16)
 
 
