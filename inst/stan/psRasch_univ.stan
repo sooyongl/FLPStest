@@ -78,12 +78,12 @@ model{
     tau ~ normal(0, 1);
     
 //// PS priors
-  //betaY ~ uniform(-5, 5);
-  //betaU ~ uniform(-5, 5);
-  //a1 ~ uniform(-5, 5);
-  //b1 ~ uniform(-5, 5);
-  //b00 ~ uniform(-5, 5);
-  //b0  ~ uniform(-5, 5);
+  betaY ~ uniform(-5, 5);
+  betaU ~ uniform(-5, 5);
+  a1 ~ uniform(-5, 5);
+  b1 ~ uniform(-5, 5);
+  b00 ~ uniform(-5, 5);
+  b0  ~ uniform(-5, 5);
 
 // Fully Latent Principal Stratification model
     // Latent variable model

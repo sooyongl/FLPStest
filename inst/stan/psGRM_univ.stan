@@ -30,7 +30,7 @@ parameters{
   vector[nstud] eta;
   real<lower=0> sigU;
 
-  matrix<lower=0>[nsec, nfac] lambda_free;
+  matrix<lower=0, upper=10>[nsec, nfac] lambda_free;
   ordered[max_k-1] tau[nsec]; //item category intercept
   
   vector[ncov] betaU;
@@ -47,7 +47,7 @@ parameters{
 
 transformed parameters{
 
- matrix<lower=0>[nsec, nfac] lambda;
+ matrix<lower=0, upper=10>[nsec, nfac] lambda;
 
 // Factor loading constraints
   for(jjj in 1:nfac) {
@@ -88,22 +88,22 @@ model{
 //priors
   // IRT priors
   for(i in 1:nsec) {
-    //for(ii in 1:(max_k-1)) {
-	//    tau[i , ii] ~ uniform(-5, 5);
-    //};
+    for(ii in 1:(max_k-1)) {
+	    tau[i , ii] ~ uniform(-10, 10);
+    };
 	  for(j in 1:nfac) {
       //lambda_free[i,j] ~ normal(lambda_prior[i,j], 1);
-	  lambda_free[i, j] ~ lognormal(0, 1);
+	  lambda_free[i, j] ~ lognormal(0, 5);
     };
   };
 
 // PS priors
-  //betaY ~ uniform(-5, 5);
-  //betaU ~ uniform(-5, 5);
-  //a1 ~ uniform(-5, 5);
-  //b1 ~ uniform(-5, 5);
-  //b00 ~ uniform(-5, 5);
-  //b0  ~ uniform(-5, 5);
+  betaY ~ uniform(-5, 5);
+  betaU ~ uniform(-5, 5);
+  a1 ~ uniform(-5, 5);
+  b1 ~ uniform(-5, 5);
+  b00 ~ uniform(-5, 5);
+  b0  ~ uniform(-5, 5);
 
 // Fully Latent Principal Stratification model
   // Latent variable model
