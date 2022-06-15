@@ -1,10 +1,30 @@
+.column2-left{
+  float: left;
+  width: 45%;
+  text-align: left;
+}
+.column2-right{
+  float: right;
+  width: 45%;
+  text-align: right;
+}
 
 .rsource {
 	background-color:#fff;
     font-size: 100%;
 	font-weight: 500;
+	width: 800px; 
+	max-width:1600px;
 	
 }
+
+.routput {
+	background-color: var(--PaleGrey);
+	font-size: 100%;
+	width: 800px; 
+	max-width:1600px;
+}
+
 
 .routput {
 	background-color:#fff;
