@@ -1,0 +1,14 @@
+name: FLPS_invest
+title: FLPS_invest
+username:
+account: sooyonglee09
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6280673
+bundleId: 5962118
+url: https://sooyonglee09.shinyapps.io/FLPS_invest/
+when: 1653969334.01756
+lastSyncTime: 1653969334.01756
+asMultiple: TRUE
+asStatic: FALSE
+ignoredFiles: shinydata/0420_data.rds|shinydata/0420_mpart.rds|0420_invest.rmd

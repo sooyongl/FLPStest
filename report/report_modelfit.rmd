@@ -21,15 +21,17 @@ options(dplyr.summarise.inform = FALSE)
 
 knitr::opts_chunk$set(
   echo = FALSE,
+  warning = F,
+  message = F,
   fig.height = 10,
   fig.width = 14
 )
-library(kableExtra)
-library(tidyverse)
-library(knitr)
-library(ggpubr); 
-library(ggrepel)
-library(DT)
+suppressPackageStartupMessages(library(kableExtra))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(knitr))
+suppressPackageStartupMessages(library(ggpubr)) 
+suppressPackageStartupMessages(library(ggrepel))
+suppressPackageStartupMessages(library(DT))
 
 root <- rprojroot::find_rstudio_root_file()
 report_path <- file.path(root, "report")
@@ -85,10 +87,10 @@ for(jj in 1:5) {
                x = -Inf, y = Inf, hjust = 0, vjust = 1)
   }
   
-  comb_area <- ggpubr::ggarrange(plotlist=plot_area, ncol = 2, nrow = 3,
-                                 common.legend = T)
-  comb_area <- ggpubr::annotate_figure(comb_area, 
-                                       top = ggpubr::text_grob(cond_name, color = "blue", face = "bold", size = 14))
+  comb_area <- ggarrange(plotlist=plot_area, ncol = 2, nrow = 3,
+                         common.legend = T)
+  comb_area <- annotate_figure(comb_area, 
+                               top = text_grob(cond_name, color = "blue", face = "bold", size = 14))
   
   plot_trace <- res_plot_trace[sn:en]
   for(i in 1:5) {
@@ -96,10 +98,10 @@ for(jj in 1:5) {
       annotate("label", label = res_model_fit[i], 
                x = -Inf, y = Inf, hjust = 0, vjust = 1)
   }
-  comb_trace <- ggpubr::ggarrange(plotlist=plot_trace, ncol = 2, nrow = 3,
+  comb_trace <- ggarrange(plotlist=plot_trace, ncol = 2, nrow = 3,
                                   common.legend = T)
-  comb_trace <- ggpubr::annotate_figure(comb_trace, 
-                                        top = ggpubr::text_grob(cond_name, color = "blue", face = "bold", size = 14))
+  comb_trace <- annotate_figure(comb_trace, 
+                                top = ggpubr::text_grob(cond_name, color = "blue", face = "bold", size = 14))
   
   comb_list[[jj]] <- list(comb_area = comb_area, comb_trace = comb_trace)
 }

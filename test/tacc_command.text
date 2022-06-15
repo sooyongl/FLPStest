@@ -1,5 +1,0 @@
-cd C:\Users\sooyong\Box\git\FLPS
-
-scp filename sooyong@stampede2.tacc.utexas.edu:/work2/07670/sooyong/stampede2/flps
-
-scp sooyong@stampede2.tacc.utexas.edu:/work2/07670/sooyong/stampede2/flps/filename results

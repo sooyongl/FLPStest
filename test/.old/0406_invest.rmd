@@ -1,0 +1,168 @@
+---
+title: "investigation"
+date: '`r Sys.Date()`'
+output: 
+  flexdashboard::flex_dashboard:
+  orientation: rows
+theme: cerulean
+runtime: shiny
+---
+
+```{r global, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(flexdashboard)
+library(tidyverse)
+library(shiny)
+library(knitr)
+
+# base_path <- rprojroot::find_rstudio_root_file()
+# total_res <- readRDS(file.path(base_path, "test/0406_total_res.rds"))
+
+total_res <- readRDS("0406_total_res.rds")
+
+sum_res <- total_res %>%
+  group_by(condition, par_name, rep) %>%
+  summarise(err = mean(err))
+
+theme_set(theme_bw(base_size = 16))
+
+cond_list <- c(
+  "logn_missing_4cov",
+  "normal_missing_4cov",
+  "unif_missing_4cov",
+  
+  "logn_complete_4cov",
+  "normal_complete_4cov",
+  "unif_complete_4cov",
+  
+  "logn_complete_2cov",
+  "normal_complete_2cov",
+  "unif_complete_2cov",
+  
+  "logn_missing_2cov",
+  "normal_missing_2cov",
+  "unif_missing_2cov",
+  "perflogn_missing_2cov",
+  "perflogn_complete_2cov")
+```
+
+
+Overall Parameter estimates {data-icon="fa-signal"}
+===================================== 
+Inputs {.sidebar}
+-------------------------------------------------------------------
+```{r echo=FALSE}
+
+checkboxGroupInput("cond",
+                   label = "Choose conditions",
+                   choices = cond_list, 
+                   selected = cond_list[c(7,10,13, 14)])
+
+```
+
+Row {.tabset}
+-------------------------------------
+- Missing: no data for the control group; 40% items answers missing for the treatment group.
+- logn(0, 0.5); normal(1, 1); unif(0, 5); perflogn(0.1, 0.3)
+
+
+### Parameter estimates 
+
+```{r echo=FALSE}
+renderPlot({
+  
+  s.condition <- input$cond
+  
+  sum_res %>%
+    
+    filter(condition %in% s.condition) %>%
+    
+    ggplot(aes(x = par_name, y = err)) +
+    geom_violin(
+      trim=F,
+      fill = "skyblue", alpha = 0.5, color = NA) +
+    ggforce::geom_sina(size = 2) +
+    geom_hline(yintercept = 0) +
+    stat_summary(
+      geom = "point",
+      fun = "mean",
+      col = "black",
+      size = 3,
+      shape = 24,
+      alpha = 0.8,
+      fill = "red"
+    ) +
+    facet_wrap(. ~ condition) +
+    scale_y_continuous(n.breaks = 10)
+})
+```
+
+
+Individual Parameter estimates {data-icon="fa-signal"}
+===================================== 
+
+Inputs {.sidebar}
+-------------------------------------------------------------------
+```{r echo=FALSE}
+
+radioButtons("cond2",
+                   label = "choose conditions",
+                   choices = cond_list, 
+                   selected = cond_list[1])
+
+```
+
+Row {.tabset}
+-------------------------------------
+
+### individual factor score estimates (eta)
+
+```{r echo = F}
+renderPlot({
+  
+  s.condition <- input$cond2
+  
+  total_res %>%
+    sample_frac(size = 0.6) %>% 
+    filter(par_name == "eta") %>%
+    filter(condition %in% s.condition) %>%
+    ggplot() +
+    geom_point(aes(true_mean, est_mean), alpha = 0.3) +
+    geom_abline(slope = 1, intercept = 0) +
+    facet_wrap(rep~condition)
+})
+```
+
+### factor loading (lambda)
+
+```{r echo = F}
+renderPlot({
+  
+  s.condition <- input$cond2
+  
+  total_res %>%
+    filter(par_name == "lambda") %>%
+    filter(condition %in% s.condition) %>%
+    ggplot() +
+    geom_point(aes(true_mean, est_mean), size = 2,  alpha = 1) +
+    geom_abline(slope = 1, intercept = 0) +
+    facet_wrap(rep~condition)
+})
+```
+
+### intercept (difficulty) (tau)
+
+```{r echo = F}
+renderPlot({
+  
+  s.condition <- input$cond2
+  
+  total_res %>%
+    filter(par_name == "tau") %>%
+    filter(condition %in% s.condition) %>%
+    ggplot() +
+    geom_point(aes(true_mean, est_mean), size = 2,  alpha = 1) +
+    geom_abline(slope = 1, intercept = 0) +
+    facet_wrap(rep~condition)
+})
+```

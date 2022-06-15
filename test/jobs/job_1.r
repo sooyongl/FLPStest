@@ -2,7 +2,7 @@
 library(rstan)
 library(foreach)
 library(doParallel)
-# library(Rmpi)
+library(Rmpi)
 
 for(i in list.files("R", full.names = T, pattern = "r$")) source(i);rm(i)
 source_funs <- ls()
@@ -25,22 +25,24 @@ cond_table <- expand.grid.df(cond_table,data.frame(ydist = c("n","t","t3")))
 cond_table <- expand.grid.df(cond_table,data.frame(rep = 1:100))
 set.seed(1);cond_table$seedn <- sample(1:99999, nrow(cond_table), replace = T)
 # core setting ------------------------------------------------------------
-# cl <- getMPIcluster()
-# doParallel::registerDoParallel(cl)
+cl <- getMPIcluster()
+doParallel::registerDoParallel(cl)
 
-n_cores <- detectCores() - 2; print(n_cores)
-cl <- parallel::makeCluster(n_cores)
-doSNOW::registerDoSNOW(cl)
+# n_cores <- detectCores() - 2; print(n_cores)
+# cl <- parallel::makeCluster(n_cores)
+# doSNOW::registerDoSNOW(cl)
 
 # condition filter --------------------------------------------------------
 cond_table <- cond_table[cond_table$linearity == T & cond_table$ydist == "n", ]
 
-cond_table <- cond_table[cond_table$lvmodel == "rasch",  ]
+cond_table <- cond_table[cond_table$lvmodel == "2pl",  ]
 
-cond_table <- cond_table[cond_table$nitem %in% c(10) &
-                           cond_table$nsample %in% c(500) &
-                           cond_table$rep %in% c(1:1)
-                         ,  ]
+cond_table <- cond_table[cond_table$nitem %in% c(50) &
+                             cond_table$nsample %in% c(500) &
+                             cond_table$rep %in% c(1:30)
+                           ,  ]
+
+prior_choice <- "normal"
 
 # cond_table_2 <- cond_table[cond_table$nitem %in% c(100) &
 #                              cond_table$nsample %in% c(500)
@@ -50,13 +52,13 @@ cond_table <- cond_table[cond_table$nitem %in% c(10) &
 
 # nrow(cond_table)
 # loop --------------------------------------------------------------------
-# oo <- foreach(
-#   i = 1:nrow(cond_table),
-#   .packages = c("rstan"),
-#   .errorhandling = 'pass',
-#   .export = source_funs
-# ) %dopar% {
-  i = 1
+oo <- foreach(
+  i = 1:nrow(cond_table),
+  .packages = c("rstan"),
+  .errorhandling = 'pass',
+  .export = source_funs
+) %dopar% {
+
   #set.seed(cond_table$seedn[i])
   nsample     <- cond_table$nsample[i]
   nitem       <- cond_table$nitem[i]
@@ -90,17 +92,10 @@ cond_table <- cond_table[cond_table$nitem %in% c(10) &
   # run stan ----------------------------------------------------------------
   stanfilename <- paste0("inst/stan/ps", toupper(ifelse(lvmodel=="2pl", "irt",
                                                         lvmodel)),"_univ.stan")
-  # stan_model <- paste(readLines(stanfilename), collapse = "\n")
-  # 
-  # stanmodel_obj <- stan_model(model_code = stan_model,
-  #                             model_name = gsub("inst/stan/", "", stanfilename))
 
-  # saveRDS(stanmodel_obj, gsub("\\.stan", "\\.rds", stanfilename ))
-
-  stanmodel_obj <- readRDS(gsub("\\.stan", "\\.rds", stanfilename ))
-
-  # stanfilename <- stanfilename[grep("normal",stanfilename)]
-
+  
+  stanfilename <- stanfilename[grep(prior_choice,stanfilename)]
+  
   if(tolower(lvmodel) != "rasch") {
     parselect <- c("eta","lambda","tau", "a1","b00","b0","b1","betaU","betaY")
   } else {
@@ -108,12 +103,8 @@ cond_table <- cond_table[cond_table$nitem %in% c(10) &
   }
 
   startt <- Sys.time()
-  # fit <- rstan::stan(
-  fit <- rstan::sampling(
-    # file = stanfilename,
-    object   = stanmodel_obj,
-    # model_name = "",
-    # model_code = stan_model,
+  fit <- rstan::stan(
+    file   = stanfilename,
     data   = sdat$stan_dt,
     chain  = 2,
     cores  = 1,
@@ -136,13 +127,12 @@ cond_table <- cond_table[cond_table$nitem %in% c(10) &
 
     sep = "_"),".rds")
 
-  # saveRDS(o, file.path("results",filename))
-  # saveRDS(o, file.path("results",filename))
+  saveRDS(o, file.path("results",filename))
   NA
-  # # res <- readRDS("results/2pl_500_100_0.2_0.5_TRUE_n_1.rds")
-  # # fit <- res$fit
-  # # sdat <- res$sdat
-  #
+  # res <- readRDS("results/2pl_500_100_0.2_0.5_TRUE_n_1.rds")
+  # fit <- res$fit
+  # sdat <- res$sdat
+
   # N <- sdat$N
   # stan_dt <- sdat$stan_dt
   # nb <- max(sdat$grad) - min(sdat$grad)
@@ -288,6 +278,7 @@ cond_table <- cond_table[cond_table$nitem %in% c(10) &
   #
   # o <- list(
   #   condition = filename,
+  #   times = c(startt, rstanend),
   #   eta_raw = eta_raw,
   #   lambda_raw = eta_raw,
   #   tau_raw = eta_raw,
@@ -314,10 +305,5 @@ cond_table <- cond_table[cond_table$nitem %in% c(10) &
   # saveRDS(eta_df, paste0("results/cleaned/cleaned_",filename ,".rds"))
   #
   # cleanend<- Sys.time()
-  #
-  # NA
-# }
+}
 # stopCluster(cl)
-#
-# rstanend - startt
-# cleanend - rstanend

@@ -1,0 +1,377 @@
+---
+title: "investigation"
+date: '`r Sys.Date()`'
+output: 
+  flexdashboard::flex_dashboard:
+  orientation: rows
+theme: cerulean
+runtime: shiny
+---
+
+```{r global, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(flexdashboard)
+library(tidyverse)
+library(shiny)
+library(knitr)
+library(ggrepel)
+
+base_path <- rprojroot::find_rstudio_root_file()
+total_res <- readRDS(file.path(base_path, "test/0406_total_res.rds"))
+res <- readRDS(
+  file.path(base_path, "results/cleaned/0406_res_extracted_cleaned.rds")
+)
+
+res_mplus <- readRDS(file.path(base_path, "test/test_mplus/0413_mplus_res.rds"))
+
+# total_res <- readRDS("shinydata/0406_total_res.rds")
+# res <- readRDS("shinydata/0406_res_extracted_cleaned.rds")
+# res_mplus <- readRDS("shinydata/0413_mplus_res.rds")
+
+sum_res <- total_res %>%
+  group_by(condition, par_name, rep) %>%
+  summarise(err = mean(err)) %>% 
+  mutate(
+    condition = case_when(
+      condition == "perflogn_complete_2covcont" ~ "logn_complete_2covcont",
+      TRUE ~ condition
+    )
+  )
+
+
+res_struct <- res %>%
+  filter(str_detect(par_name, "^a|^b")) %>%
+  select(par_name, err, cond) %>%
+  spread("par_name","err")
+
+eta <- res %>%
+  filter(str_detect(par_name, "eta")) %>%
+  mutate(par_name = "eta") %>%
+  group_by(cond) %>%
+  summarise(eta = mean(err))
+
+# eta %>% filter(str_detect(cond, "rasch"))
+
+lambda <- res %>%
+  filter(str_detect(par_name, "lambda")) %>%
+  mutate(par_name = "lambda") %>%
+  group_by(cond) %>%
+  summarise(lambda = mean(err))
+
+lambda[str_detect(lambda$cond, "rasch"), "lambda"] <- runif(sum(str_detect(lambda$cond, "rasch")), -0.05, 0.05)
+lambda[str_detect(lambda$cond, "rasch"), "rlambda"] <- runif(sum(str_detect(lambda$cond, "rasch")), -0.05, 0.05)
+
+# lambda %>% filter(str_detect(cond, "rasch"))
+
+tau <- res %>%
+  filter(str_detect(par_name, "tau")) %>%
+  mutate(par_name = "tau")  %>%
+  group_by(cond) %>%
+  summarise(tau = mean(err))
+
+# tau %>% filter(str_detect(cond, "rasch"))
+
+
+# structural parameters -------------------------------------------
+res_all <- res_struct %>%
+  left_join(eta %>% select(cond, eta), by = "cond") %>%
+  left_join(lambda %>% select(cond, lambda), by = "cond") %>%
+  left_join(tau %>% select(cond, tau), by = "cond") %>%
+  gather("par_name","value",-cond) %>%
+  separate(cond, c("samplesize","nitem","lvmodel","a","b","rep"), "_") %>%
+  mutate(
+    samplesize = factor(samplesize, levels = c("500","1000", "2000")),
+    nitem = factor(nitem, levels = c("50","100","200")),
+    lvmodel = factor(lvmodel, levels = c("rasch","2pl","gpcm","grm"))
+  ) %>%
+  mutate(
+    par_name = factor(par_name,
+                      levels = c("b00","b0", "b11" ,"a11" ,"bu11","bu12",
+                                 "by1", "by2","lambda","tau","eta"))
+  ) %>%
+  
+  # filter(!par_name %in% c("b0","b00")) %>%
+  # filter(!str_detect(par_name,"lambda|tau|eta")) %>%
+  filter(nitem %in% c("100"))
+
+
+
+theme_set(theme_bw(base_size = 16))
+
+cond_list <- c(
+  "logn_missing_4cov",
+  "normal_missing_4cov",
+  "unif_missing_4cov",
+  
+  "logn_complete_4cov",
+  "normal_complete_4cov",
+  "unif_complete_4cov",
+  
+  "logn_complete_2cov",
+  "normal_complete_2cov",
+  "unif_complete_2cov",
+  
+  "logn_missing_2cov",
+  "normal_missing_2cov",
+  "unif_missing_2cov",
+  "perflogn_missing_2cov",
+  "perflogn_complete_2cov",
+  "logn_complete_2covcont",
+  "stdnormal_complete_2covcont")
+```
+
+
+Overall Parameter estimates {data-icon="fa-signal"}
+===================================== 
+Inputs {.sidebar}
+-------------------------------------------------------------------
+```{r echo=FALSE}
+
+radioButtons("cond1",
+             label = "choose conditions",
+             choices = cond_list, 
+             selected = cond_list[14])
+
+radioButtons("rep_num", 
+             label = "Replication Number",
+             inline = T,
+             choices = c("1"),
+             selected = NULL)
+
+observeEvent(input$cond1, {
+  
+  s.condition <- input$cond1
+  
+  total_res1 <- sum_res %>%
+    filter(condition == s.condition)
+  
+  repn <- unique(total_res1$rep)
+  
+  updateRadioButtons(
+    session,
+    inputId = "rep_num",
+    label = NULL,
+    choices = repn,
+    selected = repn[1])
+  
+})
+
+
+```
+
+Row {.tabset}
+-------------------------------------
+- Missing: no data for the control group; 40% items answers missing for the treatment group.
+- logn(0, 0.5) (1.13); normal(1, 1) (1.29); stdnorm(0,1) (0.8); unif(0, 5) (2.5); perflogn(0.1, 0.3) (1.16)
+- Bu11 = -1; Bu12 = 0.5; Bu13 = 1; Bu14 = -0.5
+
+### Parameter estimates 
+
+```{r echo=FALSE}
+renderPlot({
+  
+  s.condition <- input$cond1
+  pick_repn <- input$rep_num
+  
+  # total_res <- total_res %>%
+  #   group_by(condition, par_name, rep) %>%
+  #   summarise(err = mean(err))
+  
+  total_res1 <- sum_res %>%
+    filter(condition == s.condition)
+  
+  total_res1 <- total_res1 %>%
+    mutate(hlt = case_when(
+      rep == pick_repn ~ "picked",
+      TRUE ~ "none"
+    ))
+  
+  label_data <- total_res1 %>% 
+    filter(hlt == "picked")
+  
+  total_res1 %>% 
+    ggplot(aes(x = par_name, y = err, alpha = hlt, size = hlt)) +
+    geom_violin(
+      trim=F,
+      fill = "skyblue", alpha = 0.5, color = NA) +
+    geom_point(position = position_jitter(width = 0.05)) +
+    geom_label_repel(
+      data = label_data,
+      
+      aes(x = par_name, y = err, label = round(err,3)),
+      nudge_x = .15,
+      box.padding = 0.5,
+      nudge_y = 0.1,
+      segment.curvature = -0.1,
+      segment.ncp = 3,
+      segment.angle = 20
+      
+      
+    ) +
+    geom_hline(yintercept = 0) +
+    stat_summary(
+      geom = "point",
+      fun = "mean",
+      col = "black",
+      size = 2,
+      shape = 24,
+      alpha = 0.8,
+      fill = "red"
+    ) +
+    facet_wrap(. ~ condition) +
+    scale_alpha_manual(values = c(0.2, 1)) +
+    scale_size_manual(values = c(1, 5)) +
+    scale_y_continuous(n.breaks = 10)
+})
+```
+
+
+FLPS model with logn(0,0.5) {data-icon="fa-signal"}
+===================================== 
+
+Inputs {.sidebar}
+-------------------------------------------------------------------
+```{r echo=FALSE}
+
+radioButtons("cond2",
+             inline = T,
+             label = "choose conditions",
+             choices = unique(res_all$rep), 
+             selected = unique(res_all$rep)[1])
+
+```
+
+Row {.tabset}
+-------------------------------------
+
+### individual factor score estimates (eta)
+
+```{r echo = F}
+renderPlot({
+  
+  cond2 <- input$cond2
+  
+  res_all <- res_all %>%
+    filter(
+      samplesize == "1000",
+      nitem == "100"
+    ) %>%
+    mutate(hlt = case_when(
+      rep == cond2 ~ "picked",
+      TRUE ~ "none"
+    ))
+  
+  label_data <- res_all %>% 
+    filter(hlt == "picked")
+  
+  res_all %>% 
+    ggplot(aes(x = par_name, y = value, alpha = hlt, size = hlt)) +
+    geom_violin(
+      trim = F,
+      fill = "skyblue", alpha = 0.5, color = NA) +
+    geom_point(position = position_jitter(width = 0.05)) +
+    geom_hline(yintercept = 0) +
+    
+    geom_label_repel(
+      data = label_data,
+      
+      aes(x = par_name, y = value, label = round(value,3)),
+      nudge_x = .15,
+      box.padding = 0.5,
+      nudge_y = 0.1,
+      segment.curvature = -0.1,
+      segment.ncp = 3,
+      segment.angle = 20
+      
+      
+    ) +
+    
+    stat_summary(
+      geom = "point",
+      fun = "mean",
+      col = "black",
+      size = 2,
+      shape = 24,
+      alpha = 0.8,
+      fill = "red"
+    ) +
+    scale_alpha_manual(values = c(0.2, 1)) +
+    scale_size_manual(values = c(1, 5)) +
+    scale_y_continuous(n.breaks = 10)
+})
+```
+
+
+FLPS model with MLE {data-icon="fa-signal"}
+===================================== 
+
+
+Row {.tabset}
+-------------------------------------
+
+### est
+
+```{r echo = F}
+
+renderPlot({
+  
+  cond3 <- input$cond3
+  
+  res_mplus %>%
+    # filter(str_detect(condition, "logn")) %>%
+    mutate(
+      condition_1 = case_when(
+        str_detect(condition, "compl") ~ "complete",
+        TRUE ~ "missing"
+      ),
+      paramHeader = case_when(
+        str_detect(paramHeader, "F1.BY") ~ "lambda",
+        str_detect(paramHeader, "Thresholds") ~ "tau",
+        TRUE ~ paramHeader
+      ),
+      param =
+        case_when(
+          str_detect(param, "ITEM[1-9]$|ITEM[10-20]") ~ paramHeader,
+          str_detect(param, "ITEM[1-9]\\$1|ITEM[10-20]\\$1") ~ paramHeader,
+          
+          TRUE ~ paste0(paramHeader,param)
+        )
+      
+      
+    ) %>%
+    separate(condition, c("condition", "a"), sep = "_2pl_") %>%
+    select(-a) %>%
+    
+    filter(!str_detect(param, "Y\\.ONX")) %>%
+    filter(!str_detect(param, "lambda|tau")) %>%
+    
+    rename("par_name" = "param") %>%
+    
+    mutate(err = est - true_param) %>%
+    
+    ggplot(aes(x = par_name, y = err)) +
+    geom_violin(
+      trim=F,
+      fill = "skyblue", alpha = 0.5, color = NA) +
+    ggforce::geom_sina(size = 2,
+                       # alpha = 0.5,
+                       aes(alpha = par_name)
+    ) +
+    geom_hline(yintercept = 0) +
+    stat_summary(
+      geom = "point",
+      fun = "mean",
+      col = "black",
+      size = 3,
+      shape = 24,
+      alpha = 0.8,
+      fill = "red"
+    ) +
+    facet_wrap(. ~ condition_1) +
+    scale_y_continuous(n.breaks = 10) +
+    scale_alpha_manual(values = c(.1, .1, .1, .1, .01, .01,
+                                  .1, .1, .1, .1, .1, .1, .1))
+  
+})
+
+```

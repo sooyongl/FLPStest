@@ -1,0 +1,368 @@
+---
+title: "investigation"
+date: "`r Sys.Date()`"
+output:
+  flexdashboard::flex_dashboard:
+    theme: lumen
+  orientation: rows
+runtime: shiny
+resource_files:
+- shinydata/0416_data.rds
+---
+
+```{r global, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(flexdashboard)
+library(tidyverse)
+library(shiny)
+library(knitr)
+library(ggrepel)
+library(ggforce)
+
+# base_path <- rprojroot::find_rstudio_root_file()
+# total_res <- readRDS(file.path(base_path, "test/shinydata/0416_data.rds"))
+total_res <- readRDS("shinydata/0416_data.rds")
+
+# View(total_res)
+
+```
+
+
+Overall Parameter estimates {data-icon="fa-signal"}
+===================================== 
+Inputs {.sidebar}
+-------------------------------------------------------------------
+```{r echo=FALSE}
+
+checkboxGroupInput("estimator",
+                   label = "choose estimator",
+                   inline = T,
+                   choices = unique(total_res$estimator), 
+                   selected = unique(total_res$estimator))
+
+checkboxGroupInput("samplesize", 
+                   label = "choose sample size",
+                   inline = T,
+                   choices = unique(total_res$samplesize),
+                   selected = unique(total_res$samplesize))
+
+checkboxGroupInput("par_name", 
+                   label = "choose parameter name",
+                   inline = T,
+                   choices = unique(total_res$par_name),
+                   selected = unique(total_res$par_name))
+radioButtons("stdbias", 
+             label = "choose standardized",
+             inline = T,
+             choices = c("Y","N"),
+             selected = "N")
+
+radioButtons("labeloff", 
+             label = "Label on or off",
+             inline = T,
+             choices = c("on","off"),
+             selected = "off")
+
+textInput("minv", 
+          label = "filter outlier (minimum)",
+          value = -10)
+# sliderInput("minv1", 
+#             label = "filter outlier (minimum)",
+#             min =  -200,
+#             max = 0,
+#             step = 1,
+#             value = -100)
+
+textInput("maxv", 
+          label = "filter outlier (maximum)",
+          value = 10)
+
+# sliderInput("maxv1", 
+#             label = "filter outlier (maximum)",
+#             
+#             min =  0,
+#             max = 200,
+#             step = 1,
+#             value = 100)
+
+
+```
+
+Row {.tabset}
+-------------------------------------
+- Diffuse prior: Uniform(0, 10); Matched prior: Lognorm(0.1, 0.3)
+- Almost all results are inadmissible or non-converged with Mplus in the 100 sample size.
+- Bayesian also suffers from warnings, but produces less bias than Mplus in the 100 sample size.
+
+### Parameter estimates 
+
+```{r echo=FALSE}
+renderPlot({
+  
+  estimator0  <- input$estimator
+  # estimator0 <- "Mplus"
+  samplesize0 <- input$samplesize
+  # samplesize0 <- c("100","2000")
+  par_name0   <- input$par_name
+  # par_name0 <- c("a11","b11")
+  minv <- as.numeric(input$minv)
+  maxv <- as.numeric(input$maxv)
+  
+  stdbias <- input$stdbias
+  labeloff <- input$labeloff
+  #   group_by(estimator, samplesize, nitem, par_name) %>% 
+  # summarise(
+  #   n(),
+  #   SE = sqrt(var(value)/n())
+  #   )
+  
+  
+  SE_data <- total_res %>% 
+    group_by(estimator, samplesize, nitem, par_name, rep) %>% 
+    summarise(
+      err = mean(value)
+    ) %>% 
+    group_by(estimator, samplesize, nitem, par_name) %>% 
+    summarise(
+      n = n(),
+      SE = sqrt(var(err)/n)
+    )
+  
+  total_res1 <- 
+    total_res %>% 
+    group_by(estimator, samplesize, nitem, par_name, rep) %>% 
+    summarise(
+      err = mean(value)
+    ) %>% 
+    filter(estimator %in% estimator0) %>% 
+    filter(samplesize %in% samplesize0) %>% 
+    filter(par_name %in% par_name0)
+  
+  SE_data1 <- SE_data %>% 
+    filter(estimator %in% estimator0) %>% 
+    filter(samplesize %in% samplesize0) %>% 
+    filter(par_name %in% par_name0)
+  
+  #
+  total_res1 <- total_res1 %>% 
+    left_join(
+      SE_data1, by = c("estimator","samplesize","par_name")
+    ) %>% 
+    mutate(
+      std.err = err / SE
+    )
+  
+  meanss <- total_res1 %>% 
+    group_by(estimator, samplesize, par_name) %>% 
+    summarise(
+      bias = mean(err),
+      std.bias = mean(std.err)
+    )
+  
+  theme_set(theme_bw(base_size = 16))
+  
+  yvalue <- ifelse(stdbias =="Y", "std.err", "err")
+  
+  # total_res1 <- total_res1 %>% 
+  #   filter(between(err, minv, maxv))
+  
+  p <- total_res1 %>% 
+    ggplot(aes_string(x = "par_name", y = yvalue)) +
+    geom_violin(
+      trim=F,
+      fill = "skyblue", alpha = 0.5, color = NA) +
+    geom_sina(
+      position = position_jitter(width = 0.05),
+      alpha = 0.5) +
+    
+    geom_hline(yintercept = 0) +
+    
+    geom_point(data = meanss,
+               aes(x = par_name, y = bias), size = 3, shape = 24, alpha = 0.8, fill = 'red')
+  # stat_summary(
+  #   geom = "point",
+  #   fun = "mean",
+  #   col = "black",
+  #   size = 3,
+  #   shape = 24,
+  #   alpha = 0.8,
+  #   fill = "red"
+  # )
+  
+  if(labeloff == "on") {
+    p <- p+  geom_label(data = meanss,
+                        aes(y = -Inf, x = par_name, label = round(bias,3)),
+                        hjust = 0.5, vjust = -3) +
+      annotate(geom = 'text', label = 'Bias', 
+               x = -Inf, y = -Inf, hjust = 0, vjust = -5.2) +
+      
+      geom_label(data = meanss,
+                 aes(y = -Inf, x = par_name, label = round(std.bias,3)),
+                 hjust = 0.5, vjust = -2) +
+      
+      annotate(geom = 'text', label = 'Std.Bias', 
+               x = -Inf, y = -Inf, hjust = 0, vjust = -3.8) +
+      
+      geom_label(data = SE_data1,
+                 aes(y = -Inf, x = par_name, label = round(SE,3)),
+                 hjust = 0.5, vjust = -1) +
+      annotate(geom = 'text', label = 'SE', 
+               x = -Inf, y = -Inf, hjust = 0, vjust = -2.4)
+    
+  }
+  
+  p +facet_grid(estimator ~ samplesize) +
+    scale_y_continuous(limits = c(minv,maxv))
+  
+  # scale_alpha_manual(values = c(0.2, 1)) +
+  # scale_size_manual(values = c(1, 5)) +
+  # 
+})
+```
+
+### Population model
+
+```{r echo=FALSE}
+
+
+  img(src='shinydata/figure1.png', 
+      height = '600px', width = '600px',
+      align = "center")
+
+```
+
+
+
+Individual Parameter estimates {data-icon="fa-signal"}
+===================================== 
+Inputs {.sidebar}
+-------------------------------------------------------------------
+```{r echo=FALSE}
+
+radioButtons("estimator1",
+             label = "choose estimator",
+             inline = T,
+             choices = unique(total_res$estimator), 
+             selected = unique(total_res$estimator)[1])
+
+radioButtons("samplesize1", 
+             label = "choose sample size",
+             inline = T,
+             choices = unique(total_res$samplesize),
+             selected = unique(total_res$samplesize)[1])
+
+checkboxGroupInput("par_name1", 
+                   label = "choose parameter name",
+                   inline = T,
+                   choices = unique(total_res$par_name),
+                   selected = unique(total_res$par_name))
+
+
+textInput("minv1", 
+          label = "filter outlier (minimum)",
+          value = -10000)
+textInput("maxv1", 
+          label = "filter outlier (maximum)",
+          value = 10000)
+
+radioButtons("rep_num", 
+             label = "Replication Number",
+             inline = T,
+             choices = c("1"),
+             selected = NULL)
+
+observeEvent(input$estimator1, {
+  
+  estimator1 <- input$estimator1
+  samplesize1 <- input$samplesize1
+  
+  total_res1 <- total_res %>%
+    filter(estimator == estimator1) %>% 
+    filter(samplesize == samplesize1)
+  
+  repn <- unique(total_res1$rep)
+  
+  updateRadioButtons(
+    session,
+    inputId = "rep_num",
+    label = NULL,
+    choices = repn,
+    selected = repn[1])
+  
+})
+
+
+
+```
+
+Row {.tabset}
+-------------------------------------
+
+### Parameter estimates 
+
+```{r echo=FALSE, fig.height=14, out.height='100%'}
+
+renderPlot({
+  
+  estimator1 <- input$estimator1
+  # estimator1 = "diffuse"
+  samplesize1 <- input$samplesize1
+  # samplesize1 = "100"
+  par_name1 <- input$par_name1
+  # par_name1 = c("a11","b11")
+  pick_repn <- input$rep_num
+  
+  minv1 <- as.numeric(input$minv1)
+  maxv1 <- as.numeric(input$maxv1)
+  # total_res <- total_res %>%
+  #   group_by(condition, par_name, rep) %>%
+  #   summarise(err = mean(err))
+  
+  total_res1 <- total_res %>%
+    group_by(estimator, samplesize, nitem, par_name, rep) %>% 
+    summarise(
+      err = mean(value)
+    ) %>% 
+    filter(estimator %in% estimator1) %>% 
+    filter(samplesize %in% samplesize1) %>% 
+    filter(par_name %in% par_name1)
+  
+  total_res1 <- total_res1 %>%
+    mutate(hlt = case_when(
+      rep == pick_repn ~ "picked",
+      TRUE ~ "none"
+    ))
+  
+  label_data <- total_res1 %>% 
+    filter(hlt == "picked")
+  
+  total_res1 %>% 
+    # rename("err" = "value") %>% 
+    ggplot(aes(x = par_name, y = err, alpha = hlt, 
+               size = hlt)) +
+    geom_violin(
+      trim=F,
+      fill = "skyblue", alpha = 0.5, color = NA) +
+    geom_point(position = position_jitter(width = 0.05)) +
+    geom_label_repel(
+      data = label_data,
+      
+      aes(x = par_name, y = err, label = round(err,3)),
+      nudge_x = .15,
+      box.padding = 0.5,
+      nudge_y = 0.1,
+      segment.curvature = -0.1,
+      segment.ncp = 3,
+      segment.angle = 20
+    ) +
+    geom_hline(yintercept = 0) +
+    facet_wrap(estimator ~ samplesize) +
+    scale_alpha_manual(values = c(0.2, 1)) +
+    scale_size_manual(values = c(1, 5)) +
+    scale_y_continuous(
+      limits = c(minv1, maxv1),
+      n.breaks = 10)
+})
+
+```
+

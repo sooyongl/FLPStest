@@ -7,7 +7,7 @@ library(tidyr)
 library(stringr)
 library(magrittr)
 library(purrr)
-library(Rmpi)
+# library(Rmpi)
 
 for(i in list.files("R", full.names = T, pattern = "r$")) source(i);rm(i)
 source_funs <- ls()
@@ -16,21 +16,31 @@ source_funs <- ls()
 # cl <- getMPIcluster()
 # doParallel::registerDoParallel(cl)
 
-# n_cores <- detectCores() - 2; print(n_cores)
-# cl <- parallel::makeCluster(n_cores)
-# doSNOW::registerDoSNOW(cl)
+n_cores <- detectCores() - 2; print(n_cores)
+cl <- parallel::makeCluster(n_cores)
+doSNOW::registerDoSNOW(cl)
 
 rds_name <- list.files("F:/FLPS/results", full.names = T, pattern = "rds")
 
-rds_name <- str_subset(rds_name, "normaltight")
-# rds_name <- list.files("results", full.names = T)
-res_list <- foreach(
-  irds = 1:length(rds_name)#,
-  # .packages = c("rstan","dplyr","stringr","purrr","magrittr","tidyr"),
-  # .errorhandling = 'pass',
-  # .export = source_funs
-) %do% {
+temp_rds_name <- list.files("F:/FLPS/results", full.names = F, pattern = "rds")
+cleaned_name <- list.files("F:/FLPS/results/cleaned", full.names = F, pattern = "cleaned")
+cleaned_name <- str_remove(cleaned_name, "cleaned_")
 
+rds_name <- rds_name[!temp_rds_name %in% cleaned_name]
+# rds_name <- str_subset(rds_name, "rasch")
+
+pb <- txtProgressBar(max=length(rds_name), style=3)
+progress <- function(n) setTxtProgressBar(pb, n)
+opts <- list(progress=progress)
+
+res_list <- foreach(
+  irds = 1:length(rds_name),
+  .packages = c("rstan","dplyr","stringr","purrr","magrittr","tidyr"),
+  .errorhandling = 'pass',
+  .export = source_funs,
+  .options.snow = opts
+  # ) %do% {
+) %dopar% {
   # irds <- 1
 
   condition <- str_split(rds_name[irds], "/",simplify = T)
@@ -41,7 +51,6 @@ res_list <- foreach(
   fit <- res$fit
   sdat <- res$sdat
 
-
   N <- sdat$N
   stan_dt <- sdat$stan_dt
   nb <- max(sdat$grad) - min(sdat$grad)
@@ -51,8 +60,8 @@ res_list <- foreach(
   n.chain = fit@sim$chains
 
   df.fit <- as.data.frame(fit) %>% select(-matches("free"))
+
   df.fit$chain <- rep(c(1:n.chain), each = iter)
-  # df.fit <- df.fit %>% group_by(chain)
 
   rm(res, fit)
 
@@ -60,8 +69,8 @@ res_list <- foreach(
   a11 <- sdat$omega
   b0  <- sdat$tau0
   b11 <- sdat$tau1
-  true_param <- c(-1, 0.5, 1.0, 0.5, 0, a11, b0, b11)
-  names(true_param) <- c("bu11","bu12","by1","by2","b00","a11", "b0", "b11")
+  true_param <- c(a11, 0, b0, b11, -1, 0.5, 1.0, 0.5)
+  names(true_param) <- c("a1","b00","b0", "b1","betaU[1]","betaU[2]","betaY[1]","betaY[2]")
 
   true_ipar <- sdat$lv.par
   true_lam <- true_ipar[,(1:nfac)]
@@ -77,6 +86,7 @@ res_list <- foreach(
 
   # estimates ---------------------------------------------------------------
   eta_raw    <- select(df.fit, chain, matches("^eta"))
+
   eta_df <- eta_raw %>%
     group_by(chain) %>% summarise_all(mean) %>%
     select(-chain) %>%
@@ -87,22 +97,6 @@ res_list <- foreach(
     mutate(par_name = rownames(.), .before = "est_eta1") %>%
     mutate(true_eta = true_eta, .before = "est_eta1") %>%
     tibble()
-
-  # eta_df <- eta_raw
-  # eta_df <- lapply(1:n.chain, function(i) {
-  #   apply(eta_df[eta_df$chain == i, ], 2, mean)
-  # })
-  # eta_df <- do.call("rbind", eta_df)
-  # eta_df <- data.frame(eta_df)
-  #
-  # eta_df <- select(eta_df, -chain)
-  # eta_df <- t(eta_df)
-  # eta_df <- data.frame(eta_df)
-  # eta_df <- set_names(eta_df, paste0("est_eta", 1:n.chain))
-  # eta_df <- mutate(eta_df, est_mean = rowMeans(eta_df[,1:n.chain]))
-  # eta_df <- mutate(eta_df, par_name = rownames(eta_df), .before = "est_eta1")
-  # eta_df <- mutate(eta_df, true_eta = true_eta, .before = "est_eta1")
-  # eta_df <- tibble(eta_df)
 
   lambda_raw <- select(df.fit, chain, matches("^lambda"))
   lambda_df <- lambda_raw %>%
@@ -126,32 +120,6 @@ res_list <- foreach(
         mutate(., true_lam = true_lam, .before = "est_lam1")
     } %>%
     tibble()
-  # lambda_raw <- select(df.fit, chain, matches("^lambda"))
-  # lambda_df <- lambda_raw
-  # if(sdat$lvmodel == "rasch"){
-  #   lambda_df <- mutate(lambda_df, lambda = 1)
-  # } else {
-  #   lambda_df <- lambda_df
-  # }
-  # lambda_df <- lapply(1:n.chain, function(i) {
-  #   apply(lambda_df[lambda_df$chain == i, ], 2, mean)
-  # })
-  # lambda_df <- do.call("rbind", lambda_df)
-  # lambda_df <- data.frame(lambda_df)
-  #
-  # lambda_df <- select(lambda_df, -chain)
-  # lambda_df <- t(lambda_df)
-  # lambda_df <- data.frame(lambda_df)
-  # lambda_df <- set_names(lambda_df,paste0("est_lam", 1:n.chain))
-  # lambda_df <- mutate(lambda_df,est_mean = rowMeans(lambda_df[,1:n.chain]))
-  # lambda_df <- mutate(lambda_df,par_name = rownames(lambda_df), .before = "est_lam1")
-  #
-  # if(sdat$lvmodel == "rasch") {
-  #   lambda_df <- mutate(lambda_df, true_lam = 1, .before = "est_lam1")
-  # }else {
-  #   lambda_df <- mutate(lambda_df, true_lam = true_lam, .before = "est_lam1")
-  # }
-  # lambda_df <- tibble(lambda_df)
 
 
   tau_raw    <- select(df.fit, chain, matches("^tau"))
@@ -165,21 +133,6 @@ res_list <- foreach(
     mutate(par_name = rownames(.), .before = "est_tau1") %>%
     mutate(true_tau = true_tau, .before = "est_tau1") %>%
     tibble()
-  # tau_raw    <- select(df.fit, chain, matches("^tau"))
-  # tau_df <- tau_raw
-  # tau_df <- lapply(1:n.chain, function(i) {
-  #   apply(tau_df[tau_df$chain == i, ], 2, mean)
-  # })
-  # tau_df <- do.call("rbind", tau_df)
-  # tau_df <- data.frame(tau_df)
-  # tau_df <- select(tau_df,-chain)
-  # tau_df <- t(tau_df)
-  # tau_df <- data.frame(tau_df)
-  # tau_df <- set_names(tau_df,paste0("est_tau", 1:n.chain))
-  # tau_df <- mutate(tau_df,est_mean = rowMeans(tau_df[,1:n.chain]))
-  # tau_df <- mutate(tau_df,par_name = rownames(tau_df), .before = "est_tau1")
-  # tau_df <- mutate(tau_df,true_tau = true_tau, .before = "est_tau1")
-  # tau_df <- tibble(tau_df)
 
 
   struct_raw  <- select(df.fit, chain, matches("^beta|^b|^a"))
@@ -193,32 +146,20 @@ res_list <- foreach(
     t() %>%
     data.frame() %>%
     set_names(paste0("est_struc", 1:n.chain)) %>%
-    mutate(est_mean = rowMeans(.[,1:n.chain])) %>%
+    mutate(est_mean = rowMeans(.[,1:n.chain]))
+
+  true_param <- true_param[rownames(struct_df)]
+
+  struct_df <- struct_df %>%
     mutate(par_name = names(true_param), .before = "est_struc1") %>%
     mutate(true_struc = true_param, .before = "est_struc1") %>%
     tibble()
-  # struct_raw  <- select(df.fit, chain, matches("^beta|^b|^a"))
-  # struct_df <- struct_raw
-  # struct_df <- lapply(1:n.chain, function(i) {
-  #   apply(struct_df[struct_df$chain == i, ], 2, mean)
-  # })
-  # struct_df <- do.call("rbind", struct_df)
-  # struct_df <- data.frame(struct_df)
-  #
-  # struct_df <- select(struct_df,-chain)
-  # struct_df <- t(struct_df)
-  # struct_df <- data.frame(struct_df)
-  # struct_df <- set_names(struct_df,paste0("est_struc", 1:n.chain))
-  # struct_df <- mutate(struct_df,est_mean = rowMeans(struct_df[,1:n.chain]))
-  # struct_df <- mutate(struct_df,par_name = names(true_param), .before = "est_struc1")
-  # struct_df <- mutate(struct_df,true_struc = true_param, .before = "est_struc1")
-  # struct_df <- tibble(struct_df)
 
   o <- list(
     condition = condition,
     eta_raw = eta_raw,
-    lambda_raw = eta_raw,
-    tau_raw = eta_raw,
+    lambda_raw = lambda_raw,
+    tau_raw = tau_raw,
     struct_raw = struct_raw,
     eta_df = eta_df,
     lambda_df = lambda_df,
@@ -226,13 +167,101 @@ res_list <- foreach(
     struct_df = struct_df
   )
 
-  saveRDS(o, paste0("F:/FLPS/results/cleaned/0406_extracted_",condition ,".rds"))
+  saveRDS(o, paste0("F:/FLPS/results/cleaned/extracted_",condition ,".rds"))
 
-  gc(TRUE)
+  if(dim(o$eta_df)[2] == 6) {
+    names(o$eta_df) <- c("par_name","true_param","est_chain1","est_chain2","est_chain3","est_mean")
+    names(o$lambda_df) <- c("par_name","true_param","est_chain1","est_chain2","est_chain3","est_mean")
+    names(o$tau_df) <- c("par_name","true_param","est_chain1","est_chain2","est_chain3","est_mean")
+    names(o$struct_df) <- c("par_name","true_param","est_chain1","est_chain2","est_chain3","est_mean")
+  }
+  if(dim(o$eta_df)[2] == 5) {
+    names(o$eta_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
+    names(o$lambda_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
+    names(o$tau_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
+    names(o$struct_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
+  }
+
+  o <- o$eta_df %>%
+    bind_rows(o$lambda_df, o$tau_df, o$struct_df) %>%
+    mutate(err = (est_mean - true_param)) %>%
+    mutate(cond = o$condition)
+
+  saveRDS(o, paste0("F:/FLPS/results/cleaned/cleaned_",condition ,".rds"))
+
+  gc()
+  NA
 }
+stopCluster(cl)
+
+cleaned <- fs::dir_ls("D:/FLPS/results/cleaned", regexp = "cleaned_")
+length(cleaned)
+# cleaned <- str_subset(cleaned, "unif|normal")
+
+combined <- foreach(i = 1:length(cleaned)) %do% {
+  a1 <- readRDS(cleaned[i])
+  a1
+} %>%
+  bind_rows()
+
+data_idx <- "0529"
+saveRDS(combined, paste0("results/cleaned/",data_idx,"_extracted_cleaned.rds"))
+
+# saveRDS(combined, paste0("results/cleaned/",data_idx,"_extracted_cleaned_priors.rds"))
+
+# n_cores <- detectCores() - 2; print(n_cores)
+# cl <- parallel::makeCluster(n_cores)
+# doSNOW::registerDoSNOW(cl)
+#
+# rds_name <- list.files("F:/FLPS/results0/cleaned", full.names = T, pattern = "extracted")
+#
+# temp_rds_name <- list.files("F:/FLPS/results0", full.names = F, pattern = "rds")
+# cleaned_name <- list.files("F:/FLPS/results0/cleaned", full.names = F, pattern = "cleaned")
+# cleaned_name <- str_remove(cleaned_name, "cleaned_")
+# rds_name <- rds_name[!temp_rds_name %in% cleaned_name]
 
 
-
+# pb <- txtProgressBar(max=length(rds_name), style=3)
+# progress <- function(n) setTxtProgressBar(pb, n)
+# opts <- list(progress=progress)
+#
+# res_list <- foreach(
+#   irds = 1:length(rds_name),
+#   .packages = c("rstan","dplyr","stringr","purrr","magrittr","tidyr"),
+#   .errorhandling = 'pass',
+#   .export = source_funs,
+#   .options.snow = opts
+#   # ) %do% {
+# ) %dopar% {
+#
+#   o <- readRDS(rds_name[irds])
+#   condition <- o$condition
+#   if(dim(o$eta_df)[2] == 6) {
+#     names(o$eta_df) <- c("par_name","true_param","est_chain1","est_chain2","est_chain3","est_mean")
+#     names(o$lambda_df) <- c("par_name","true_param","est_chain1","est_chain2","est_chain3","est_mean")
+#     names(o$tau_df) <- c("par_name","true_param","est_chain1","est_chain2","est_chain3","est_mean")
+#     names(o$struct_df) <- c("par_name","true_param","est_chain1","est_chain2","est_chain3","est_mean")
+#   }
+#   if(dim(o$eta_df)[2] == 5) {
+#     names(o$eta_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
+#     names(o$lambda_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
+#     names(o$tau_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
+#     names(o$struct_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
+#   }
+#
+#   o <- o$eta_df %>%
+#     bind_rows(o$lambda_df, o$tau_df, o$struct_df) %>%
+#     mutate(err = (est_mean - true_param)) %>%
+#     mutate(cond = o$condition)
+#
+#   saveRDS(o, paste0("F:/FLPS/results0/cleaned/cleaned_",condition ,".rds"))
+#
+#   o
+# }
+# stopCluster(cl)
+#
+# res_list <- bind_rows(res_list)
+# saveRDS(res_list, "results/cleaned/0508_extracted_cleaned.rds")
 
 # cleaned <- readRDS("results/cleaned/0310_res_cleaned.rds")
 # a3 <- cleaned %>%
@@ -394,35 +423,57 @@ res_list <- foreach(
 #           #,ggplot2::aes(colour=as.character(chain), alpha = 0.4)
 #   )
 
-
-extracted <- list.files("F:/FLPS/results/cleaned",
-                        full.names = T, pattern = "extracted")
-
-extracted <- str_subset(extracted, "normaltight")
-
-res <- foreach(
-  irds = 1:length(extracted), .combine = 'rbind') %do% {
-
-    # irds <- 136
-
-    res <- readRDS(extracted[irds])
-
-    names(res$eta_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
-    names(res$lambda_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
-    names(res$tau_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
-    names(res$struct_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
-
-
-    res$eta_df %>%
-      bind_rows(res$lambda_df, res$tau_df, res$struct_df) %>%
-      mutate(err = (est_mean - true_param)) %>%
-      mutate(cond = res$condition)
-  }
+#
+# extracted <- list.files("F:/FLPS/results/cleaned",
+#                         full.names = T, pattern = "extracted")
+#
+# extracted <- str_subset(extracted, "normaltight")
+#
+# res <- foreach(
+#   irds = 1:length(extracted), .combine = 'rbind') %do% {
+#
+#     # irds <- 136
+#
+#     res <- readRDS(extracted[irds])
+#
+#     names(res$eta_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
+#     names(res$lambda_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
+#     names(res$tau_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
+#     names(res$struct_df) <- c("par_name","true_param","est_chain1","est_chain2","est_mean")
+#
+#
+#     res$eta_df %>%
+#       bind_rows(res$lambda_df, res$tau_df, res$struct_df) %>%
+#       mutate(err = (est_mean - true_param)) %>%
+#       mutate(cond = res$condition)
+#
+#     # res$eta_df <- do.call('rbind',list(res$lambda_df, res$tau_df, res$struct_df))
+#     #
+#     # res$eta_df$err = res$eta_df$err$est_mean - res$eta_df$err$true_param
+#     # res$eta_df$cond = res$condition
+#   }
 # saveRDS(res, "results/cleaned/0420_res_extracted_cleaned.rds")
 
-res0 <- readRDS("results/cleaned/0420_res_extracted_cleaned.rds")
+
+
+# cleaned <- list.files("F:/FLPS/results0/cleaned",
+#                       full.names = T, pattern = "cleaned")
 #
-saveRDS(bind_rows(res0, res), "results/cleaned/0420_res_extracted_cleaned.rds")
+# res <- foreach(
+#   irds = 1:length(cleaned), .combine = 'rbind') %do% {
+#
+#     # irds <- 136
+#
+#     res <- readRDS(cleaned[irds])
+#
+#     if(dim(res)[2] == 6) {
+#       res <- res %>% select(par_name,true_param,est_chain1,est_chain2,est_mean)
+#     }
+#   }
+# saveRDS(res, "results/cleaned/0508_extracted_cleaned.rds")
+
+# res0 <- readRDS("results/cleaned/0420_res_extracted_cleaned.rds")
+# saveRDS(bind_rows(res0, res), "results/cleaned/0420_res_extracted_cleaned.rds")
 
 
 

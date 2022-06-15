@@ -1,0 +1,33 @@
+cd C:\Users\sooyong\Box\git\FLPS
+
+scp filename sooyong@stampede2.tacc.utexas.edu:/work2/07670/sooyong/stampede2/flps
+
+scp sooyong@stampede2.tacc.utexas.edu:/work2/07670/sooyong/stampede2/flps/filename results
+
+module load modulename
+
+module load Rstats/3.5.1
+
+ for i in $(seq 1 $END); do echo $i; done
+
+
+#!/bin/bash
+#SBATCH -J gp1000200
+#SBATCH -o jobs/gp_1.o
+#SBATCH -e jobs/gp_1.e
+#SBATCH -N 2
+#SBATCH -n 24
+#SBATCH -p skx-normal
+#SBATCH -t 24:00:00
+#SBATCH -A FLPS
+#SBATCH --mail-user=sooyongl09@utexas.edu
+#SBATCH --mail-type=all
+
+module reset
+module load Rstats/3.5.1
+
+export OMP_NUM_THREADS=2
+ibrun RMPISNOW < job_1.r
+
+
+dos2unix ...

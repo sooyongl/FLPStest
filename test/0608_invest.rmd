@@ -1,0 +1,949 @@
+---
+title: "investigation"
+date: "`r Sys.Date()`"
+output:
+  flexdashboard::flex_dashboard:
+    theme: lumen
+  orientation: rows
+runtime: shiny
+resource_files:
+- shinydata/0608_data.rds
+- shinydata/0608_mpart.rds
+---
+
+```{r global, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(flexdashboard)
+library(tidyverse)
+library(shiny)
+library(knitr)
+library(ggrepel)
+library(ggforce)
+library(ggpubr)
+library(hpa)
+library(DT)
+# base_path <- rprojroot::find_rstudio_root_file()
+# total_res <- readRDS(file.path(base_path, "test/shinydata/0508_data.rds"))
+# mpart <- readRDS(file.path(base_path, "test/shinydata/0508_mpart.rds"))
+
+total_res <- readRDS("shinydata/0608_data.rds")
+mpart <- readRDS("shinydata/0608_mpart.rds") %>% 
+  rename(est_mean = mean)
+
+
+
+# total_res %>% distinct(lvmodel)
+# View(total_res)
+
+```
+
+
+Overall Parameter estimates {data-icon="fa-signal"}
+===================================== 
+Inputs {.sidebar}
+-------------------------------------------------------------------
+Prior: three priors (uniform(0,10), std.norm(0,1), lognormal(0,5)); 2pl, 500 sample size; 50 items
+
+
+```{r echo=FALSE}
+radioButtons("prior_choice",
+             "Prior Choice",
+             inline = T,
+             choices = c("prior","main"),
+             selected = "main")
+
+
+radioButtons("lvmodel", 
+             label = "choose LV model",
+             inline = T,
+             choices = c("rasch","2pl","grm","gpcm"),
+             selected = "2pl")
+
+# checkboxGroupInput("lvmodel", 
+#                    label = "choose LV model",
+#                    inline = T,
+#                    choices = unique(total_res$lvmodel),
+#                    selected = unique(total_res$lvmodel)[1])
+
+checkboxGroupInput("samplesize", 
+                   label = "choose sample size",
+                   inline = T,
+                   choices = unique(total_res$samplesize),
+                   selected = unique(total_res$samplesize))
+
+checkboxGroupInput("nitem", 
+                   label = "choose the number of items",
+                   inline = T,
+                   choices = unique(total_res$nitem),
+                   selected = unique(total_res$nitem)[1])
+
+checkboxGroupInput("par_name", 
+                   label = "choose parameter name",
+                   inline = T,
+                   choices = unique(total_res$par_name),
+                   selected = unique(total_res$par_name))
+
+# radioButtons("stdbias",
+#              label = "choose standardized",
+#              inline = T,
+#              choices = c("Y","N"),
+#              selected = "N")
+# 
+# radioButtons("labeloff",
+#              label = "Label on or off",
+#              inline = T,
+#              choices = c("on","off"),
+#              selected = "off")
+
+radioButtons("facetswitch",
+             label = "Change facet",
+             inline = T,
+             choices = c("on","off"),
+             selected = "off")
+
+# radioButtons("biastype",
+#              label = "Type Bias",
+#              inline = T,
+#              choices = c("Bias","RelBias"),
+#              selected = "Bias")
+
+
+textInput("minv", 
+          label = "filter outlier (minimum)",
+          value = -.3)
+# sliderInput("minv1", 
+#             label = "filter outlier (minimum)",
+#             min =  -200,
+#             max = 0,
+#             step = 1,
+#             value = -100)
+
+textInput("maxv", 
+          label = "filter outlier (maximum)",
+          value = .3)
+
+# sliderInput("maxv1", 
+#             label = "filter outlier (maximum)",
+#             
+#             min =  0,
+#             max = 200,
+#             step = 1,
+#             value = 100)
+
+
+```
+
+Row {.tabset}
+-------------------------------------
+
+### Parameter estimates 
+
+```{r echo=FALSE}
+renderPlot({
+  
+  # if(input$biastype == "RelBias") {
+  #   total_res <- total_res %>% 
+  #     select(-value) %>% 
+  #     rename("value" = "rvalue") %>% 
+  #     filter(par_name != "b00")
+  # }
+  
+  facetswitch <- input$facetswitch
+  
+  lvmodel0 <- input$lvmodel
+  # lvmodel0 <- c("2pl")
+  samplesize0 <- input$samplesize
+  # samplesize0 <- c("500","1000","2000")
+  nitem0 <- input$nitem
+  # nitem0 <- c("100")
+  
+  par_name0   <- input$par_name
+  # par_name0 <- c("a11","b11")
+  minv <- as.numeric(input$minv)
+  maxv <- as.numeric(input$maxv)
+  
+  # stdbias <- input$stdbias
+  # labeloff <- input$labeloff
+  
+  if(input$prior_choice == "prior") {
+    
+    total_res <- total_res %>% 
+      filter(str_detect(lvmodel, "unif|norm|logn" ))
+  }
+  
+  if(lvmodel0 == "rasch") {
+    
+    total_res <- total_res %>% filter(par_name != "lambda")
+  }
+  
+  SE_data <- total_res %>% 
+    group_by(lvmodel, samplesize, nitem, par_name, rep) %>% 
+    summarise(
+      err = mean(value)
+    ) %>% 
+    group_by(lvmodel, samplesize, nitem, par_name) %>% 
+    summarise(
+      n = n(),
+      SE = sqrt(var(err)/n)
+    )
+  
+  total_res1 <- 
+    total_res %>% 
+    group_by(lvmodel, samplesize, nitem, par_name, rep) %>% 
+    summarise(
+      err = mean(value)
+    ) %>% 
+    {
+      if(input$prior_choice == "prior")
+        filter(., str_detect(lvmodel, "unif|norm|logn" )) %>% 
+        filter(., samplesize %in% "500") %>% 
+        filter(., nitem %in% "50") 
+      else
+        filter(., lvmodel %in% lvmodel0) %>% 
+        filter(., samplesize %in% samplesize0) %>% 
+        filter(., nitem %in% nitem0) 
+    } %>% 
+    filter(par_name %in% par_name0)
+  
+  SE_data1 <- SE_data %>% 
+    {
+      if(input$prior_choice == "prior")
+        filter(., str_detect(lvmodel, "unif|norm|logn" )) %>% 
+        filter(., samplesize %in% "500") %>% 
+        filter(., nitem %in% "50")
+      else
+        filter(., lvmodel %in% lvmodel0) %>% 
+        filter(., samplesize %in% samplesize0) %>% 
+        filter(., nitem %in% nitem0)
+    } %>% 
+    filter(par_name %in% par_name0)
+  
+  #
+  total_res1 <- total_res1 %>% 
+    left_join(
+      SE_data1, by = c("lvmodel","samplesize","nitem","par_name")
+    ) %>% 
+    mutate(
+      std.err = err / SE
+    )
+  
+  meanss <- total_res1 %>% 
+    group_by(lvmodel, samplesize, nitem, par_name) %>% 
+    summarise(
+      bias = mean(err),
+      medbias = median(err),
+      std.bias = mean(std.err)
+    )
+  
+  theme_set(
+    theme_bw(base_size = 16) +
+      theme(
+        strip.text.x = element_text(
+          # angle=50, hjust=1,
+          margin = margin(2, 0, 2, 0))
+      )
+  )
+  
+  # ggplot:  facet_grid(align ~ gender, margins=TRUE) 
+  # facet_wrap(decade ~ gender, drop = FALSE)
+  # facet_grid(align ~ gender, space="free", scales="free") 
+  # theme(plot.margin=unit(rep(1.5,4), "line"))
+  #
+  yvalue <- "err" #ifelse(stdbias =="Y", "std.err", "err")
+  
+  # total_res1 <- total_res1 %>% 
+  #   filter(between(err, minv, maxv))
+  
+  
+  
+  p <- total_res1 %>% 
+    ggplot(aes_string(x = "par_name", y = yvalue)) +
+    geom_violin(
+      trim=F,
+      fill = "skyblue", alpha = 0.5, color = NA) +
+    geom_sina(
+      position = position_jitter(width = 0.05),
+      alpha = 0.2) +
+    
+    geom_hline(yintercept = 0) +
+    
+    # geom_point(data = meanss,
+    #            aes(x = par_name, y = medbias), 
+    #            size = 3, shape = 23, 
+    #            alpha = 0.8, fill = 'green') +
+    
+    geom_point(data = meanss,
+               aes(x = par_name, y = bias), 
+               size = 3, shape = 24, alpha = 0.8, fill = 'red')
+  
+  
+  # stat_summary(
+  #   geom = "point",
+  #   fun = "mean",
+  #   col = "black",
+  #   size = 3,
+  #   shape = 24,
+  #   alpha = 0.8,
+  #   fill = "red"
+  # )
+  
+  # if(labeloff == "on") {
+  #   p <- p+  geom_label(data = meanss,
+  #                       aes(y = -Inf, x = par_name, label = round(bias,3)),
+  #                       hjust = 0.5, vjust = -3) +
+  #     annotate(geom = 'text', label = 'Bias', 
+  #              x = -Inf, y = -Inf, hjust = 0, vjust = -5.2) +
+  #     
+  #     geom_label(data = meanss,
+  #                aes(y = -Inf, x = par_name, label = round(std.bias,3)),
+  #                hjust = 0.5, vjust = -2) +
+  #     
+  #     annotate(geom = 'text', label = 'Std.Bias', 
+  #              x = -Inf, y = -Inf, hjust = 0, vjust = -3.8) +
+  #     
+  #     geom_label(data = SE_data1,
+  #                aes(y = -Inf, x = par_name, label = round(SE,3)),
+  #                hjust = 0.5, vjust = -1) +
+  #     annotate(geom = 'text', label = 'SE', 
+  #              x = -Inf, y = -Inf, hjust = 0, vjust = -2.4)
+  #   
+  # }
+  
+  if(facetswitch == "on") {
+    p + facet_grid(lvmodel + nitem ~  samplesize) +
+      scale_y_continuous(limits = c(minv,maxv)) +
+      scale_x_discrete(guide = guide_axis(n.dodge=2))
+  } else {
+    p +facet_grid(lvmodel + samplesize ~ nitem) +
+      scale_y_continuous(limits = c(minv,maxv)) +
+      scale_x_discrete(guide = guide_axis(n.dodge=2))
+  }
+  
+  
+  
+  # scale_alpha_manual(values = c(0.2, 1)) +
+  # scale_size_manual(values = c(1, 5)) +
+  # 
+})
+```
+
+### Table
+
+```{r, echo=FALSE}
+renderDT({
+  
+
+  
+  # lvmodel0 <- input$lvmodel
+  # # lvmodel0 <- c("rasch","2pl","grm","gpcm")
+  # samplesize0 <- input$samplesize
+  # # samplesize0 <- c("500","1000","2000")
+  # nitem0 <- input$nitem
+  # # nitem0 <- c("100")
+  # 
+  # par_name0   <- input$par_name
+  # # par_name0 <- c("a11","b11")
+  # minv <- as.numeric(input$minv)
+  # maxv <- as.numeric(input$maxv)
+  # 
+  
+  # if(lvmodel0 == "rasch") {
+  #   
+  #   total_res <- total_res %>%
+  #     filter(par_name != "lambda")
+  # }
+  
+  SE_data <- total_res %>%
+    group_by(lvmodel, samplesize, nitem, par_name, rep) %>%
+    summarise(
+      err = mean(value)#,
+      # rerr = mean(rvalue)
+    ) %>%
+    group_by(lvmodel, samplesize, nitem, par_name) %>%
+    summarise(
+      n = n(),
+      SE = sd(err)#,
+      # rSE = sd(rerr)
+    )
+ 
+  #
+  total_res1 <-
+    total_res %>%
+    group_by(lvmodel, samplesize, nitem, par_name, rep) %>%
+    summarise(
+      err = mean(value),
+      rerr = mean(rvalue),
+      X2.5. = mean(X2.5.),
+      X97.5. = mean(X97.5.),
+      coverage = mean(coverage)
+    ) %>%
+ 
+  mutate_if(is.numeric, ~ round(.x, 3))
+  
+  SE_data1 <- SE_data # %>%
+ 
+  total_res1 <- total_res1 %>%
+    left_join(
+      SE_data1, by = c("lvmodel","samplesize","nitem","par_name")
+    ) %>%
+    mutate(
+      std.err = err / SE
+    )
+  
+  #############################################
+  #############################################
+  # https://cran.r-project.org/web/packages/simhelpers/vignettes/MCSE.html#absolute-criteria
+  #############################################
+  #############################################
+  
+  total_res1 <- total_res1 %>%
+    group_by(lvmodel, samplesize, nitem, par_name) %>%
+    summarise(
+      N = n(),
+      bias = mean(err),
+      absbias = mean(abs(err)),
+      
+      X2.5. = mean(X2.5.),
+      X97.5. = mean(X97.5.),
+      coverage = mean(coverage),
+      
+      
+      rbias = mean(rerr),
+      arbias = mean(abs(rerr)),
+      
+      brmse = sqrt(mean(err^2)),
+      abrmse = sqrt(mean(abs(err)^2)),
+      
+      rbrmse = sqrt(mean(rerr^2)),
+      arbrmse = sqrt(mean(abs(rerr)^2)),
+      
+      VAR.bias = var(err)
+     ) %>%
+    ungroup() %>% 
+    mutate(
+      MSE.bias = bias^2
+    ) %>% 
+    arrange(lvmodel, nitem, par_name, samplesize)
+  
+  total_res1 %>%
+    mutate_if(is.numeric, ~ round(.x, 3)) %>%
+    datatable(.,
+              style='bootstrap',
+              class='table-condensed',
+              editable=TRUE,
+              rownames=FALSE,
+              extensions = 'Buttons',
+              options = list(
+                scrollX = '400px',
+                scrollY='500px',
+                dom = 'tp',
+                # searchHighlight = TRUE,
+                # columnDefs = list(list(width='50px',targets=c(0:9))),
+                order=list(0, 'asc'),
+                pageLength=10
+              ),
+              filter = list(position = "top")
+              
+    )
+})
+
+
+```
+
+
+### Population model
+
+```{r echo=FALSE}
+
+
+img(src='shinydata/figure1.png',
+    height = '600px', width = '600px',
+    align = "center")
+
+```
+
+
+
+Individual Parameter estimates {data-icon="fa-signal"}
+=====================================
+Inputs {.sidebar}
+-------------------------------------------------------------------
+```{r echo=FALSE}
+
+radioButtons("prior_choice1",
+             "Prior Choice",
+             inline = T,
+             choices = c("prior","main"),
+             selected = "main")
+
+radioButtons("lvmodel1",
+             label = "choose LV model",
+             inline = T,
+             choices = unique(total_res$lvmodel),
+             selected = unique(total_res$lvmodel)[1])
+
+radioButtons("samplesize1",
+             label = "choose sample size",
+             inline = T,
+             choices = unique(total_res$samplesize),
+             selected = unique(total_res$samplesize)[1])
+
+radioButtons("nitem1",
+             label = "choose N.item",
+             inline = T,
+             choices = unique(total_res$nitem),
+             selected = unique(total_res$nitem)[1])
+
+checkboxGroupInput("par_name1",
+                   label = "choose parameter name",
+                   inline = T,
+                   choices = unique(total_res$par_name),
+                   selected = unique(total_res$par_name)[1:4])
+
+
+textInput("minv1",
+          label = "filter outlier (minimum)",
+          value = -.5)
+textInput("maxv1",
+          label = "filter outlier (maximum)",
+          value = .5)
+
+radioButtons("rep_num",
+             label = "Replication Number",
+             inline = T,
+             choices = c("1"),
+             selected = NULL)
+
+observeEvent(input$prior_choice1, {
+  
+  if(input$prior_choice1 == "prior") {
+    lvmodel1 <- c("2plunif","2plnormal","2pllogn")
+  } else {
+    lvmodel1 <- c("rasch","2pl","gpcm","grm")
+  }
+  
+  updateRadioButtons(
+    session,
+    inputId = "lvmodel1",
+    label = NULL,
+    choices = lvmodel1,
+    selected = lvmodel1[2])
+})
+
+observeEvent(input$lvmodel1, {
+  
+  lvmodel1 <- input$lvmodel1
+  samplesize1 <- input$samplesize1
+  nitem1 <- input$nitem1
+  
+  total_res1 <- total_res %>%
+    {
+      if(input$prior_choice1 == "prior" )
+        filter(., lvmodel == lvmodel1) %>%
+        filter(., samplesize == "500") %>%
+        filter(., nitem == "50")
+      else
+        filter(.,lvmodel == lvmodel1) %>%
+        filter(.,samplesize == samplesize1) %>%
+        filter(.,nitem == nitem1)
+    }
+  
+  
+  repn <- unique(total_res1$rep)
+  
+  updateRadioButtons(
+    session,
+    inputId = "rep_num",
+    label = NULL,
+    choices = repn,
+    selected = repn[1])
+  
+})
+
+
+
+```
+
+Row {.tabset}
+-------------------------------------
+
+### Parameter estimates
+
+```{r echo=FALSE, fig.height=14, out.height='100%'}
+
+renderPlot({
+  
+  lvmodel1 <- input$lvmodel1
+  samplesize1 <- input$samplesize1
+  nitem1 <- input$nitem1
+  par_name1 <- input$par_name1
+  
+  # lvmodel1 = "2pl"
+  # samplesize1 = "1000"
+  # nitem1 = "100"
+  # par_name1 = c("a11","b11")
+  
+  pick_repn <- input$rep_num
+  
+  minv1 <- as.numeric(input$minv1)
+  maxv1 <- as.numeric(input$maxv1)
+  # minv1 <- -0.5
+  # maxv1 <- 0.5
+  
+  # total_res <- total_res %>%
+  #   group_by(condition, par_name, rep) %>%
+  #   summarise(err = mean(err))
+  
+  total_res1 <- total_res %>%
+    group_by(lvmodel, samplesize, nitem, par_name, rep) %>%
+    summarise(
+      err = mean(value)
+    ) %>%
+    {
+      if(input$prior_choice1 == "prior")
+        filter(., lvmodel == lvmodel1) %>%
+        filter(.,samplesize %in% "500") %>%
+        filter(.,nitem %in% "50")
+      
+      else
+        filter(.,lvmodel %in% lvmodel1) %>%
+        filter(.,samplesize %in% samplesize1) %>%
+        filter(.,nitem %in% nitem1)
+      
+    } %>%
+    filter(par_name %in% par_name1)
+  
+  total_res1 <- total_res1 %>%
+    mutate(hlt = case_when(
+      rep == pick_repn ~ "picked",
+      TRUE ~ "none"
+    ))
+  
+  label_data <- total_res1 %>%
+    filter(hlt == "picked")
+  
+  total_res1 %>%
+    # rename("err" = "value") %>%
+    ggplot(aes(x = par_name, y = err, alpha = hlt,
+               size = hlt)) +
+    geom_violin(
+      trim=F,
+      fill = "skyblue", alpha = 0.5, color = NA) +
+    geom_point(position = position_jitter(width = 0.05)) +
+    geom_label_repel(
+      data = label_data,
+      
+      aes(x = par_name, y = err, label = round(err,3)),
+      nudge_x = .15,
+      box.padding = 0.5,
+      nudge_y = 0.1,
+      segment.curvature = -0.1,
+      segment.ncp = 3,
+      segment.angle = 20
+    ) +
+    geom_hline(yintercept = 0) +
+    facet_wrap(nitem ~ samplesize) +
+    scale_alpha_manual(values = c(0.2, 1)) +
+    scale_size_manual(values = c(1, 5)) +
+    scale_y_continuous(
+      limits = c(minv1, maxv1),
+      n.breaks = 10)
+})
+
+```
+
+
+### Measurement part
+
+```{r echo=FALSE, fig.height=14, out.height='100%'}
+
+renderPlot({
+  
+  lvmodel1 <- input$lvmodel1
+  samplesize1 <- input$samplesize1
+  nitem1 <- input$nitem1
+  
+  # lvmodel1 = "grm"
+  # samplesize1 = "1000"
+  # nitem1 = "100"
+  
+  pick_repn <- input$rep_num
+  # pick_repn = "1"
+  
+  if(input$prior_choice1 == "prior") {
+    
+    condname <- paste(lvmodel1,
+                      "500","50", "0.2_0.5_TRUE_n",
+                      pick_repn, sep = "_")
+    
+  } else {
+    condname <- paste(lvmodel1, samplesize1,nitem1, "0.2_0.5_TRUE_n",
+                      pick_repn, sep = "_")
+  }
+  
+  
+  mpart_sub <- mpart %>%
+    filter(cond == condname) %>%
+    mutate(
+      par_name =
+        case_when(str_detect(par_name, "eta") ~ "eta",
+                  str_detect(par_name, "lambda") ~ "lambda",
+                  TRUE ~ "tau")
+    )
+  
+  correlations <- mpart_sub %>%
+    group_by(par_name) %>%
+    summarise(corr = cor(true_param, est_mean))
+  
+  means <- mpart_sub %>%
+    group_by(par_name) %>%
+    summarise(
+      var_est  = var(est_mean),
+      var_true  = var(true_param),
+      bias     = mean(est_mean-true_param),
+      sdbias   = sd(est_mean-true_param)
+    )
+  
+  
+  peta <- mpart_sub %>%
+    filter(par_name == "eta") %>%
+    mutate(group = rep(c("trt","ctl"), each = nrow(.)/2)) %>%
+    ggplot() +
+    geom_point(aes(x = true_param, y = est_mean, color = group)) +
+    geom_abline(slope = 1, intercept = 0) +
+    annotate(geom = "text",
+             x = -Inf, y = Inf,
+             size = 6,
+             vjust = 1,
+             hjust = -2,
+             label = paste0("Cor = ",
+                            round(correlations$corr[1],3))) +
+    annotate(geom = "text",
+             x = -Inf, y = Inf,
+             size = 6,
+             vjust = 2,
+             hjust = -2,
+             label = paste0("Bias = ",
+                            round(means$bias[1],3))) +
+    annotate(geom = "text",
+             x = -Inf, y = -Inf,
+             size = 6,
+             vjust = -2,
+             hjust = -2,
+             label = paste0("Variance of eta est = ",
+                            round(means$var_est[1],3))) +
+    annotate(geom = "text",
+             x = -Inf, y = -Inf,
+             size = 6,
+             vjust = -1,
+             hjust = -2,
+             label = paste0("Variance of true = ",
+                            round(means$var_true[1],3)))
+  
+  plam <- mpart_sub %>%
+    filter(par_name == "lambda") %>%
+    ggplot() +
+    geom_point(aes(x = true_param, y = est_mean)) +
+    geom_abline(slope = 1, intercept = 0) +
+    annotate(geom = "text",
+             x = -Inf, y = Inf,
+             size = 6,
+             vjust = 1,
+             hjust = -2,
+             label = paste0("Cor = ",
+                            round(correlations$corr[2],3))) +
+    annotate(geom = "text",
+             x = -Inf, y = Inf,
+             size = 6,
+             vjust = 2,
+             hjust = -2,
+             label = paste0("Bias = ",
+                            round(means$bias[2],3)))
+  
+  
+  ptau <- mpart_sub %>%
+    filter(par_name == "tau") %>%
+    ggplot() +
+    geom_point(aes(x = true_param, y = est_mean)) +
+    geom_abline(slope = 1, intercept = 0) +
+    annotate(geom = "text",
+             x = -Inf, y = Inf,
+             size = 6,
+             vjust = 1,
+             hjust = -2,
+             label = paste0("Cor = ",
+                            round(correlations$corr[3],3))) +
+    annotate(geom = "text",
+             x = -Inf, y = Inf,
+             size = 6,
+             vjust = 2,
+             hjust = -2,
+             label = paste0("Bias = ",
+                            round(means$bias[3],3)))
+  
+  
+  ggpubr::ggarrange(peta, plam, ptau,
+                    nrow = 3,
+                    labels = c("Eta","Lambda","Tau"))
+})
+
+```
+
+
+### Measurement part: Coverage
+
+```{r echo=FALSE, fig.height=14, out.height='100%'}
+
+renderPlot({
+  
+  lvmodel1 <- input$lvmodel1
+  samplesize1 <- input$samplesize1
+  nitem1 <- input$nitem1
+  
+  # lvmodel1 = "rasch"
+  # samplesize1 = "1000"
+  # nitem1 = "100"
+  
+  pick_repn <- input$rep_num
+  # pick_repn = "1"
+  
+  if(input$prior_choice1 == "prior") {
+    
+    condname <- paste(lvmodel1,
+                      "500","50", "0.2_0.5_TRUE_n",
+                      pick_repn, sep = "_")
+    
+  } else {
+    condname <- paste(lvmodel1, samplesize1,nitem1, "0.2_0.5_TRUE_n",
+                      pick_repn, sep = "_")
+  }
+  
+  
+  mpart_sub <- mpart %>%
+    filter(cond == condname) %>%
+    mutate(
+      par_name0 =
+        case_when(str_detect(par_name, "eta") ~ "eta",
+                  str_detect(par_name, "lambda") ~ "lambda",
+                  TRUE ~ "tau"),
+      CIin = case_when(
+        true_param > X2.5. & true_param < X97.5. ~ 1,
+        TRUE ~ 0
+      ),
+      X2.5err = X2.5. - true_param,
+      X97.5err = X97.5. - true_param,
+    )
+  
+  covarage <- mpart_sub %>%
+    group_by(cond, par_name0) %>%
+    summarise(coverage = mean(CIin))
+  
+  peta <- mpart_sub %>%
+    filter(str_detect(par_name, "eta")) %>%
+    mutate(group = rep(c("trt","ctl"), each = nrow(.)/2))
+  
+  trt1 <- peta %>% 
+    filter(group == "trt") %>% 
+    sample_frac(size = .1)
+  
+  ctl1 <- peta %>% 
+    filter(group != "trt") %>% 
+    sample_frac(size = .1)
+  
+  peta <-
+    bind_rows(trt1, ctl1) %>% 
+    ggplot(aes(x = par_name, y = err)) +
+    geom_point() +
+    geom_errorbar(aes(ymin=X2.5err, ymax=X97.5err), 
+                  width=.2, alpha = 0.5) +
+    geom_hline(yintercept = 0, 
+               color = "red", 
+               linetype = "solid", size = 1.5, alpha = 0.4) +
+    annotate(geom = "text",
+             x = -Inf, y = Inf,
+             size = 5,
+             vjust = 2,
+             hjust = 0,
+             label = paste0("Covarage = ", round(covarage$coverage[1],3))) +
+    labs(y = "Eta") +
+    theme(axis.text.x = element_blank())
+  
+  if(nrow(covarage) == 2) {
+    
+    ptau <- mpart_sub %>%
+      filter(str_detect(par_name, "tau")) %>%
+      
+      ggplot(aes(x = par_name, y = err)) +
+      geom_point() +
+      geom_errorbar(aes(ymin=X2.5err, ymax=X97.5err), 
+                    width=.2, alpha = 0.5) +
+      geom_hline(yintercept = 0, 
+                 color = "red", 
+                 linetype = "solid", size = 1.5, alpha = 0.4) +
+      annotate(geom = "text",
+               x = -Inf, y = Inf,
+               size = 5,
+               vjust = 2,
+               hjust = 0,
+               label = paste0("Covarage = ", round(covarage$coverage[2],3))) +
+      labs(y = "Tau") +
+      theme(axis.text.x = element_blank())
+    
+    
+    ggpubr::ggarrange(peta, ptau,
+                      nrow = 2,
+                      labels = c("Eta","Tau"))
+    
+  } else {
+    
+    
+    plam <- mpart_sub %>%
+      filter(str_detect(par_name, "lambda")) %>%
+      
+      ggplot(aes(x = par_name, y = err)) +
+      geom_point() +
+      geom_errorbar(aes(ymin=X2.5err, ymax=X97.5err), 
+                    width=.2, alpha = 0.5) +
+      geom_hline(yintercept = 0, 
+                 color = "red", 
+                 linetype = "solid", size = 1.5, alpha = 0.4) +
+      annotate(geom = "text",
+               x = -Inf, y = Inf,
+               size = 5,
+               vjust = 2,
+               hjust = 0,
+               label = paste0("Covarage = ", round(covarage$coverage[2],3))) +
+      labs(y = "Lambda") +
+      theme(axis.text.x = element_blank())
+    
+    ptau <- mpart_sub %>%
+      filter(str_detect(par_name, "tau")) %>%
+      
+      ggplot(aes(x = par_name, y = err)) +
+      geom_point() +
+      geom_errorbar(aes(ymin=X2.5err, ymax=X97.5err), 
+                    width=.2, alpha = 0.5) +
+      geom_hline(yintercept = 0, 
+                 color = "red", 
+                 linetype = "solid", size = 1.5, alpha = 0.4) +
+      annotate(geom = "text",
+               x = -Inf, y = Inf,
+               size = 5,
+               vjust = 2,
+               hjust = 0,
+               label = paste0("Covarage = ", round(covarage$coverage[3],3))) +
+      labs(y = "Tau") +
+      theme(axis.text.x = element_blank())
+    
+    
+    ggpubr::ggarrange(peta, plam, ptau,
+                      nrow = 3,
+                      labels = c("Eta","Lambda","Tau"))
+    
+  }
+  
+  
+})
+
+```
+
