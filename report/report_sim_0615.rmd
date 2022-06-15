@@ -19,6 +19,7 @@ editor_options:
 knitr::opts_chunk$set(
   eval = T,
   echo = F,
+  cache = T,
   fig.height = 12,
   fig.width = 24,
   out.width = '150%',
@@ -309,14 +310,16 @@ total_res1 %>%
              aes_string(x = "par_name", y = yvalue),
              size = 3, shape = 24, alpha = 0.8, fill = 'red') +
   facet_grid(nitem ~  samplesize) +
-  scale_y_continuous(limits = c(0, 0.3), expand = c(0,0))
+  scale_y_continuous(limits = c(0, 0.3), expand = c(0,0)) +
+  theme(text = element_text(size = 40))
 
 total_res2 %>%
   filter(lvmodel == "rasch") %>%
   filter(nitem == "100") %>%
   ggplot(aes_string(x = "par_name", y = yvalue)) +
   geom_col(fill = "grey50", color = "white") +
-  facet_grid(nitem ~  samplesize)
+  facet_grid(nitem ~  samplesize) +
+  theme(text = element_text(size = 40))
 
 total_res2 %>%
   filter(lvmodel == "rasch") %>%
@@ -324,7 +327,8 @@ total_res2 %>%
   ggplot(aes_string(x = "par_name", y = yvalue)) +
   geom_point(shape = 21, color = 'black',
              fill = 'white', size = 3, stroke = 3) +
-  facet_grid(nitem ~  samplesize)
+  facet_grid(nitem ~  samplesize) +
+  theme(text = element_text(size = 40))
 
 
 p_ni100 <- total_res2 %>%
@@ -333,7 +337,7 @@ p_ni100 <- total_res2 %>%
   ggplot(aes_string(x = "par_name", y = yvalue)) +
   geom_col(fill = "grey50", color = "white") +
   facet_grid(nitem ~  samplesize) +
-  theme_half_open() +
+  theme_half_open(font_size = 30) +
   panel_border()
 
 p_ss1000 <- total_res2 %>%
@@ -343,7 +347,7 @@ p_ss1000 <- total_res2 %>%
   ggplot(aes_string(x = "par_name", y = yvalue)) +
   geom_col(fill = "grey50", color = "white") +
   facet_grid(samplesize ~ nitem ) +
-  theme_half_open() +
+  theme_half_open(font_size = 30) +
   # theme_minimal_hgrid(12) +
   panel_border()
 
