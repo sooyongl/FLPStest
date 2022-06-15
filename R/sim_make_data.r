@@ -37,20 +37,20 @@ makeDat <- function(N,R2Y,R2eta,omega,tau0,tau1,linear,ydist,lambda,nsec,nfac,lv
   mc <- match.call(expand.dots = TRUE)
   mc[[1L]] <- quote(list); # mc <- as.list(match.call()[-1])
 
-  # set up S3 class ---------------------------------------------------------
+  # set up S3 class
   sim_info <- structure(eval(mc), class = tolower(lvmodel))
   # sim_info<-structure(sim_condition,class=tolower(sim_condition$lvmodel))
 
-  # Generate Latent Variable Model Information ------------------------------
+  # Generate Latent Variable Model Information
   sim_info <- genLVinfo(sim_info = sim_info)
 
-  # Generate True eta -------------------------------------------------------
+  # Generate True eta
   sim_info <- genTrueEta(Data = sim_info)
 
-  # Generate LV part --------------------------------------------------------
+  # Generate LV part
   sim_info <- genLVM(info = sim_info)
 
-  # simulate Y --------------------------------------------------------------
+  # simulate Y
   sim_info <- genOutcome(Data = sim_info)
 
   return(sim_info)

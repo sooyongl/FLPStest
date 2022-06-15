@@ -1,154 +1,97 @@
-clean_temp <- function(fit, sdat) {
-  N <- sdat$N
-  stan_dt <- sdat$stan_dt
-  nb <- max(sdat$grad) - min(sdat$grad)
-  nfac <- sdat$nfac
+# latent_labmda <- function(obs.v.partial, lv_type) {
+# }
 
-  iter = fit@sim$iter - fit@sim$warmup
-  n.chain = fit@sim$chains
-
-
-  if(class(sdat) == "rasch") {
-   comb_lambda <- matrix(c(1,1, -99, -99, -99, -99, -99, -99, -99,-99,-99), nrow = 1)
-   colnames(comb_lambda) <- c("true_param","mean","se_mean","sd","2.5%","25%","50%","75%","97.5%","n_eff","Rhat")
-
-  } else {
-    est_lambda <- summary(fit, pars = c("lambda"))
-    comb_lambda <- cbind(true_param=sdat$lv.par[,1:nfac],est_lambda$summary)
-  }
-
-
-  est_tau <- summary(fit, pars = c("tau"))
-  # str(mea_param)
-  # mea_param$c_summary[1:100, 1, 1:2]
-
-  # item param
-  # df.fit <- as.data.frame(fit)
-  # df.fit$chain <- rep(c(1:n.chain), each = iter)
-  # df.fit <- df.fit %>% group_by(chain)
-
-  # lambda <- df.fit %>%
-  #   select(chain, matches("^lambda\\[")) %>%
-  #   summarise_all(mean) %>%
-  #   select(-chain) %>%
-  #   as.matrix() %>%
-  #   matrix(., ncol = nfac, byrow = T)
-  #
-  # tau <- df.fit %>%
-  #   select(chain, matches("^tau\\[")) %>%
-  #   summarise_all(mean) %>%
-  #   select(-chain) %>%
-  #   as.matrix() %>%
-  #   matrix(., ncol = nfac, byrow = T)
-
-  # lambda <- summary(fit, pars = c("lambda"))$summary
-  # tau    <- summary(fit, pars = c("tau"))$summary
-  #
-  # # comb_lambda <- apply(comb_lambda, 2, as.numeric)
-  true_tau <- sdat$lv.par[,(nfac+1):ncol(sdat$lv.par)]
-  true_tau <- true_tau[!grepl("g", names(true_tau))]
-  #
-  if(dim(true_tau)[2]>1)
-    true_tau <- unlist(true_tau)
-
-  comb_tau    <- cbind(true_param=true_tau, est_tau$summary)
-  keepnm <- colnames(comb_tau)
-  keepnm[1] <- "true_param"
-  colnames(comb_tau) <- keepnm
-  # comb_tau    <- apply(comb_tau, 2, as.numeric)
-
-  est_eta <- summary(fit, pars = c("eta"))
-
-  # eta <- df.fit %>%
-  #   select(chain, matches("^eta")) %>%
-  #   summarise_all(mean) %>%
-  #   select(-chain) %>%
-  #   as.matrix() %>%
-  #   matrix(., ncol = n.chain, nrow = N, byrow = T)
-  #
-  #   eta <- summary(fit, pars = c("eta"))$summary
-    comb_eta <- cbind(true_param=sdat$theta, est_eta$summary)
-  # comb_eta <- apply(comb_eta, 2, as.numeric)
-
-  # apply(comb_eta, 2, function(x) mean(unlist(x)))
-  # apply(comb_eta, 2, function(x) var(unlist(x)))
-  #
-  #
-  # plot(unlist(comb_eta[,1]), unlist(comb_eta[,3]))
-  # plot(unlist(comb_eta[,2]), unlist(comb_eta[,4]))
-
-  # true_param <- check_flps(stan_dt)
-
-  a11 <- sdat$omega
-  b0  <- sdat$tau0
-  b11 <- sdat$tau1
-
-  true_param <- c(-1, 0.5, 1.0, 0.5, 0, a11, b0, b11)
-
-  names(true_param) <- c("bu11","bu12","by1","by2","b00","a11", "b0", "b11")
-  # colnames(stan_dt$X) <- paste0("X", 1:ncol(stan_dt$X))
-  # # main effect ------------------------------------------
-  # true_data <- data.frame(Y = stan_dt$Y, stan_dt$X, eta = sdat$theta, Z = stan_dt$Z)
-  #
-  # etas <- names(true_data)[str_detect(names(true_data), "eta")]
-  # Xs <- names(true_data)[str_detect(names(true_data), "X")]
-  #
-  # etapart<- paste(etas, collapse = "+")
-  # etazpart <- paste(paste0(etas, "*Z"), collapse = "+")
-  # true_form <- as.formula(glue::glue("Y ~ Z + {etapart} + {etazpart} + X1 + X2"))
-  # true_param <- lm(true_form, data = true_data)
-  # true_param <- coefficients(true_param)
-  #
-  # true_param1 <- lm(eta.eta1 ~ X1 + X2, data = true_data)
-  # true_param2 <- lm(eta.eta2 ~ X1 + X2, data = true_data)
-  # true_param12 <- c(coefficients(true_param1)[2:3],
-  #                   coefficients(true_param2)[2:3])
-  #
-  # true_param <- c(true_param, true_param12)
-  #
-  # names(true_param) <- c("b00", "b0", "a11","a12", "by1","by2",
-  #                        "b11","b12", "bu11","bu21","bu12","bu22")
-  # true_param <- true_param[c("b00", "b0", "b11","b12", "a11","a12",
-  #                            "by1","by2", "bu11","bu21","bu12","bu22")]
-  # bu <- names(true_param)[grep("bu", names(true_param))]
-  # b1 <- names(true_param)[grep("b1", names(true_param))]
-  # a1 <- names(true_param)[grep("a1", names(true_param))]
-  # by <- names(true_param)[grep("by", names(true_param))]
-
-  true_param <- true_param[c("bu11","bu12","by1","by2","b00","a11","b0","b11")]
-
-  # est_param <- df.fit %>%
-  #   select(matches("^b00|^b0|b1|a1|betaY|betaU")) %>%
-  #   summarise_all(mean) %>%
-  #   select(-chain) %>%
-  #   set_names(c("bu1","bu2", "by1", "by2","b00", "a1", "b0", "b1")) #%>%
-  #select(names(true_param))
-
-  est_param <- summary(fit,
-                       pars = c("betaU",
-                                "betaY",
-                                "b00","a1","b0","b1"))$summary #[, "n_eff"]
-
-  # est_param_sd <- df.fit %>%
-  #   select(matches("^b00|^b0|b1|a1|betaY|betaU")) %>%
-  #   summarise_all(sd) %>%
-  #   select(-chain) %>%
-  #   set_names(c("bu1","bu2", "by1", "by2","b00", "a1", "b0", "b1")) #%>%
-  # flps_param <- bind_rows(true = true_param, est = est_param, .id = "type")
-
-  flps_param <- cbind(true_param=true_param, est_param)
-
-  list(flps_param=flps_param,
-       comb_lambda=comb_lambda,
-       comb_tau=comb_tau,
-       comb_eta=comb_eta
-  )
-
-}
-
-
-#' gelman diagnostic with chol.default error addressed.
+#' make stanmodel class
 #'
+# makeStanModel <- function(stan_code_path) {
+#
+#   stanfit <- rstan::stanc_builder(stan_code_path,
+#                                   allow_undefined = TRUE,
+#                                   obfuscate_model_name = FALSE)
+#   stanfit$model_cpp <- list(model_cppname = stanfit$model_name,
+#                             model_cppcode = stanfit$cppcode)
+#   # create stanmodel object
+#   sm <- methods::new(Class = "stanmodel",
+#                      model_name = stanfit$model_name,
+#                      model_code = stanfit$model_code,
+#                      model_cpp = stanfit$model_cpp,
+#                      mk_cppmodule = function(x) get(paste0("model_", model_name)))
+#
+#   sm
+# }
+
+# Generate Binary data
+#
+# simData.dich <- function(a, d, guess, N, theta, D = 1){
+#
+#   # a = as.matrix(a),
+#   # d = as.matrix(d),
+#   # guess = as.vector(guess),
+#   # N = N,
+#   # theta = as.matrix(theta),
+#   # itemtype = lvmodel
+#
+#   nexaminee <- N
+#   nitem <- length(a)
+#   g <- guess
+#   # data generation
+#   pr <- matrix(NA, nexaminee, nitem)
+#   for (j in 1:nexaminee){
+#     pr[j,] <- g + (1 - g) / (1 + exp(-D * (d + a * (theta[j]))))
+#   }
+#   resp <- (matrix(runif(nexaminee*nitem), nexaminee, nitem) < pr) * 1
+#
+#   # ipar <- data.frame(a = a, d = d, c = g)
+#   return(resp)
+# }
+
+# Generate GPCM data (Under test)
+#
+# simData.gpcm <- function(a, d, N, theta){
+#
+#   disc <- a
+#   loc <- d
+#
+#   K_j <- rep(ncol(d), nrow(d))
+#   maxK <- max(K_j)
+#
+#   resp <- matrix(NA, nrow(theta), nitem)
+#
+#   for (i in 1:length(theta)){# i<-1
+#
+#     ### Compute item response category functions
+#     pr <- matrix(NA, nitem, maxK + 1) # each row: P(X=0), ... ,P(X=K_j)
+#     for (j in 1:nitem) { # j <- 1
+#       exps_k <- rep(0, K_j[j]+1) # Exponentials at k = 0, ... , K_j
+#       exps_k[1] <- exp(0)
+#       for (k in 1:K_j[j]){ # h <- 1
+#         exps_k[k+1] <- exp( k * disc[j] * theta[i] + sum(loc[j, 1:k]) )
+#       }
+#       pr[j, 1:(K_j[j]+1)] <- exps_k / sum(exps_k)
+#     } # end of j
+#
+#     cumpr <- matrix(NA, nitem, maxK+1)
+#     for (j in 1:nitem){ # j <- 1
+#       for (k in 1:(K_j[j]+1)){# h <- 1
+#         cumpr[j, k] <- sum(pr[j, 1:k])
+#       }
+#     }
+#
+#     tmp <- 1 * (cumpr >= matrix(rep(runif(nitem), maxK+1), nrow=nitem, ncol=maxK+1))
+#     for (j in 1:nitem){ # j <- 1
+#       if (sum(tmp[j,], na.rm=T)==(K_j[j]+1)){ # if all cumprs (including cpr_0) are larger than u
+#         resp[i, j] <- 0
+#       } else {
+#         resp[i, j] <- min(which(tmp[j,]==1, arr.ind=T)) - 1
+#       }
+#     }
+#
+#   }
+#
+#   return(resp)
+# }
+
+# gelman diagnostic with chol.default error addressed.
 # my.gelman.diag <- function(x,confidence = 0.95,transform = FALSE,autoburnin = FALSE,multivariate = TRUE) {
 #   x <- as.mcmc.list(x)
 #   if (nchain(x) < 2)
@@ -207,3 +150,100 @@ clean_temp <- function(fit, sdat) {
 #   class(out) <- "gelman.diag"
 #   return( out )
 # }
+
+
+#  Check simulated latent variable model parameters
+#
+#  lvmodel <- "2pl"
+#  ipar <- genIRTpar(20, ncat = 3, 2, lvmodel)
+#  eta <- MASS::mvrnorm(100, rep(0, 2), matrix(c(1,0,0,1),ncol=2))
+#  dat <- genIRTdt(lvmodel, eta, ipar)
+#  check_irt(dat, lvmodel, 2, IRTpars = F)
+#
+# check_lv <- function(dat, covdata=NULL, lvmodel, nfac, IRTpars) {
+#
+#   nitem <- ncol(dat);
+#
+#   idx_ <- rep(floor(nitem / nfac),nfac)
+#   idx_[length(idx_)] <- nitem - sum(idx_[-length(idx_)])
+#   idx_c <- c(0,cumsum(idx_))
+#
+#   mirt_model <- ""
+#   for(j in 1:nfac) { # j=1
+#     mirt_model <- paste(mirt_model,
+#                         paste0("F", j, "=",(idx_c[j]+1),"-", idx_c[(j+1)]),
+#                         sep = "\n")
+#   }
+#
+#   lvmodel <- switch(lvmodel,
+#                     "rasch" = "Rasch",
+#                     "2pl" = "2PL",
+#                     "3pl" = "3PL",
+#                     "gpcm" = "gpcm",
+#                     "grm" = "graded",
+#                     lvmodel)
+#
+#   cov.formula <- NULL
+#   if(!is.null(covdata)) {
+#     Xs <- names(covdata)
+#     cov.formula <- as.formula(paste0("~ ", paste(Xs, collapse = "+")))
+#   }
+#
+#   res <- mirt::mirt(
+#     data = dat,
+#     model = mirt_model, # paste0("F = 1-",ncol(dat)),
+#     itemtype = lvmodel,
+#     covdata = covdata,
+#     formula = cov.formula,
+#     SE = F,
+#     verbose = FALSE
+#   )
+#   coef.res <- mirt::coef(res, IRTpars = IRTpars, simplify = T)
+#   items.res <- as.data.frame(coef.res$items)
+#
+#   list(mirt.fit = res, items.est = items.res)
+# }
+
+
+# Check simulated FLPS part parameters
+#
+# check_flps <- function(stan_dt) {
+#
+#   colnames(stan_dt$X) <- paste0("X", 1:ncol(stan_dt$X))
+#   # main effect ------------------------------------------
+#   true_data <- data.frame(Y = stan_dt$Y, stan_dt$X, eta = sdat$theta, Z = stan_dt$Z)
+#
+#   etas <- names(true_data)[str_detect(names(true_data), "eta")]
+#   Xs <- names(true_data)[str_detect(names(true_data), "X")]
+#
+#   etapart <- paste(etas, collapse = "+")
+#   etazpart <- paste(paste0(etas, "*Z"), collapse = "+")
+#
+#   xpart <- paste(Xs, collapse = "+")
+#
+#   true_form <- as.formula(glue::glue("Y ~ Z + {etapart} + {etazpart} + {xpart}"))
+#   all_to_y.fit <- lm(true_form, data = true_data)
+#   all_to_y <- coefficients(all_to_y.fit)
+#
+#   x_to_factor <- c()
+#   for(i in 1:length(etas)) {
+#     f1 <- as.formula(glue::glue("{etas[i]} ~ {xpart}"))
+#     x_to_factor.fit <- lm(f1, data = true_data)
+#     coef.x <- coef(x_to_factor.fit)
+#     x_to_factor <- c(x_to_factor, coef.x[grepl("X", names(coef.x))])
+#   }
+#
+#   omega <- paste0("a1", 1:length(etas))
+#   interterm <- paste0("b1", 1:length(etas))
+#
+#   bux1 <- paste0("bu", 1:length(etas), "1")
+#   bux2 <- paste0("bu", 1:length(etas), "2")
+#
+#   true_param <- c(all_to_y, x_to_factor)
+#
+#   names(true_param) <- c("b00", "b0", omega, "by1","by2", interterm, bux1,bux2)
+#   true_param <- true_param[c("b00", "b0", interterm, omega,"by1","by2", bux1,bux2)]
+#   true_param
+# }
+
+

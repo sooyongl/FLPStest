@@ -1,3 +1,36 @@
+#' make NULL S3 class
+#' @noRd
+S3class <- function(class) {
+  out <- structure(list(), class = class)
+  out
+}
+
+#' obtain the signs of factor loadings
+#' @noRd
+obv_lambda <- function(obs.v.partial, a_idx) {
+
+  nsec <- nrow(a_idx)
+  nfac <- ncol(a_idx)
+
+  fs.prior.info <- apply(obs.v.partial, 2, function(x) {
+    cor(x, rowMeans(obs.v.partial, na.rm = T), use = "pairwise.complete.obs")
+  })
+
+  fs.prior.info[which(fs.prior.info > 0)] <- 1
+  fs.prior.info[which(fs.prior.info < 0)] <- -1
+  fs.prior.info[which(is.na(fs.prior.info))] <- 0
+
+  temp_idx <- apply(a_idx, 2, function(x) which(x == 1))
+
+  a1 <- matrix(rep(0, nsec*nfac), ncol=nfac)
+  for(x in 1:nfac) {
+    a1[temp_idx[,x],x] <- fs.prior.info[temp_idx[,x]]
+
+  }
+
+  a1
+}
+
 #' @noRd
 gen_a <- function(nitem, nfac) {
   idx_ <- rep(floor(nitem / nfac),nfac)
@@ -43,4 +76,56 @@ str_split_and <- function(x, char) {
   }
 
   return(x)
+}
+
+#' Set the options of rstan
+#' stanOptions(stan_options = list());
+#' @noRd
+stanOptions <- function(stan_options, ...) {
+
+  # replace a missing value in a list -------------
+  #
+  # replaceMissing <- function(List, comp, value){
+  #   arg <- paste(substitute(List), "$", substitute(comp), sep = "")
+  #   arg.value <- eval(parse(text = arg), parent.frame(1))
+  #   if (any(is.na(arg.value))) {
+  #     change <- paste(arg, "<-", deparse(substitute(value)))
+  #     a <- eval(parse(text = change), parent.frame(1))
+  #   }
+  #   invisible()
+  # }
+
+  dots <- list(...)
+
+  if(!"chain" %in% names(stan_options)) {
+    stan_options$chain <- 1
+  }
+
+  if(!"iter" %in% names(stan_options)) {
+    stan_options$iter <- 10000
+    stan_options$warmup <- 2000
+
+  } else {
+
+    if(!"warmup" %in% names(stan_options)) {
+      stan_options$warmup <- floor(stan_options$iter / 2)
+    }
+  }
+
+  for(i in 1:length(dots)){
+    stan_options[[names(dots)[i]]] <- dots[[i]]
+  }
+
+  # if (sys.parent() == 0)
+  # e <- asNamespace("FLPS")
+  # else
+  # e <- parent.frame()
+  # if(length(stan_options) > 0) {
+  #   for(i in 1:length(stan_options)){
+  #     .stanOptions[[which(names(.stanOptions) %in% names(stan_options)[i])]] <-
+  #       stan_options[[i]]
+  #   }
+  # }
+
+  return(stan_options)
 }

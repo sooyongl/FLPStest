@@ -18,6 +18,10 @@ genOutcome.default <- function(Data) {
   linear <- Data$linear
   ydist  <- Data$ydist
 
+  Data$omega0 <- Data$omega
+  Data$tau00 <- Data$tau0
+  Data$tau10 <- Data$tau1
+
   omega  <- Data$omega # round(runif(nfac, 0.1, 0.3),3)
   tau0   <- Data$tau0  # round(runif(1, 0.2, 0.4),3)
   tau1   <- Data$tau1  # round(runif(nfac, -0.2, -0.1),3)
@@ -69,6 +73,8 @@ genOutcome.default <- function(Data) {
 
     Y <- Y + rq(N, 3)
   }
+
+  Y <- Y - mean(Y)
 
   Data$omega <- omega
   Data$tau0 <- tau0

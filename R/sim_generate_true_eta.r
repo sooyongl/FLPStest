@@ -18,7 +18,7 @@ genTrueEta.default <- function(Data) {
 
   x1   <- rnorm(N, 0, 1)
   x1sq <- x1^2
-  x2   <- rnorm(N, 0, 1) # rbinom(N, 1, .5) #
+  x2   <- rbinom(N, 1, .5)
 
   if(linear){
 
