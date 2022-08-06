@@ -37,7 +37,7 @@ infoSetting <- function(...) {
 #'
 #' @returns a flpsData class.
 #'
-#' @export
+# #' @export
 makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type, custom = F, ...) {
   # flps_data <- dataSetting() ; S3 class
   dotdotdot <- list(...)
@@ -54,15 +54,6 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type,
     out$lv_model <- lv_model
     out$stan_data <- inp_data
 
-    ## S4
-    # out <- new("flpsData")
-    #
-    # out@outcome <- outcome
-    # out@group <- group
-    # out@covariate <- covariate
-    # out@lv_type <- lv_type
-    # out@lv_model <- lv_model
-    # out@stan_data <- inp_data
 
   } else {
 
@@ -90,6 +81,8 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type,
     obs.v.vector <- sapply(1:nrow(obs.v.idx),
                            function(n) obs.v.matrix[obs.v.idx[n,1], obs.v.idx[n,2]])
 
+    a_idx <- gen_a_idx(nsec, nfac = 1) # temporary 1
+    fi_idx <- detect_firstitem(a_idx)
 
     flps_data <- list(
       nsecWorked = length(obs.v.idx[,2]),
@@ -104,7 +97,11 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type,
       ncov = ncol(covariate.data),
 
       Z = group.data,
-      Y = outcome.data
+      Y = outcome.data,
+
+      firstitem = fi_idx,
+      factoridx = a_idx,
+      nfac = 1
     )
 
     if(TRUE) {
@@ -115,8 +112,9 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type,
 
     lv_type <- toupper(lv_type)
     if(lv_type %in% c("IRT","RASCH","2PL","3PL")) {
-      flps_data$lambda_prior <- obtain_prior(obs.v.partial)
-
+      flps_data$lambda_prior <- obtain_prior(obs.v.partial, a_idx)
+      flps_data$min_k <- min(obs.v.vector)
+      flps_data$max_k <- max(obs.v.vector)
       ## S3
       out <- S3class("flpsIRT")
 
@@ -125,7 +123,8 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type,
     }
 
     if(lv_type %in% c("GPCM","PCM","RSM")) {
-      flps_data$lambda_prior <- obtain_prior(obs.v.partial)
+      flps_data$lambda_prior <- obtain_prior(obs.v.partial, a_idx)
+      flps_data$min_k <- min(obs.v.vector)
       flps_data$max_k <- max(obs.v.vector)
 
       ## S3
@@ -136,7 +135,7 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type,
     }
 
     if(lv_type %in% c("SEM","CFA")) {
-      flps_data$lambda_prior <- obtain_prior(obs.v.partial)
+      flps_data$lambda_prior <- obtain_prior(obs.v.partial, a_idx)
 
       ## S3
       out <- S3class("flpsSEM")
@@ -177,16 +176,8 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type,
     out$lv_data <- obs.v.partial
     out$stan_data <- flps_data
 
-    ## S4
-    # out@outcome <- outcome
-    # out@group <- group
-    # out@covariate <- covariate
-    # out@lv_type <- lv_type
-    # out@lv_model <- lv_model
-    # out@lv_data <- obs.v.partial
-    # out@stan_data <- flps_data
   }
-
 
   return(out)
 }
+

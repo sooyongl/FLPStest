@@ -27,7 +27,7 @@
 #' \donttest{
 #' runSimulation(pars)
 #' }
-#' @export runSimulation
+# #' @export runSimulation
 runSimulation <- function(param_list, iter = 2000, warmup = 1000, cores = 1, chains = 1, pars = NA) {
 #
 #   # print("It is deprecated. Use runFLPS instead.")

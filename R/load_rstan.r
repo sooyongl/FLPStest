@@ -6,31 +6,37 @@
 #' @return An object of class \code{\linkS4class{stanmodel}}
 #' @examples
 #' stan_model <- rstan_path(lv_type = "rasch")
-#' @export
-loadRstan <- function(lv_type = "2pl") {
+# #' @export
+loadRstan <- function(lv_type = "2PL") {
 
   # if(!dir.exists(file.path("inst", "stan")))
   #   stop("The stan code does not exist!")
-  # stan_path <- "inst/stan"
+
 
   if(tolower(lv_type) %in% c("rasch","2pl", "3pl")) {
     lv_type <- "IRT"
   }
 
   # stan_path <- system.file("rds", package = "FLPS")
-  stan_path <- system.file("stan", package = "FLPS")
+  # stan_path <- system.file("stan", package = "FLPS")
+  stan_path <- "inst/stan"
   stan_list <- list.files(stan_path)
+  # stan_list <- list.files("inst/stan")
 
   if(tolower(lv_type) != "lca") {
-    stan_list <- stan_list[grepl(toupper("multi"), toupper(stan_list))]
+    stan_list <- stan_list[grepl(toupper("flps"), toupper(stan_list))]
   }
 
-  stan_picked <- grepl(toupper(lv_type), toupper(stan_list))
-  stan_picked2 <- grepl("stan", stan_list[stan_picked])
-  stan_model <- stan_list[stan_picked][stan_picked2]
+  stan_picked <- grepl("\\.rds", stan_list)
+  stan_picked1 <- stan_list[stan_picked]
+
+  stan_picked <- grepl(toupper(lv_type), toupper(stan_picked1))
+  stan_model <- stan_picked1[stan_picked]
 
   stan_file <- file.path(stan_path, stan_model)
-  stan_model <- paste(readLines(stan_file), collapse = "\n")
+
+  stan_model <- readRDS(stan_file)
+  # stan_model <- paste(readLines(stan_file), collapse = "\n")
 
   return(stan_model)
 

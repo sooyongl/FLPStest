@@ -11,7 +11,6 @@
 #' @param stan_options A list containing \code{\link{stan}} options, using 'name = value'.
 #' @param ... Additional arguments for latent variable models information (e.g., nclass = 2).
 #' @return an object of class \code{flps}
-#' @examples
 #'
 #' @export
 runFLPS <- function(inp_data = NULL,
@@ -57,30 +56,17 @@ runFLPS <- function(inp_data = NULL,
   }
 
   # fit FLPS ----------------------------------------------------------------
-  ## S3
-  if(class(flps_model) == "stanmodel") {
-    # stan_options <- stanOptions(stan_options,
-    #                             data = flps_data_class$stan_data$stan_dt,
-    #                             object = flps_model)
-    #
-    # flps_fit <-  do.call(rstan::sampling, stan_options)
-
-  } else {
-    stan_options <- stanOptions(stan_options,
-                                data = flps_data_class$stan_data$stan_dt,
-                                model_code = flps_model)
-    flps_fit <-  do.call(rstan::stan, stan_options)
+  if(class(flps_model) != "stanmodel") {
+    # stan_model <- paste(readLines(stanfiles[i]), collapse = "\n")
+    flps_model <- rstan::stan_model(model_code = flps_model)
   }
-
-  ## S4
-  # if(class(flps_model) == "stanmodel") {
-  #   stan_options <- stanOptions(stan_options, data = flps_data_class@stan_data, object = flps_model)
-  #   flps_fit <-  do.call(rstan::sampling, stan_options)
+  ## S3
+  stan_options <- stanOptions(stan_options,
+                              data = flps_data_class$stan_data,
+                              object = flps_model)
   #
-  # } else {
-  #   stan_options <- stanOptions(stan_options, data = flps_data_class@stan_data, model_code = flps_model)
-  #   flps_fit <-  do.call(rstan::stan, stan_options)
-  # }
+  flps_fit <-  do.call(rstan::sampling, stan_options)
+
 
   # class output ------------------------------------------------------------
 
@@ -93,16 +79,6 @@ runFLPS <- function(inp_data = NULL,
   o$flps_fit   <- flps_fit
 
   o$time <- c("Timing:" = as.numeric(proc.time()[3L] - start.time))
-
-  ## S4
-  # o <- new("flps")
-  # o@call       <- .call
-  # o@inp_data   <- inp_data
-  # o@flps_model <- flps_model
-  # o@flps_data  <- flps_data_class
-  # o@flps_fit   <- flps_fit
-  #
-  # o@time <- c("Timing:" = as.numeric(proc.time()[3L] - time$start.time))
 
   return(o)
 }
