@@ -18,58 +18,53 @@ The documentation is available at (…)
 
 ### Running with the package
 
--   Set up simulation factors
-
-For latent variable models, Rasch, 2PL, GPCM, and sem (one-factor CFA)
-are available.
+-   Generate a simulated rectangular data.
+-   This data will be converted to a list of data for
+    [`rstan`](https://github.com/stan-dev/rstan) package.
+-   For latent variable models, Rasch, 2PL, GPCM, and sem (one-factor
+    CFA) are available.
 
 ``` r
-parsFromMod <- list(
-  N = 500,              # sample size
-  R2Y = 0.2,            # r^2 of outcome
-  R2eta = 0.2,          # r^2 of eta by two covariates
-  omega = 0.2,          # the effect of eta
-  tau0 = 0.13,          # direct effect
-  tau1 = -0.06,         # interaction effect between Z and eta
-  lambda = 10,          # the mean of administered items
-  nsec = 20,            # the number of items
-  lvmodel = "Rasch"     # tag for latent variable model; case-nonsensitive
+sim_dt <- FLPS::makeInpData(
+  N       = 500,  # sample size
+  R2Y     = 0.2,  # r^2 of outcome
+  R2eta   = 0.5,  # r^2 of eta by two covariates
+  omega   = 0.2,  # the effect of eta
+  tau0    = 0.13, # direct effect
+  tau1    = -0.06,# interaction effect between Z and eta
+  linear  = T,    # linearity between the outcome and the covariates
+  ydist   = 'n',  # outcome distribution
+  lambda  = 0.6,  # the proportion of administered items
+  nsec    = 20,   # the total number of items
+  nfac    = 1,    # the number of latent factors
+  lvmodel = 'rasch' # tag for latent variable model; case-sensitive (use lower-case letters)
 )
 ```
 
--   Generate a set of simulated data for
-    [`rstan`](https://github.com/stan-dev/rstan) package.
+`sim_dt` contains three variables: `sim_info` and `inp_data`.
 
-``` r
-dt <- do.call(FLPS::makeInpData, parsFromMod)
-```
+-   `sim_info`: information about FLPS models
 
-`dt` contains three variables: `lv.par`, `true_eta`, and `inp_data`.
-
--   `lv.par`: information about latent variable models
-
--   `true_eta`: True factor scores
-
--   `inp_data`: a matrix containing all the data for FLPS. It is used in
-    `runFLPS` function.
+-   `inp_data`: a data frame containing all the data for FLPS. It is
+    used in `runFLPS` function.
 
 ``` r
 # Input data matrix
-head(dt$inp_data,5)
+head(sim_dt$inp_data,5)
 ```
 
-    ##            Y Z          x1         x2 X1 X2 X3 X4 X5 X6 X7 X8 X9 X10 X11 X12
-    ## 1  0.6659478 1 -0.46700688  2.0108626  1 NA NA NA NA NA  1 NA NA  NA  NA  NA
-    ## 2  1.9291701 1  1.22900561  0.2660477 NA  0  0 NA  1 NA  0 NA  1  NA  NA  NA
-    ## 3  1.1205595 1 -0.55433973 -0.6977031 NA NA NA NA NA NA NA  1 NA  NA  NA  NA
-    ## 4 -0.4231403 1 -0.89700570 -0.5831692 NA  1  1 NA NA NA  0 NA NA  NA  NA  NA
-    ## 5 -0.2065087 1  0.02736169  0.7790387  0 NA NA NA  0  0  0  1  0   0   0   0
-    ##   X13 X14 X15 X16 X17 X18 X19 X20
-    ## 1   1   0   1  NA   1  NA  NA  NA
-    ## 2   0  NA  NA  NA  NA   1  NA  NA
-    ## 3  NA  NA  NA  NA  NA  NA  NA  NA
-    ## 4   0  NA  NA   0  NA  NA   0   0
-    ## 5   0   0  NA   0   0   0   0  NA
+    ##            Y Z         x1 x2 i1 i2 i3 i4 i5 i6 i7 i8 i9 i10 i11 i12 i13 i14 i15
+    ## 1  1.5003687 1  0.9972527  1  0  0  0 NA  0  0 NA  1 NA   0   1   0  NA   1  NA
+    ## 2 -1.9171469 1 -1.3221610  0 NA  0  1 NA  0  1  1 NA  1   0  NA  NA   0   1   1
+    ## 3 -2.9871150 1 -2.0303319  0  1  1  1 NA  1  1 NA NA NA  NA   1   1   1   1   0
+    ## 4 -0.4899533 1 -0.9069553  1  0 NA NA NA NA  1  1  0  0  NA   0   0  NA  NA   1
+    ## 5  1.6518906 1  0.4944915  1 NA NA  0 NA NA  0  1  0 NA   0   0   0  NA   1  NA
+    ##   i16 i17 i18 i19 i20
+    ## 1   0  NA  NA   1  NA
+    ## 2   0  NA  NA  NA   0
+    ## 3  NA  NA   1   1  NA
+    ## 4  NA   1   0   0   0
+    ## 5   0   0   0   1  NA
 
 -   Fit your FLPS model
 
