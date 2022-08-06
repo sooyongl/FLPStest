@@ -4,7 +4,7 @@
 \alias{loadRstan}
 \title{Load rstan model}
 \usage{
-loadRstan(lv_type = "2pl")
+loadRstan(lv_type = "2PL")
 }
 \arguments{
 \item{lv_model}{a character specifying a latent model}

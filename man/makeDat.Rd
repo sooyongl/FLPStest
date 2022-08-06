@@ -7,15 +7,16 @@
 makeDat(
   N,
   R2Y,
+  R2eta,
   omega,
   tau0,
   tau1,
-  lambda,
-  R2eta,
   linear,
+  ydist,
+  lambda,
   nsec,
-  lvmodel,
-  lvinfo
+  nfac,
+  lvmodel
 )
 }
 \arguments{
@@ -23,20 +24,19 @@ makeDat(
 
 \item{R2Y}{a numeric indicating predictive power of covariates.}
 
-\item{omega}{a numeric indicating the relationship between eta_T and Y_C.}
+\item{R2eta}{a numeric indicating Predictive power of latent variable}
 
-\item{tau0}{a numeric indicating the treatment eff when eta_T=0.}
+\item{linear}{a logical}
 
-\item{tau1}{a numeric indicating the relationship between eta_T and Y_T-Y_C;
-(for now, single level (not multilevel), linear, normal).}
+\item{ydist}{a character}
 
-\item{lambda}{a numeric indicating the mean of Worked problems/person.}
-
-\item{R2eta}{a numeric indicating Predictive power of latent variable
+\item{lambda}{a numeric indicating the mean of Worked problems/person.
 (extent to which covariates predict eta).}
 
 \item{nsec}{a numeric indicating the number of maximum sections given to
 students.}
+
+\item{nfac}{a numeric indicating the number of latent factors}
 
 \item{lvmodel}{a character specifying a type of latent variable model.}
 }
@@ -51,18 +51,13 @@ information.
 sdat <- makeDat(
   N = 100,
   R2Y = 0.2,
-  omega = 0.2,
-  tau0 = 0.4,
-  tau1 = -0.2,
-  lambda = .6,
   R2eta = 0.5,
   linear = T,
+  ydist = "n",
+  lambda = .6,
   nsec = 10,
-  lvmodel = "2PL",
-  lvinfo = data.frame(
-  a = runif(20, 0.7, 1.4),
-  b = rnorm(20),
-  g = rep(0, 20))
+  nfac = 1,
+  lvmodel = "2PL"
 )
 
 }

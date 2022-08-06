@@ -7,21 +7,25 @@
 makeInpData(
   N,
   R2Y,
+  R2eta,
   omega,
   tau0,
   tau1,
-  lambda,
-  R2eta,
   linear,
+  ydist,
+  lambda,
   nsec,
-  lvmodel,
-  lvinfo
+  nfac,
+  lvmodel
 )
 }
 \arguments{
 \item{N}{a numeric indicating sample size.}
 
 \item{R2Y}{a numeric indicating predictive power of covariates.}
+
+\item{R2eta}{a numeric indicating Predictive power of latent variable
+(extent to which covariates predict eta).}
 
 \item{omega}{a numeric indicating the relationship between eta_T and Y_C.}
 
@@ -32,9 +36,6 @@ makeInpData(
 
 \item{lambda}{a numeric indicating the mean of Worked problems/person.}
 
-\item{R2eta}{a numeric indicating Predictive power of latent variable
-(extent to which covariates predict eta).}
-
 \item{nsec}{a numeric indicating the number of maximum sections given to students.}
 
 \item{lvmodel}{a character specifying a type of latent variable model.}
@@ -44,8 +45,8 @@ a list containing latent variable model information, true eta,
 and a matrix containing the data for running FLPS.
 }
 \description{
-\code{\link{makeInpDat}} is a function for generating a data based on the given
-information.
+\code{\link{makeInpDat}} is a function for generating a data based on
+the given information.
 }
 \examples{
 sdat <- makeInpData(
@@ -58,7 +59,6 @@ sdat <- makeInpData(
   R2eta = 0.5,
   nsec = 10,
   linear = T,
-  lvmodel = "sem",
-  lvinfo  = 1
+  lvmodel = "sem"
 )
 }

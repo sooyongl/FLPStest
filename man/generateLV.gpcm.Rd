@@ -2,10 +2,10 @@
 % Please edit documentation in R/sim_generate_lvm.r
 \name{generateLV.gpcm}
 \alias{generateLV.gpcm}
-\title{method for Polytomous Response: GPCM}
+\title{method for GPCM model}
 \usage{
-\method{generateLV}{gpcm}(info)
+\method{generateLV}{gpcm}(.x, ...)
 }
 \description{
-method for Polytomous Response: GPCM
+method for GPCM model
 }

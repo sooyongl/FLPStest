@@ -44,6 +44,3 @@ an object of class \code{flps}
 \description{
 Conduct fully latent principal stratification
 }
-\examples{
-
-}
