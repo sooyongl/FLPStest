@@ -34,8 +34,8 @@ runFLPS <- function(inp_data = NULL,
   argslist <- as.list(.call[-1])
 
   # validate ----------------------------------------------------------------
-  if(!is.null(inp_data) && !is.null(custom_data))
-    stop("Data is not provided.")
+  ## if(!is.null(inp_data) && !is.null(custom_data))
+  ##   stop("Data is not provided.")
 
   if((!is.null(custom_data) && is.null(custom_stan)) |
      (is.null(custom_data) && !is.null(custom_stan)))
@@ -67,7 +67,7 @@ runFLPS <- function(inp_data = NULL,
 
   } else {
     stan_options <- stanOptions(stan_options,
-                                data = flps_data_class$stan_data$stan_dt,
+                                data = flps_data_class$stan_data,
                                 model_code = flps_model)
     flps_fit <-  do.call(rstan::stan, stan_options)
   }

@@ -88,7 +88,7 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type,
     obs.v.idx <- which(!is.na(obs.v.partial), arr.ind = T)
 
     obs.v.vector <- sapply(1:nrow(obs.v.idx),
-                           function(n) obs.v.matrix[obs.v.idx[n,1], obs.v.idx[n,2]])
+                           function(n) obs.v.partial[obs.v.idx[n,1], obs.v.idx[n,2]])
 
 
     flps_data <- list(
@@ -96,7 +96,7 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type,
       nstud = nstu,
       nsec = nsec,
 
-      studentM = unname(obs.v.idx[,1]),
+      studentM = which(group.data==1)[obs.v.idx[,1]],#unname(obs.v.idx[,1]),
       section = unname(obs.v.idx[,2]),
 
       grad = obs.v.vector,
@@ -125,8 +125,13 @@ makeFLPSdata <- function(inp_data, outcome, group, covariate, lv_model, lv_type,
     }
 
     if(lv_type %in% c("GPCM","PCM","RSM")) {
-      flps_data$lambda_prior <- obtain_prior(obs.v.partial)
+      flps_data$nfac <- 1
+      a_idx=gen_a_idx(nsec,flps_data$nfac)
+      flps_data$lambda_prior <- obtain_prior(obs.v.partial,a_idx)
       flps_data$max_k <- max(obs.v.vector)
+      flps_data$min_k <- min(obs.v.vector)
+      flps_data$factoridx <- matrix(1,nsec,1)
+      flps_data$firstitem <- rep(0,nsec)
 
       ## S3
       out <- S3class("flpsGPCM")
