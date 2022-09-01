@@ -15,3 +15,5 @@ report/rds/0317_res_extracted_70.rds
 report/rds/0317_res_extracted_80.rds
 *.log
 *.out
+
+*.ini

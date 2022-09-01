@@ -25,42 +25,38 @@ The documentation is available at (...)
 
 ### Running with the package
 
-- Set up simulation factors
+- Generate a simulated rectangular data.
+- This data will be converted to a list of data for [`rstan`](https://github.com/stan-dev/rstan) package.
+- For latent variable models, Rasch, 2PL, GPCM, and sem (one-factor CFA) are available.
 
-For latent variable models, Rasch, 2PL, GPCM, and sem (one-factor CFA) are available.
 
 ```{r eval = T}
-parsFromMod <- list(
-  N = 500,              # sample size
-  R2Y = 0.2,            # r^2 of outcome
-  R2eta = 0.2,          # r^2 of eta by two covariates
-  omega = 0.2,          # the effect of eta
-  tau0 = 0.13,          # direct effect
-  tau1 = -0.06,         # interaction effect between Z and eta
-  lambda = 10,          # the mean of administered items
-  nsec = 20,            # the number of items
-  lvmodel = "Rasch"     # tag for latent variable model; case-nonsensitive
+sim_dt <- FLPS::makeInpData(
+  N       = 500,  # sample size
+  R2Y     = 0.2,  # r^2 of outcome
+  R2eta   = 0.5,  # r^2 of eta by two covariates
+  omega   = 0.2,  # the effect of eta
+  tau0    = 0.13, # direct effect
+  tau1    = -0.06,# interaction effect between Z and eta
+  linear  = T,    # linearity between the outcome and the covariates
+  ydist   = 'n',  # outcome distribution
+  lambda  = 0.6,  # the proportion of administered items
+  nsec    = 20,   # the total number of items
+  nfac    = 1,    # the number of latent factors
+  lvmodel = 'rasch' # tag for latent variable model; case-sensitive (use lower-case letters)
 )
+
 ```
 
+`sim_dt` contains three variables: `sim_info` and `inp_data`. 
 
-- Generate a set of simulated data for [`rstan`](https://github.com/stan-dev/rstan) package.
+- `sim_info`: information about FLPS models
 
-```{r eval = T}
-dt <- do.call(FLPS::makeInpData, parsFromMod)
-```
-
-`dt` contains three variables: `lv.par`, `true_eta`, and `inp_data`. 
-
-- `lv.par`: information about latent variable models
-
-- `true_eta`: True factor scores
-
-- `inp_data`: a matrix containing all the data for FLPS. It is used in `runFLPS` function.
+- `inp_data`: a data frame containing all the data for FLPS. It is used in `runFLPS` function.
 
 ```{r eval = T}
 # Input data matrix
-head(dt$inp_data,5)
+head(sim_dt$inp_data,5)
 ```
 
 - Fit your FLPS model
