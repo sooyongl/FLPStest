@@ -42,9 +42,22 @@ genIRTpar <- function(nitem=25, nfac=1, lvmodel, ncat = 4) {
     # for the graded model, ensure that there is enough space between
     # the intercepts, otherwise closer categories will not be selected often
     # (minimum distance of 0.5 here)
+    # nitem = 10;ncat = 4; a = 1
+    if(lvmodel == "gpcm") {
+      diffs <- t(apply(matrix(runif(nitem * (ncat-1), 0.5, 1), nitem), 1, cumsum))
+      d <- -(diffs - rowMeans(diffs))
+      d <- -1*d
+    }
+    if(lvmodel == "grm") {
+      # diffs <- t(apply(matrix(runif(20*4, .3, 1), 20), 1, cumsum))
+      # diffs <- -(diffs - rowMeans(diffs))
+      # d <- diffs + rnorm(20)
 
-    diffs <- t(apply(matrix(runif(nitem * (ncat-1), .5, 1), nitem), 1, cumsum))
-    d <- -(diffs - rowMeans(diffs))
+      diffs <- t(apply(matrix(runif(nitem * (ncat-1), 0.5, 1), nitem), 1, cumsum))
+      d <- -(diffs - rowMeans(diffs))
+
+    }
+
 
     colnames(d) <- paste0("d",1:ncol(d))
     ipar <- data.frame(a, d)
@@ -99,6 +112,7 @@ genLVM <- function(info) { # info = sim_info
   lv.resp <- lv.gen.dt$resp
 
   total_N <- N/2
+  # total_N <- N
 
   nworked <- rep(floor(nsec * lambda), total_N)
 
@@ -220,6 +234,7 @@ simIRTdata <- function(a, d, guess, N, theta, itemtype) {
       N = N,
       Theta = theta,
       itemtype = itemtype)
+
   } else {
     resp <- simData.pcm(
       a = a,
@@ -264,8 +279,8 @@ simData.pcm <- function(a,d,theta) {
       p[1] <- 1
 
       for(j in 2:ncat) {
-        measure <- measure + theta[k, ] - steps[i,1] - steps[i,j]
-        p[j] <- p[(j-1)] + exp(a[i, ]%*%measure)
+        measure <- measure + a[i, 1]*theta[k, 1] - d[i, j-1]
+        p[j] <- p[(j-1)] + exp(measure)
       }
 
       U <- runif(1, 0, 1)

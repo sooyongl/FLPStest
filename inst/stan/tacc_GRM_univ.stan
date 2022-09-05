@@ -86,14 +86,22 @@ model{
   };
 
 //priors
-  // IRT priors
   for(i in 1:nsec) {
     for(ii in 1:(max_k-1)) {
-	    tau[i , ii] ~ uniform(-10, 10);
+            if(ii == 1) {
+               tau[i, ii] ~ normal(-1, 1);
+            }
+            if(ii == 2) {
+               tau[i, ii] ~ normal(0,1);
+            }
+            if(ii == 3) {
+               tau[i, ii] ~ normal(1, 1);
+            }
+            //tau[i , ii] ~ uniform(-10, 10);
     };
-	  for(j in 1:nfac) {
+          for(j in 1:nfac) {
       //lambda_free[i,j] ~ normal(lambda_prior[i,j], 1);
-	  lambda_free[i, j] ~ lognormal(0, 5);
+          lambda_free[i, j] ~ lognormal(0, 5);
     };
   };
 

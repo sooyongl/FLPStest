@@ -68,11 +68,13 @@ transformed parameters{
 model{
   matrix[max_k, nsecWorked] p;      // probs of reponse
   matrix[max_k, nsecWorked] s;      // logits of reponse
-  
+    
   vector[nstud] muEta;
   vector[nstud] muY0;
   vector[nstud] muY;
   real sigYI[nstud];
+  
+  real measure;
 
   for(i in 1:nstud){
  	  muEta[i] = X[i, ]*betaU;
@@ -90,14 +92,24 @@ model{
   // IRT priors
   for(i in 1:nsec) {
     for(ii in 1:(max_k-1)) {
-	    tau[i , ii] ~ uniform(-10, 10);
+            if(ii == 1) {
+               tau[i, ii] ~ normal(-1, 1);
+            }
+            if(ii == 2) {
+               tau[i, ii] ~ normal(0,1);
+            }
+            if(ii == 3) {
+               tau[i, ii] ~ normal(1, 1);
+            }
+            //tau[i , ii] ~ uniform(-10, 10);
+			//tau[i , ii] ~ normal(0, 1);
     };
-	  for(j in 1:nfac) {
+          for(j in 1:nfac) {
       //lambda_free[i,j] ~ normal(lambda_prior[i,j], 1);
-	  lambda_free[i, j] ~ lognormal(0, 5);
+          lambda_free[i, j] ~ lognormal(0, 5);
     };
   };
-
+  
   // PS priors
   betaY ~ uniform(-5, 5);
   betaU ~ uniform(-5, 5);
@@ -109,13 +121,22 @@ model{
 // Fully Latent Principal Stratification model
   // Latent variable model
   for(i in 1:nsecWorked) {
-    s[1,i] = 0; //reference
+    s[1,i] = 1; //reference
+	measure = 0;
+	
     for(k in 2:max_k) {
-	    s[k,i] = s[k-1, i] + tau[section[i], k-1] + lambda[section[i], 1] * eta[studentM[i]];
+	
+		measure = measure + lambda[section[i], 1]*eta[studentM[i]] - tau[section[i], k-1];
+		
+		s[k, i] = s[k-1, i] + exp(measure);
 	  }
-    
-    p[,i] = softmax(s[,i]);
-	  grad[i] ~ categorical(p[,i]);
+
+    for(kk in 1:max_k) {
+	   p[kk,i] = s[kk,i] / sum(s[,i]);
+	}
+
+    //p[,i] = softmax(s[,i]);
+    grad[i] ~ categorical(p[,i]);
   }
 }
 // last line
