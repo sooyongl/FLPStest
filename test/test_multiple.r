@@ -11,7 +11,7 @@ expand.grid.df <- function(...) Reduce(function(...) merge(..., by=NULL), list(.
 
 # condition ---------------------------------------------------------------
 lvmodel <- c("rasch","2pl","gpcm","grm")
-nsample <- c(1000)
+nsample <- c(500)
 nitem   <- c(20)
 fnitem  <- expand.grid(nsample=nsample, nitem=nitem, lvmodel=lvmodel)
 
@@ -38,7 +38,7 @@ cond_table <- cond_table[cond_table$linearity == T & cond_table$ydist == "n", ]
 cond_table <- cond_table[cond_table$lvmodel == "gpcm", ]
 
 cond_table <- cond_table[cond_table$nitem %in% c(20) &
-                           cond_table$nsample %in% c(1000)
+                           cond_table$nsample %in% c(500)
                          ,  ]
 
 # cond_table_2 <- cond_table[cond_table$nitem %in% c(100) &
@@ -138,7 +138,8 @@ cond_table <- cond_table[cond_table$nitem %in% c(20) &
     include = T,
     pars = parselect
   )
-
+  # summary(fit, pars = "tau")[[1]]
+  # ipar
   # Rhat(fit)
   # ess_bulk(fit)
   # ess_tail(fit)

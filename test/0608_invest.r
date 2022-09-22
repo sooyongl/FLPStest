@@ -1,21 +1,21 @@
 library(tidyverse); library(ggforce); library(foreach)
 
-cleaned <- fs::dir_ls("D:/FLPS/results/cleaned", regexp = "cleaned_")
-length(cleaned)
-# cleaned <- str_subset(cleaned, "unif|normal")
-
-combined <- foreach(i = 1:length(cleaned)) %do% {
-  a1 <- readRDS(cleaned[i])
-  a1$stan_res
-} %>%
-  bind_rows()
-
-rownames(combined) <- NULL
-
-combined <- combined %>% rename(true_param = true_parm)
-
-data_idx <- "0608"
-saveRDS(combined, paste0("results/cleaned/",data_idx,"_extracted_cleaned.rds"))
+# cleaned <- fs::dir_ls("D:/FLPS/results/cleaned", regexp = "cleaned_")
+# length(cleaned)
+# # cleaned <- str_subset(cleaned, "unif|normal")
+#
+# combined <- foreach(i = 1:length(cleaned)) %do% {
+#   a1 <- readRDS(cleaned[i])
+#   a1$stan_res
+# } %>%
+#   bind_rows()
+#
+# rownames(combined) <- NULL
+#
+# combined <- combined %>% rename(true_param = true_parm)
+#
+# data_idx <- "0608"
+# saveRDS(combined, paste0("results/cleaned/",data_idx,"_extracted_cleaned.rds"))
 
 bayes_res <- readRDS(paste0("results/cleaned/",data_idx,"_extracted_cleaned.rds"))
 

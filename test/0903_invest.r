@@ -1,7 +1,6 @@
 library(tidyverse); library(ggforce); library(foreach)
 
-cleaned <- fs::dir_ls("D:/FLPS/results_poly/cleaned_poly",
-                      regexp = "cleaned_")
+cleaned <- fs::dir_ls("D:/FLPS/results/cleaned",regexp = "cleaned_")
 length(cleaned)
 # cleaned <- str_subset(cleaned, "unif|normal")
 
@@ -15,23 +14,12 @@ rownames(combined) <- NULL
 
 combined <- combined %>% rename(true_param = true_parm)
 
-# willberemoved <- combined$cond[str_detect(combined$cond, "gpcm")]
-# willberemoved <- willberemoved[str_detect(willberemoved, "220830")]
-
-combined <-
-  combined %>%
-  # filter(!cond %in% willberemoved) %>%
-  # filter(!str_detect(cond, "220820")) %>%
-  filter(str_detect(cond, "gpcm|grm" ))
-
 #
-data_idx <- "0723"
+data_idx <- "0903"
 
-saveRDS(combined, paste0("results/cleaned/",data_idx,"_extracted_cleaned_poly.rds"))
+saveRDS(combined, paste0("results/cleaned/",data_idx,"_extracted_cleaned.rds"))
 
-bayes_res <- readRDS(paste0("results/cleaned/",data_idx,"_extracted_cleaned_poly.rds"))
-# bayes_res <- bayes_res %>% rename(true_param = true_parm)
-# nrow(bayes_res)
+bayes_res <- readRDS(paste0("results/cleaned/",data_idx,"_extracted_cleaned.rds"))
 
 bayes_res <- bayes_res %>%
   mutate(Rhat = case_when(is.nan(Rhat) ~ 1, TRUE ~ Rhat)) %>%
@@ -52,10 +40,12 @@ bayes_res <- bayes_res %>%
     TRUE ~ par_name
   ),
   CIin = case_when(
-    true_param > X2.5. & true_param < X97.5. ~ 1,
+    true_param >= X2.5. & true_param <= X97.5. ~ 1,
     TRUE ~ 0
   )
   )
+
+saveRDS(bayes_res, "test/paper_materials/bayes_res_0000.rds")
 
 
 res <- bayes_res
@@ -151,7 +141,7 @@ res_all <-
                         "by1", "by2","lambda","tau","eta"))
   )
 
-saveRDS(res_all, paste0("test/shinydata/", data_idx, "_data_poly.rds"))
+saveRDS(res_all, paste0("test/shinydata/", data_idx, "_data.rds"))
 
 
 total_res <- res_all
@@ -159,4 +149,4 @@ total_res <- res_all
 # measurement part -------------------------
 mpart <- res %>% filter(str_detect(par_name, "eta|lambda|tau"))
 
-saveRDS(mpart, paste0("test/shinydata/", data_idx, "_mpart_poly.rds"))
+saveRDS(mpart, paste0("test/shinydata/", data_idx, "_mpart.rds"))

@@ -97,7 +97,6 @@ genSEMpar <- function(nitem=25, nfac=1, lvmodel) {
   ipar <- data.frame(loading=loading)
 }
 
-
 #' Generate LV model data
 #'
 genLVM <- function(info) { # info = sim_info

@@ -194,17 +194,17 @@ res_list <- foreach(
 }
 stopCluster(cl)
 
-cleaned <- fs::dir_ls("D:/FLPS/results/cleaned", regexp = "cleaned_")
+cleaned <- fs::dir_ls("D:/FLPS/results/cleaned", regexp = "210626")
 length(cleaned)
 # cleaned <- str_subset(cleaned, "unif|normal")
 
 combined <- foreach(i = 1:length(cleaned)) %do% {
   a1 <- readRDS(cleaned[i])
-  a1
+  a1$stan_res
 } %>%
   bind_rows()
 
-data_idx <- "0529"
+data_idx <- "0628"
 saveRDS(combined, paste0("results/cleaned/",data_idx,"_extracted_cleaned.rds"))
 
 # saveRDS(combined, paste0("results/cleaned/",data_idx,"_extracted_cleaned_priors.rds"))

@@ -59,7 +59,6 @@ res_list <- foreach(
   stan_summary <- stan_summary000$summary
   stan_chains <- stan_summary000$c_summary
 
-
   stan_parname <- rownames(stan_summary)
   # tail(stan_parname, 100); length(stan_parname)
   N <- sdat$N
@@ -67,7 +66,7 @@ res_list <- foreach(
   nb <- max(sdat$grad) - min(sdat$grad)
   nfac <- sdat$nfac
 
-  iter = 5000 - 2000 #fit@sim$iter - fit@sim$warmup
+  iter = fit@sim$iter - fit@sim$warmup
   n.chain = 2 # fit@sim$chains
 
   df.fit <- as.data.frame(fit)
@@ -103,7 +102,9 @@ res_list <- foreach(
   true_tau <- true_ipar[,(nfac+1):ncol(true_ipar)]
   true_tau <- true_tau[!grepl("g", names(true_tau))]
   if(sdat$lvmodel != "2pl") {
-    true_tau <- -true_tau
+    if(sdat$lvmodel =="grm") {
+      true_tau <- -true_tau
+    }
 
     if(sdat$lvmodel == "rasch") {
       true_tau <- -true_tau
@@ -281,7 +282,7 @@ res_list <- foreach(
       grep("tau\\[", rownames(stan_summary))), ]
 
   stan_summary <- rbind(str_summary, meas_summary)
-
+  # stan_res[rownames(stan_res) %in% rownames(stan_res)[1209:1300], ]
   stan_res <- data.frame(par_name = stan_parname,
                          true_parm = parmav,
                          stan_summary,
