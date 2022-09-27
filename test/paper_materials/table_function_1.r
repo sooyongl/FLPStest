@@ -311,7 +311,7 @@ wt_struc_ss <- function(ft_data, header_name="N",
 table_add <- function(x.doc, x.tb, landscape = F) {
 
   if(landscape)
-    x.doc <- body_end_section_landscape(x.doc)
+    x.doc <- body_end_section_portrait(x.doc)
 
   flextable::body_add_flextable(
     x.doc,
@@ -322,7 +322,7 @@ table_add <- function(x.doc, x.tb, landscape = F) {
   body_add_par(x.doc, " ")
 
   if(landscape)
-    end.landscape(x.doc)
+    x.doc <- body_end_section_landscape(x.doc)
 }
 
 # my.doc <- read_docx()

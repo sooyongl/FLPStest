@@ -17,7 +17,7 @@ collapse_col <- function(data, .column) {
   data
 }
 
-mpart_t <- function(x, title = "**Table 3.** Results of measurement model across the sample sizes, the number of items, and the measurement models",
+mpart_t <- function(x, title = "**Table 2.** Results of measurement model across the sample sizes, the number of items, and the measurement models",
 
                            source.note = "",
                            bias.label = "Bias") {
@@ -52,24 +52,24 @@ mpart_t <- function(x, title = "**Table 3.** Results of measurement model across
     ) %>%
 
     cols_label(
-      lvmodel    = "MM",
+      lvmodel    = "Mpdel",
       samplesize = "N",
       nitem = "J",
 
       # bias_eta0 = "eta0", # escape_latex(text)
-      bias_eta1 = "eta1",
+      bias_eta1 = html("&eta;<sup>1</sup>"), #"eta1",
       bias_a = "a",
-      bias_b = "b",
+      bias_b = "d",
 
       # rmse_eta0 = "eta0", # escape_latex(text)
-      rmse_eta1 = "eta1",
+      rmse_eta1 = html("&eta;<sup>1</sup>"), #"eta1",
       rmse_a = "a",
-      rmse_b = "b",
+      rmse_b = "d",
 
       # coverage_eta0 = "eta0",
-      coverage_eta1 = "eta1",
+      coverage_eta1 = html("&eta;<sup>1</sup>"), #"eta1",
       coverage_a = "a",
-      coverage_b = "b"
+      coverage_b = "d"
     ) %>%
 
     cols_width(
@@ -459,7 +459,8 @@ mpart_t_nitem <- function(x, title = "**Table 4**. Results of measurement model 
 
 
 # --------------------------------------------------------------
-struc_t <- function(x, title = "**Table 4.** Results of structural model across the sample sizes, the number of items, and the measurement models",bias.label = "Bias") {
+struc_t <- function(x, title = "**Table 3.** Results of structural model across the sample sizes, the number of items, and the measurement models",bias.label = "Bias",
+                    source.note = "") {
   x %>%
     gt() %>%
 
@@ -481,28 +482,29 @@ struc_t <- function(x, title = "**Table 4.** Results of structural model across 
       columns = c(coverage_b0, coverage_b11,
                   coverage_a11,coverage_bu,coverage_by)
     ) %>%
+    # cols_label("Estimate" = html("&beta;"))
     cols_label(
-      lvmodel    = "MM",
+      lvmodel    = "Model",
       samplesize = "N",
       nitem = "J",
 
-      bias_b0  = "tau0",
-      bias_b11 = "tau1",
-      bias_a11 = "omega",
-      bias_bu = "beta",
-      bias_by = "gamma",
+      bias_b0  = html("&tau;<sup>0</sup>"), #"tau0",
+      bias_b11 = html("&tau;<sup>1</sup>"), #"tau1",
+      bias_a11 = html("&omega;"), #"omega",
+      bias_bu = html("&beta;"), # "beta",
+      bias_by = html("&gamma;"),# "gamma",
 
-      rmse_b0  = "tau0",
-      rmse_b11 = "tau1",
-      rmse_a11 = "omega",
-      rmse_bu = "beta",
-      rmse_by = "gamma",
+      rmse_b0  = html("&tau;<sup>0</sup>"), #"tau0",
+      rmse_b11 = html("&tau;<sup>1</sup>"),
+      rmse_a11 = html("&omega;"),
+      rmse_bu = html("&beta;"), # "beta",
+      rmse_by = html("&gamma;"), #"gamma",
 
-      coverage_b0  = "tau0",
-      coverage_b11 = "tau1",
-      coverage_a11 = "omega",
-      coverage_bu = "beta",
-      coverage_by = "gamma"
+      coverage_b0  = html("&tau;<sup>0</sup>"), #"tau0",
+      coverage_b11 = html("&tau;<sup>1</sup>"), #"tau1",
+      coverage_a11 = html("&omega;"),
+      coverage_bu = html("&beta;"),
+      coverage_by = html("&gamma;"),
 
     ) %>%
     cols_width(
@@ -525,7 +527,7 @@ struc_t <- function(x, title = "**Table 4.** Results of structural model across 
     ) %>%
 
     tab_source_note(
-      source_note = md("*Note.* MM: Measurement model; N: Sample size; J: the number of items")
+      source_note = md(source.note)
     ) %>%
 
     tab_style(
@@ -741,6 +743,11 @@ struc_t_sample <- function(x, title = "**Table 5.** Results of structural model 
 
 struc_t_nitem <- function(x, title = "**Table 6.** Results of structural model by the number of items",bias.label = "Bias") {
   x %>% gt() %>%
+
+    tab_source_note(
+      source_note =
+        md(source.note)
+    ) %>%
 
     tab_header(
       title = md(title)

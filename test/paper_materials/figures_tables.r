@@ -11,6 +11,92 @@ source("test/paper_materials/gtPaper.r")
 source("test/paper_materials/table_function.r")
 source("test/paper_materials/table_function_1.r")
 # Table ----------------------------------------
+# condition table ---------------------------------------------------------
+
+cond_table <- tibble(
+  `Simulation factors` = c("Manipulated conditions",
+                           "\U0020 \U0020 Measurement model",
+                           "  Sample size",
+                           "  Number of items",
+                           "  Strength of relationship",
+                           "    \U03B7_t and Y_c",
+                           "    \U03B7_t and Y_t-Y_c",
+                           "    Z and Y",
+                           "Fixed conditions",
+                           "  Number of covariates",
+                           "  Percentage of items administered",
+                           "  Predictive power of \U03B7",
+                           "  Predictive power of Y"),
+  Values = c("",
+             "Rasch, 2PL, GPCM, GRM",
+             "500, 1000, 2000",
+             "50, 100, 200",
+             "",
+             "U(0.1,0.3)",
+             "U(-0.2,-0.1)",
+             "U(0.2,0.4)",
+             "",
+             "2",
+             "0.6",
+             "0.5",
+             "0.2"),
+  Notation = c(
+    "",
+    "MM",
+    "N",
+    "J",
+    "",
+    "\U1D74E",
+    "\U1D749_1",
+    "\U1D749_0",
+    "",
+    "",
+    "",
+    "",
+    "")
+) %>%
+  gt() %>%
+  tab_header(title =md("Table 1. Simulation factors")) %>%
+  tab_style(
+    style = cell_text(align = "left", indent = px(20)),
+    locations = cells_body(rows = c(2:5, 10:13),
+                           columns = matches("Simulation factors"))
+  ) %>%
+  tab_style(
+    style = cell_text(align = "left", indent = px(40)),
+    locations = cells_body(rows = c(6:8),
+                           columns = matches("Simulation factors"))
+  ) %>%
+  tab_options(
+    # Heading -----------------------------
+    # heading.align = "center",
+    # heading.title.font.size = px(16),
+    # heading.padding = NULL,
+
+    # Inside Table border ------------------
+    column_labels.border.top.width = px(3),
+    column_labels.border.top.color = "black",
+
+    #Remove border around table  -----------
+    table_body.border.bottom.color = "black",
+    table_body.border.bottom.width = px(3),
+
+    # Outside Table border
+    table.border.top.color = "transparent",
+    table.border.bottom.color = "transparent",
+
+    # Source note ----------------------------
+    source_notes.font.size = 16,
+    source_notes.padding = 12
+  )
+
+
+cond_table %>%
+  gtsave(filename = "test/paper_materials/cond_table.html")
+
+tex <- cond_table %>% as_latex()
+cat(mni_tex[[1]])
+
 # Convergence Results --------------------------
 
 converged_results0 <- readRDS("test/paper_materials/converged_results0.rds")
@@ -145,7 +231,7 @@ cp <-
   )
 
 wt <- cp %>% default_wt(hlines = c(5, 10),
-                  caption = "Table 2. Freq of non-convergence MCMC results by parameters",tablenote = "Note. N: sample size; J: number of item")
+                        caption = "Table 2. Freq of non-convergence MCMC results by parameters",tablenote = "Note. N: sample size; J: number of item")
 
 
 table_add(my.doc, wt)
@@ -326,6 +412,9 @@ mpart_combined <-mpart_sample %>%
 
 mpart_combined %>% gtsave(filename = "test/paper_materials/mpart_combined_half.html")
 mpart_combined %>% gtsave(filename = "test/paper_materials/mpart_combined_half.png")
+
+tex <- mpart_combined %>% as_latex()
+cat(mni_tex[[1]])
 
 ## by sample ----------------
 cbias <- mpart_by_cond %>%
