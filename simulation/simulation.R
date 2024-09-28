@@ -81,4 +81,4 @@ oo <- foreach(
 
   NA
 }
-# stopCluster(cl)
+stopCluster(cl)
